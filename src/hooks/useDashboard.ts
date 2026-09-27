@@ -49,12 +49,9 @@ export function useDashboardOverview() {
           .limit(4),
       ]);
 
-      const errors = [
-        products.error,
-        favorites.error,
-        projects.error,
-        recentProducts.error,
-      ].filter(Boolean);
+      const errors = [products.error, favorites.error, projects.error, recentProducts.error].filter(
+        Boolean,
+      );
 
       if (errors.length) {
         throw errors[0];
