@@ -15,7 +15,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudClient as supabase } from "@/lib/cloud-client";
 import { useIsAdmin, useProfile } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
