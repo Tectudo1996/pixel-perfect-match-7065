@@ -66,14 +66,20 @@ function DashboardPage() {
         <SummaryCard
           icon={Compass}
           title="Seu perfil"
-          value={preferences?.experience_level ? labels[preferences.experience_level] : "Configurado"}
+          value={
+            preferences?.experience_level ? labels[preferences.experience_level] : "Configurado"
+          }
           description={preferences?.goal ? labels[preferences.goal] : "Objetivo salvo"}
         />
         <SummaryCard
           icon={Sparkles}
           title="Conteúdo"
           value={preferences?.video_style ? labels[preferences.video_style] : "Configurado"}
-          description={categories.length ? `${categories.length} categoria(s) selecionada(s)` : "Preferências salvas"}
+          description={
+            categories.length
+              ? `${categories.length} categoria(s) selecionada(s)`
+              : "Preferências salvas"
+          }
         />
         <SummaryCard
           icon={Database}
@@ -111,7 +117,9 @@ function SummaryCard({
       <span className="gold-chip flex h-9 w-9 items-center justify-center rounded-md">
         <Icon className="h-4 w-4" />
       </span>
-      <p className="mt-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</p>
+      <p className="mt-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        {title}
+      </p>
       <p className="mt-1 text-sm font-semibold">{value}</p>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
     </div>

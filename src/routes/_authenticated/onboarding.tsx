@@ -44,7 +44,11 @@ const niveis = [
     label: "Intermediário",
     description: "Já publico e quero melhorar meus resultados.",
   },
-  { value: "avancado", label: "Avançado", description: "Já tenho rotina e experiência com vendas." },
+  {
+    value: "avancado",
+    label: "Avançado",
+    description: "Já tenho rotina e experiência com vendas.",
+  },
 ];
 
 const objetivos = [
@@ -137,7 +141,9 @@ function OnboardingPage() {
       toast.success("Preferências salvas. Seu Radar está preparado.");
       navigate({ to: "/dashboard", replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível salvar suas preferências.");
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar suas preferências.",
+      );
     } finally {
       setSaving(false);
     }
@@ -314,7 +320,9 @@ function ChoiceCard({
           {selected && <Check className="h-3 w-3" />}
         </span>
       </span>
-      {description && <span className="mt-1.5 block text-xs text-muted-foreground">{description}</span>}
+      {description && (
+        <span className="mt-1.5 block text-xs text-muted-foreground">{description}</span>
+      )}
     </button>
   );
 }
