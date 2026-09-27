@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Heart, ImageOff, UsersRound } from "lucide-react";
-  import { brl, percent, NA } from "@/lib/format";
+import { brl, percent, NA } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useToggleFavorite } from "@/hooks/useFavorites";
 import type { Produto } from "@/types/product";
