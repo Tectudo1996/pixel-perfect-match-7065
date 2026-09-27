@@ -40,7 +40,7 @@ jobs:
           src/routes/_authenticated/dashboard.tsx
           src/routes/_authenticated/favoritos.tsx
           src/routes/_authenticated/onboarding.tsx
-          src/routes/_authenticated/produto.$id.tsx
+          'src/routes/_authenticated/produto.$id.tsx'
           src/routes/_authenticated/radar.tsx
           src/types/product.ts
           --max-warnings=0
