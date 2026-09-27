@@ -44,9 +44,7 @@ export function useProductDetail(productId: string) {
       if (!productResult.data) return null;
 
       const rawCategory = productResult.data.categories as
-        | ProductCategory
-        | ProductCategory[]
-        | null;
+        ProductCategory | ProductCategory[] | null;
       const category = Array.isArray(rawCategory)
         ? (rawCategory[0] ?? null)
         : rawCategory;
