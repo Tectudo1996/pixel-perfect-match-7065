@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Heart, ImageOff, UsersRound } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { brl, percent, NA } from "@/lib/format";
+  import { brl, percent, NA } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useToggleFavorite } from "@/hooks/useFavorites";
 import type { Produto } from "@/types/product";
 
 export type { Produto } from "@/types/product";
@@ -12,60 +11,6 @@ const compactNumber = new Intl.NumberFormat("pt-BR", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
-
-export function useFavorites() {
-  return useQuery({
-    queryKey: ["favorites"],
-    queryFn: async () => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!userData.user) return [];
-
-      const { data, error } = await supabase
-        .from("favorites")
-        .select("product_id")
-        .eq("user_id", userData.user.id);
-
-      if (error) throw error;
-      return (data ?? []).map((favorite) => favorite.product_id);
-    },
-  });
-}
-
-export function useToggleFavorite() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ productId, active }: { productId: string; active: boolean }) => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      const userId = userData.user?.id;
-      if (!userId) throw new Error("Sua sessão expirou. Entre novamente.");
-
-      if (active) {
-        const { error } = await supabase
-          .from("favorites")
-          .delete()
-          .eq("product_id", productId)
-          .eq("user_id", userId);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("favorites")
-          .insert({ product_id: productId, user_id: userId });
-
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
-      queryClient.invalidateQueries({ queryKey: ["favorite-products"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-overview"] });
-    },
-  });
-}
 
 export function ProductCard({ produto, favorito }: { produto: Produto; favorito: boolean }) {
   const toggle = useToggleFavorite();
