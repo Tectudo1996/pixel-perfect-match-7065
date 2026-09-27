@@ -67,14 +67,15 @@ function DashboardPage() {
           icon={Compass}
           title="Seu perfil"
           value={
-            preferences?.experience_level ? labels[preferences.experience_level] : "Configurado"
+            (preferences?.experience_level && labels[preferences.experience_level]) ||
+            "Configurado"
           }
-          description={preferences?.goal ? labels[preferences.goal] : "Objetivo salvo"}
+          description={(preferences?.goal && labels[preferences.goal]) || "Objetivo salvo"}
         />
         <SummaryCard
           icon={Sparkles}
           title="Conteúdo"
-          value={preferences?.video_style ? labels[preferences.video_style] : "Configurado"}
+          value={(preferences?.video_style && labels[preferences.video_style]) || "Configurado"}
           description={
             categories.length
               ? `${categories.length} categoria(s) selecionada(s)`
