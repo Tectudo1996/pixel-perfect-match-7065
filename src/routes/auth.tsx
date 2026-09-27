@@ -12,10 +12,10 @@ type Modo = "entrar" | "criar" | "recuperar";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): { modo: Modo } => ({
-    modo:
-      search.modo === "criar" || search.modo === "recuperar" ? (search.modo as Modo) : "entrar",
-  }),
+  validateSearch: (search: Record<string, unknown>): { modo: Modo } => {
+    const m = search["modo"];
+    return { modo: m === "criar" || m === "recuperar" ? (m as Modo) : "entrar" };
+  },
   head: () => ({
     meta: [
       { title: "Entrar — RadarShop AI" },
