@@ -23,9 +23,7 @@ export function usePersonalRadar() {
 
       const { data: preferences, error: preferencesError } = await supabase
         .from("user_preferences")
-        .select(
-          "categories,commission_min,commission_max,goal,video_style,onboarding_completed",
-        )
+        .select("categories,commission_min,commission_max,goal,video_style,onboarding_completed")
         .eq("user_id", userData.user.id)
         .maybeSingle();
 
