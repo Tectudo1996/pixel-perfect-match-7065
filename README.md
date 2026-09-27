@@ -46,9 +46,18 @@ A migration `drizzle/migrations/0001_foundation_security.sql` deve ser aplicada 
 - favoritos por usuário
 - estados reais de erro, carregamento e catálogo vazio
 
-### Etapa 4 — Produto + Favoritos
+### Etapa 4 — concluída
 
-Em desenvolvimento. Inclui página individual do produto com dados da fonte e histórico de métricas, além da lista real de produtos favoritados pelo usuário.
+- página individual do produto
+- fonte e datas dos dados
+- histórico de métricas
+- link original quando disponível
+- favoritos persistidos por usuário
+- página real de favoritos
+
+### Etapa 5 — Meu Radar
+
+Em desenvolvimento. Personaliza a seleção com categorias, faixa de comissão e objetivo do onboarding, mantendo critérios explicáveis e sem score artificial.
 
 ## Fluxo base
 
@@ -64,6 +73,8 @@ Dashboard
 Radar de Produtos
   ↓
 Produto / Favoritos
+  ↓
+Meu Radar personalizado
 ```
 
 Usuários autenticados que ainda não concluíram o onboarding são direcionados para `/onboarding`. Após salvar as preferências, o acesso segue para `/dashboard`.
