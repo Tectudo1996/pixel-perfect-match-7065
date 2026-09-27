@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - feat/foundation-onboarding
+      - "feat/**"
   pull_request:
     branches:
       - main
@@ -31,6 +31,7 @@ jobs:
         run: >-
           npx eslint
           src/components/app-shell.tsx
+          src/hooks/useDashboard.ts
           src/routes/auth.tsx
           src/routes/_authenticated/dashboard.tsx
           src/routes/_authenticated/onboarding.tsx
