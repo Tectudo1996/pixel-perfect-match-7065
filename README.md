@@ -21,16 +21,24 @@ O produto está sendo construído em etapas para manter segurança, previsibilid
 - autenticação
 - onboarding
 - redirecionamento pós-login
-- dashboard inicial
 - endurecimento de segurança em migration
 - remoção do `.env` versionado
 - CI com lint dirigido e build de produção
 
 A migration `drizzle/migrations/0001_foundation_security.sql` deve ser aplicada ao banco Supabase do ambiente antes de considerar a infraestrutura de produção sincronizada.
 
-### Etapa 2 — Dashboard real
+### Etapa 2 — concluída
 
-Em desenvolvimento. O objetivo é transformar `/dashboard` em uma visão geral alimentada exclusivamente por dados existentes no banco, com contagem de produtos, favoritos, projetos de conteúdo, preferências do usuário e produtos atualizados recentemente.
+- dashboard alimentado por dados reais
+- contagem de produtos, favoritos e projetos
+- resumo das preferências do usuário
+- produtos atualizados recentemente
+- estados de carregamento, erro e banco vazio
+- navegação completa das rotas existentes
+
+### Etapa 3 — Radar de Produtos
+
+Em desenvolvimento. Inclui consulta paginada no servidor, busca, categoria, faixa de preço, comissão mínima e ordenação por atualização, comissão, vendas e preço.
 
 ## Fluxo base
 
@@ -42,6 +50,8 @@ Cadastro / Login
 Onboarding
   ↓
 Dashboard
+  ↓
+Radar de Produtos
 ```
 
 Usuários autenticados que ainda não concluíram o onboarding são direcionados para `/onboarding`. Após salvar as preferências, o acesso segue para `/dashboard`.
