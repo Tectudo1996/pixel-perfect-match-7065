@@ -1,22 +1,45 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, LogOut, Menu, Radar, X } from "lucide-react";
+import {
+  Bookmark,
+  Clapperboard,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Radar,
+  Search,
+  Settings,
+  ShieldCheck,
+  Target,
+  UserRound,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/hooks/useAuth";
+import { useIsAdmin, useProfile } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const nav = [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] as const;
+const primaryNav = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/radar", label: "Radar de Produtos", icon: Search },
+  { to: "/meu-radar", label: "Meu Radar", icon: Target },
+  { to: "/favoritos", label: "Favoritos", icon: Bookmark },
+  { to: "/estudio", label: "Estúdio", icon: Clapperboard },
+] as const;
 
-const nextModules = ["Radar de Produtos", "Meu Radar", "Favoritos", "Estúdio de Conteúdo"];
+const accountNav = [
+  { to: "/perfil", label: "Perfil", icon: UserRound },
+  { to: "/configuracoes", label: "Configurações", icon: Settings },
+] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [aberto, setAberto] = useState(false);
   const { data: profile } = useProfile();
+  const { data: isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   async function sair() {
     await queryClient.cancelQueries();
@@ -51,42 +74,27 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
-          {nav.map(({ to, label, icon: Icon }) => {
-            const active = pathname === to || pathname.startsWith(to + "/");
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setAberto(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "gold-chip font-medium"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Link>
-            );
-          })}
+          <NavGroup items={primaryNav} pathname={pathname} close={() => setAberto(false)} />
 
           <p className="px-3 pt-6 pb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-            Próximas etapas
+            Conta
           </p>
-          <div className="space-y-1">
-            {nextModules.map((label) => (
-              <div
-                key={label}
-                className="flex items-center justify-between rounded-md px-3 py-2 text-xs text-muted-foreground/70"
-              >
-                <span>{label}</span>
-                <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px]">
-                  Em breve
-                </span>
-              </div>
-            ))}
-          </div>
+          <NavGroup items={accountNav} pathname={pathname} close={() => setAberto(false)} />
+
+          {isAdmin && (
+            <>
+              <p className="px-3 pt-6 pb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                Administração
+              </p>
+              <NavLink
+                to="/admin"
+                label="Painel administrativo"
+                icon={ShieldCheck}
+                pathname={pathname}
+                close={() => setAberto(false)}
+              />
+            </>
+          )}
         </nav>
 
         <div className="border-t border-border p-3">
@@ -119,5 +127,63 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8">{children}</main>
       </div>
     </div>
+  );
+}
+
+type NavItem = {
+  to:
+    | "/dashboard"
+    | "/radar"
+    | "/meu-radar"
+    | "/favoritos"
+    | "/estudio"
+    | "/perfil"
+    | "/configuracoes"
+    | "/admin";
+  label: string;
+  icon: typeof LayoutDashboard;
+};
+
+function NavGroup({
+  items,
+  pathname,
+  close,
+}: {
+  items: readonly NavItem[];
+  pathname: string;
+  close: () => void;
+}) {
+  return (
+    <div className="space-y-1">
+      {items.map((item) => (
+        <NavLink key={item.to} {...item} pathname={pathname} close={close} />
+      ))}
+    </div>
+  );
+}
+
+function NavLink({
+  to,
+  label,
+  icon: Icon,
+  pathname,
+  close,
+}: NavItem & { pathname: string; close: () => void }) {
+  const active = pathname === to || pathname.startsWith(to + "/");
+
+  return (
+    <Link
+      to={to}
+      onClick={close}
+      className={cn(
+        "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+        active
+          ? "gold-chip font-medium"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Link>
   );
 }

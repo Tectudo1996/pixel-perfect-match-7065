@@ -2,7 +2,7 @@
 
 SaaS em desenvolvimento para afiliados brasileiros do TikTok Shop.
 
-O produto está sendo construído em etapas. A primeira entrega prioriza uma fundação segura e um fluxo completo de autenticação e onboarding antes dos módulos de inteligência de produtos.
+O produto está sendo construído em etapas para manter segurança, previsibilidade e um fluxo utilizável a cada entrega.
 
 ## Stack
 
@@ -14,7 +14,25 @@ O produto está sendo construído em etapas. A primeira entrega prioriza uma fun
 - Radix UI / shadcn
 - Drizzle para migrations
 
-## Fluxo da etapa 1
+## Status
+
+### Etapa 1 — concluída no código
+
+- autenticação
+- onboarding
+- redirecionamento pós-login
+- dashboard inicial
+- endurecimento de segurança em migration
+- remoção do `.env` versionado
+- CI com lint dirigido e build de produção
+
+A migration `drizzle/migrations/0001_foundation_security.sql` deve ser aplicada ao banco Supabase do ambiente antes de considerar a infraestrutura de produção sincronizada.
+
+### Etapa 2 — Dashboard real
+
+Em desenvolvimento. O objetivo é transformar `/dashboard` em uma visão geral alimentada exclusivamente por dados existentes no banco, com contagem de produtos, favoritos, projetos de conteúdo, preferências do usuário e produtos atualizados recentemente.
+
+## Fluxo base
 
 ```text
 Landing
