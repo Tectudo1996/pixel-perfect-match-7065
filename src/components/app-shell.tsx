@@ -138,7 +138,8 @@ type NavItem = {
     | "/favoritos"
     | "/estudio"
     | "/perfil"
-    | "/configuracoes";
+    | "/configuracoes"
+    | "/admin";
   label: string;
   icon: typeof LayoutDashboard;
 };
