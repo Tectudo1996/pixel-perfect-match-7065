@@ -77,6 +77,7 @@ function ProductDetailPage() {
   }
 
   const { product, metrics } = data;
+  const originalUrl = safeHttpUrl(product.original_url);
 
   return (
     <div className="space-y-6">
@@ -156,9 +157,9 @@ function ProductDetailPage() {
             )}
 
             <div className="mt-6 flex flex-wrap gap-3 border-t border-border pt-5">
-              {product.original_url && (
+              {originalUrl && (
                 <Button asChild variant="gold">
-                  <a href={product.original_url} target="_blank" rel="noreferrer">
+                  <a href={originalUrl} target="_blank" rel="noreferrer noopener">
                     Abrir produto original <ExternalLink className="h-4 w-4" />
                   </a>
                 </Button>
@@ -264,6 +265,17 @@ function MetadataRow({ label, value }: { label: string; value: string }) {
       <span className="max-w-[65%] text-right font-medium">{value}</span>
     </div>
   );
+}
+
+function safeHttpUrl(value: string | null | undefined) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function ProductDetailSkeleton() {
