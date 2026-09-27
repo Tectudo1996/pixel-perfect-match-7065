@@ -107,9 +107,8 @@ function PersonalRadarPage() {
                   : "Não informada"}
               </p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Esta preferência não altera a seleção de produtos porque o catálogo ainda não
-                possui um dado confiável de compatibilidade criativa. Ela será usada no Estúdio de
-                Conteúdo.
+                Esta preferência não altera a seleção de produtos porque o catálogo ainda não possui
+                um dado confiável de compatibilidade criativa. Ela será usada no Estúdio de Conteúdo.
               </p>
               <Link
                 to="/configuracoes"
