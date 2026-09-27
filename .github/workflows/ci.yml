@@ -33,6 +33,7 @@ jobs:
           src/components/app-shell.tsx
           src/components/product-card.tsx
           src/hooks/useDashboard.ts
+          src/hooks/useFavorites.ts
           src/hooks/useProductRadar.ts
           src/routes/auth.tsx
           src/routes/_authenticated/dashboard.tsx
