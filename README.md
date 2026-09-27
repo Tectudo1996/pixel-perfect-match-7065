@@ -36,9 +36,19 @@ A migration `drizzle/migrations/0001_foundation_security.sql` deve ser aplicada 
 - estados de carregamento, erro e banco vazio
 - navegação completa das rotas existentes
 
-### Etapa 3 — Radar de Produtos
+### Etapa 3 — concluída
 
-Em desenvolvimento. Inclui consulta paginada no servidor, busca, categoria, faixa de preço, comissão mínima e ordenação por atualização, comissão, vendas e preço.
+- consulta paginada no servidor
+- busca por nome
+- filtro por categoria
+- faixa de preço e comissão mínima
+- ordenação por atualização, comissão, vendas e preço
+- favoritos por usuário
+- estados reais de erro, carregamento e catálogo vazio
+
+### Etapa 4 — Produto + Favoritos
+
+Em desenvolvimento. Inclui página individual do produto com dados da fonte e histórico de métricas, além da lista real de produtos favoritados pelo usuário.
 
 ## Fluxo base
 
@@ -52,6 +62,8 @@ Onboarding
 Dashboard
   ↓
 Radar de Produtos
+  ↓
+Produto / Favoritos
 ```
 
 Usuários autenticados que ainda não concluíram o onboarding são direcionados para `/onboarding`. Após salvar as preferências, o acesso segue para `/dashboard`.
