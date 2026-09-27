@@ -106,7 +106,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="lg:pl-60">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface/85 px-4 backdrop-blur lg:hidden">
-          <button type="button" aria-label="Abrir menu" className="cursor-pointer" onClick={() => setAberto(true)}>
+          <button
+            type="button"
+            aria-label="Abrir menu"
+            className="cursor-pointer"
+            onClick={() => setAberto(true)}
+          >
             <Menu className="h-5 w-5" />
           </button>
           <span className="text-sm font-bold">RadarShop AI</span>
