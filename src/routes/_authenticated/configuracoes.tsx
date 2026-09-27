@@ -45,12 +45,8 @@ function SettingsPage() {
     setSelectedCategories(preferences.categories ?? []);
     setGoal(preferences.goal ?? "");
     setVideoStyle(preferences.video_style ?? "");
-    setCommissionMin(
-      preferences.commission_min === null ? "" : String(preferences.commission_min),
-    );
-    setCommissionMax(
-      preferences.commission_max === null ? "" : String(preferences.commission_max),
-    );
+    setCommissionMin(preferences.commission_min === null ? "" : String(preferences.commission_min));
+    setCommissionMax(preferences.commission_max === null ? "" : String(preferences.commission_max));
     setHydrated(true);
   }, [preferences, hydrated]);
 
@@ -67,9 +63,7 @@ function SettingsPage() {
 
   function toggleCategory(slug: string) {
     setSelectedCategories((current) =>
-      current.includes(slug)
-        ? current.filter((category) => category !== slug)
-        : [...current, slug],
+      current.includes(slug) ? current.filter((category) => category !== slug) : [...current, slug],
     );
   }
 
