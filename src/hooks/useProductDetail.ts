@@ -33,9 +33,7 @@ export function useProductDetail(productId: string) {
           .maybeSingle(),
         supabase
           .from("product_metrics_history")
-          .select(
-            "id,price,commission_amount,sales_count,creators_count,source,recorded_at",
-          )
+          .select("id,price,commission_amount,sales_count,creators_count,source,recorded_at")
           .eq("product_id", productId)
           .order("recorded_at", { ascending: false })
           .limit(12),
@@ -45,10 +43,7 @@ export function useProductDetail(productId: string) {
       if (metricsResult.error) throw metricsResult.error;
       if (!productResult.data) return null;
 
-      const rawCategory = productResult.data.categories as
-        | ProductCategory
-        | ProductCategory[]
-        | null;
+      const rawCategory = productResult.data.categories as ProductCategory | ProductCategory[] | null;
       const category = Array.isArray(rawCategory) ? (rawCategory[0] ?? null) : rawCategory;
 
       const product: ProductDetail = {
