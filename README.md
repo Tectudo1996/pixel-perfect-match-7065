@@ -1,24 +1,45 @@
-# Pixel Perfect Replica
+# RadarShop AI
 
-Implement exactly the screenshot and nothing else
+SaaS em desenvolvimento para afiliados brasileiros do TikTok Shop.
 
-This project was built with [Lovable](https://lovable.dev).
+O produto está sendo construído em etapas. A primeira entrega prioriza uma fundação segura e um fluxo completo de autenticação e onboarding antes dos módulos de inteligência de produtos.
 
-## Build with Lovable
+## Stack
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/348d051c-3458-4eb1-87a6-598b02d234d4).
+- React 19 + TypeScript
+- TanStack Start / Router
+- Supabase + PostgreSQL
+- Tailwind CSS 4
+- React Query
+- Radix UI / shadcn
+- Drizzle para migrations
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## Fluxo da etapa 1
 
-## Development
+```text
+Landing
+  ↓
+Cadastro / Login
+  ↓
+Onboarding
+  ↓
+Dashboard
+```
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Usuários autenticados que ainda não concluíram o onboarding são direcionados para `/onboarding`. Após salvar as preferências, o acesso segue para `/dashboard`.
+
+## Desenvolvimento local
+
+Copie o arquivo de exemplo e preencha apenas no seu ambiente local:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+cp .env.example .env
+npm install
 npm run dev
 ```
+
+Nunca versione chaves secretas. Chaves com privilégios administrativos, como `SUPABASE_SERVICE_ROLE_KEY`, devem existir somente no ambiente de servidor.
+
+## Sincronização com Lovable
+
+Este repositório continua conectado ao Lovable. Evite force push, rebase ou alteração do histórico já publicado, pois isso pode quebrar a sincronização do projeto.

@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feat/foundation-onboarding
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Lint owned application files
+        run: >-
+          npx eslint
+          src/components/app-shell.tsx
+          src/routes/auth.tsx
+          src/routes/_authenticated/dashboard.tsx
+          src/routes/_authenticated/onboarding.tsx
+          --max-warnings=0
+
+      - name: Production build
+        run: npm run build
