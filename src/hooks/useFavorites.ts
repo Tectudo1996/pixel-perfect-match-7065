@@ -51,10 +51,7 @@ export function useFavoriteProducts() {
 
       const productsById = new Map(
         (products ?? []).map((product) => {
-          const rawCategory = product.categories as
-            | ProductCategory
-            | ProductCategory[]
-            | null;
+          const rawCategory = product.categories as ProductCategory | ProductCategory[] | null;
           const category = Array.isArray(rawCategory) ? (rawCategory[0] ?? null) : rawCategory;
 
           const normalized: Produto = {
