@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Modo = "entrar" | "criar" | "recuperar";
+type PostAuthDestination = "/onboarding" | "/dashboard";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -27,6 +28,19 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+async function getPostAuthDestination(): Promise<PostAuthDestination> {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return "/onboarding";
+
+  const { data: preferences } = await supabase
+    .from("user_preferences")
+    .select("onboarding_completed")
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+
+  return preferences?.onboarding_completed ? "/dashboard" : "/onboarding";
+}
+
 function AuthPage() {
   const { modo } = Route.useSearch();
   const navigate = useNavigate();
@@ -36,9 +50,18 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard", replace: true });
-    });
+    let active = true;
+
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user || !active) return;
+      const destination = await getPostAuthDestination();
+      if (active) navigate({ to: destination, replace: true });
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   const setModo = (m: Modo) => navigate({ to: "/auth", search: { modo: m } });
@@ -50,13 +73,13 @@ function AuthPage() {
       if (modo === "entrar") {
         const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
-        navigate({ to: "/dashboard", replace: true });
+        navigate({ to: await getPostAuthDestination(), replace: true });
       } else if (modo === "criar") {
         const { data, error } = await supabase.auth.signUp({
           email,
           password: senha,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth?modo=entrar`,
             data: { full_name: nome },
           },
         });
@@ -83,7 +106,7 @@ function AuthPage() {
   async function handleGoogle() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth?modo=entrar`,
     });
     if (result.error) {
       setLoading(false);
@@ -91,7 +114,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: await getPostAuthDestination(), replace: true });
   }
 
   const titulos: Record<Modo, string> = {
