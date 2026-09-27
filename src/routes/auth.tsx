@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Radar, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { cloudClient as supabase } from "@/lib/cloud-client";
+import { lovableAuthClient } from "@/lib/lovable-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,7 +105,7 @@ function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
+    const result = await lovableAuthClient.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/auth?modo=entrar`,
     });
     if (result.error) {

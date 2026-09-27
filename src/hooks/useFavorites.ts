@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudClient as supabase } from "@/lib/cloud-client";
 
 export function useFavorites() {
   return useQuery({
