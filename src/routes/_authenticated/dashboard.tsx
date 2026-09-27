@@ -61,14 +61,7 @@ const labels: Record<string, string> = {
 function DashboardPage() {
   const { data: profile } = useProfile();
   const { data: preferences } = usePreferences();
-  const {
-    data: overview,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isFetching,
-  } = useDashboardOverview();
+  const { data: overview, isLoading, isError, error, refetch, isFetching } = useDashboardOverview();
 
   const firstName = profile?.full_name?.trim().split(/\s+/)[0] || "Afiliado";
   const categories = preferences?.categories ?? [];
@@ -82,8 +75,8 @@ function DashboardPage() {
           </span>
           <h1 className="mt-2 text-2xl font-bold md:text-3xl">Olá, {firstName}.</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Acompanhe o que já existe no sistema e use seus atalhos para continuar a operação.
-            Os números abaixo vêm diretamente do banco — sem dados simulados.
+            Acompanhe o que já existe no sistema e use seus atalhos para continuar a operação. Os
+            números abaixo vêm diretamente do banco — sem dados simulados.
           </p>
         </div>
       </section>
@@ -111,19 +104,19 @@ function DashboardPage() {
           <MetricCard
             icon={PackageSearch}
             label="Produtos disponíveis"
-            value={isLoading ? null : overview?.productsCount ?? 0}
+            value={isLoading ? null : (overview?.productsCount ?? 0)}
             description="Produtos atualmente cadastrados no radar."
           />
           <MetricCard
             icon={Bookmark}
             label="Favoritos"
-            value={isLoading ? null : overview?.favoritesCount ?? 0}
+            value={isLoading ? null : (overview?.favoritesCount ?? 0)}
             description="Produtos salvos na sua conta."
           />
           <MetricCard
             icon={FileText}
             label="Projetos de conteúdo"
-            value={isLoading ? null : overview?.projectsCount ?? 0}
+            value={isLoading ? null : (overview?.projectsCount ?? 0)}
             description="Rascunhos e projetos vinculados ao seu usuário."
           />
           <MetricCard
@@ -228,7 +221,9 @@ function DashboardPage() {
               />
               <ProfileRow
                 label="Vídeos"
-                value={(preferences?.video_style && labels[preferences.video_style]) || "Não informado"}
+                value={
+                  (preferences?.video_style && labels[preferences.video_style]) || "Não informado"
+                }
               />
               <ProfileRow
                 label="Categorias"
