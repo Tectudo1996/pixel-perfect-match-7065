@@ -2,12 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Produto, ProductCategory } from "@/types/product";
 
-export type RadarSort =
-  | "recent"
-  | "commission_desc"
-  | "sales_desc"
-  | "price_asc"
-  | "price_desc";
+export type RadarSort = "recent" | "commission_desc" | "sales_desc" | "price_asc" | "price_desc";
 
 export type RadarFilters = {
   search: string;
