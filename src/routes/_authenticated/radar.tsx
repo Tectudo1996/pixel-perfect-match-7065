@@ -10,7 +10,8 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import { ProductCard, EmptyState, useFavorites } from "@/components/product-card";
+import { ProductCard, EmptyState } from "@/components/product-card";
+import { useFavorites } from "@/hooks/useFavorites";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCategories } from "@/hooks/useAuth";
