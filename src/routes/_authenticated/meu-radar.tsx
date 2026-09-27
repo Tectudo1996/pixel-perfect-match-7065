@@ -1,11 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-  RefreshCw,
-  Settings2,
-  Sparkles,
-  Target,
-  WandSparkles,
-} from "lucide-react";
+import { RefreshCw, Settings2, Sparkles, Target, WandSparkles } from "lucide-react";
 import { EmptyState, ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -113,8 +107,9 @@ function PersonalRadarPage() {
                   : "Não informada"}
               </p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Esta preferência não altera a seleção de produtos porque o catálogo ainda não possui
-                um dado confiável de compatibilidade criativa. Ela será usada no Estúdio de Conteúdo.
+                Esta preferência não altera a seleção de produtos porque o catálogo ainda não
+                possui um dado confiável de compatibilidade criativa. Ela será usada no Estúdio de
+                Conteúdo.
               </p>
               <Link
                 to="/configuracoes"
@@ -131,9 +126,7 @@ function PersonalRadarPage() {
               <div>
                 <h2 className="text-base font-semibold">Produtos compatíveis com seus filtros</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {isLoading
-                    ? "Consultando o catálogo..."
-                    : formatResultCount(data?.total ?? 0)}
+                  {isLoading ? "Consultando o catálogo..." : formatResultCount(data?.total ?? 0)}
                 </p>
               </div>
               {!isLoading && data?.goal && (
