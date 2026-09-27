@@ -34,10 +34,13 @@ jobs:
           src/components/product-card.tsx
           src/hooks/useDashboard.ts
           src/hooks/useFavorites.ts
+          src/hooks/useProductDetail.ts
           src/hooks/useProductRadar.ts
           src/routes/auth.tsx
           src/routes/_authenticated/dashboard.tsx
+          src/routes/_authenticated/favoritos.tsx
           src/routes/_authenticated/onboarding.tsx
+          'src/routes/_authenticated/produto.$id.tsx'
           src/routes/_authenticated/radar.tsx
           src/types/product.ts
           --max-warnings=0
