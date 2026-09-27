@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudClient as supabase } from "@/lib/cloud-client";
 import type { ProductCategory, Produto } from "@/types/product";
 
 export type ProductDetail = Produto & {

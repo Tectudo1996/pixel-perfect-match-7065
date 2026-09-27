@@ -9,4 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Inject the Lovable Cloud URL and publishable key explicitly in Vite, with public fallbacks, because hosted browser bundles may not receive the managed `VITE_*` aliases.
+- Browser code must use `src/lib/cloud-client.ts`, which owns the public Lovable Cloud URL and publishable key, because hosted bundles may not receive managed `VITE_*` aliases.

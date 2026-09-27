@@ -10,7 +10,7 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudClient as supabase } from "@/lib/cloud-client";
 import { usePreferences, useProfile } from "@/hooks/useAuth";
 import { useDashboardOverview } from "@/hooks/useDashboard";
 import { brl, percent, NA } from "@/lib/format";
