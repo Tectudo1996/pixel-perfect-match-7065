@@ -47,7 +47,9 @@ export function useProductDetail(productId: string) {
         | ProductCategory
         | ProductCategory[]
         | null;
-      const category = Array.isArray(rawCategory) ? (rawCategory[0] ?? null) : rawCategory;
+      const category = Array.isArray(rawCategory)
+        ? (rawCategory[0] ?? null)
+        : rawCategory;
 
       const product: ProductDetail = {
         ...productResult.data,
