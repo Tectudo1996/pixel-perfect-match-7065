@@ -106,7 +106,7 @@ function MarketIntelligencePage() {
   }
 
   const current = data ? selectView(data, view) : [];
-  const currentMeta = views.find((item) => item.id === view) ?? views[0];
+  const currentMeta = views.find((item) => item.id === view) ?? views[0]!;
 
   return (
     <div className="space-y-6">

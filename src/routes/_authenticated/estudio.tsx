@@ -48,9 +48,10 @@ type StudioForm = {
 
 export const Route = createFileRoute("/_authenticated/estudio")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): StudioSearch => ({
-    produto: typeof search["produto"] === "string" ? search["produto"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): StudioSearch => {
+    const produto = typeof search["produto"] === "string" ? search["produto"] : undefined;
+    return produto ? { produto } : {};
+  },
   head: () => ({
     meta: [
       { title: "Estúdio de Conteúdo — RadarShop AI" },

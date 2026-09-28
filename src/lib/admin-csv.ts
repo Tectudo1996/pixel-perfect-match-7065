@@ -86,7 +86,17 @@ export function parseAdminProductCsv(
     };
   }
 
-  const headers = rawRows[0].map((header) => HEADER_ALIASES[normalizeHeader(header)] ?? null);
+  const headerRow = rawRows[0];
+
+  if (!headerRow) {
+    return {
+      delimiter,
+      fatalErrors: ["O CSV não contém um cabeçalho válido."],
+      rows: [],
+    };
+  }
+
+  const headers = headerRow.map((header) => HEADER_ALIASES[normalizeHeader(header)] ?? null);
   const fatalErrors: string[] = [];
 
   if (!headers.includes("name")) {

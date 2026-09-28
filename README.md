@@ -234,3 +234,16 @@ Para habilitar cobrança real, aplique primeiro as migrations 0002 e 0003, mante
 O cancelamento nesta implementação é imediato: depois da confirmação do provedor, o usuário
 retorna ao plano Grátis. Uma política futura de acesso até o fim do período pago exigirá guardar
 e aplicar explicitamente o término do entitlement.
+
+### Etapa 10F — concluída no código
+
+- diagnóstico de prontidão disponível apenas para administradores
+- verificação server-side de Supabase, banco base e migrations 0002/0003
+- verificação de configuração da IA, ingestão, limites e Mercado Pago sem expor segredos
+- indicadores separados para núcleo da aplicação e lançamento pago
+- nova aba `Prontidão` dentro do painel administrativo
+- endpoint protegido `GET /api/admin/readiness`
+- CI reforçado com `tsc --noEmit` após o build de produção
+
+A tela de Prontidão é a referência operacional para ativação do ambiente. Ela não mostra
+valores de chaves; apenas informa se cada dependência está configurada e acessível.
