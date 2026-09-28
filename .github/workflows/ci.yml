@@ -39,7 +39,9 @@ jobs:
           src/hooks/usePersonalRadar.ts
           src/hooks/useProductDetail.ts
           src/hooks/useProductRadar.ts
+          src/lib/admin-csv.ts
           src/routes/auth.tsx
+          src/routes/_authenticated/admin.tsx
           src/routes/_authenticated/configuracoes.tsx
           src/routes/_authenticated/dashboard.tsx
           src/routes/_authenticated/estudio.tsx
