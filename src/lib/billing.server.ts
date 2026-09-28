@@ -6,6 +6,18 @@ import { isUsageLimitsEnabled } from "@/lib/usage.server";
 
 const MERCADO_PAGO_API = "https://api.mercadopago.com";
 
+export type BillingProvider = "mercado_pago" | "paypal" | "pepper";
+
+type BillingProviderOption = {
+  id: BillingProvider;
+  label: string;
+  description: string;
+  configured: boolean;
+  managementAvailable: boolean;
+  automaticEntitlement: boolean;
+  monthlyPrice: number | null;
+};
+
 type MercadoPagoSubscription = {
   id: string;
   external_reference?: string | number | null;
@@ -32,6 +44,32 @@ type WebhookPayload = {
   };
 };
 
+type PayPalSubscription = {
+  id: string;
+  status?: string;
+  custom_id?: string;
+  subscriber?: {
+    payer_id?: string;
+    email_address?: string;
+  };
+  billing_info?: {
+    next_billing_time?: string;
+  };
+  links?: Array<{
+    href?: string;
+    rel?: string;
+    method?: string;
+  }>;
+};
+
+type PayPalWebhook = {
+  id?: string;
+  event_type?: string;
+  resource?: {
+    id?: string;
+  };
+};
+
 export class BillingError extends Error {
   constructor(
     public readonly status: number,
@@ -44,18 +82,22 @@ export class BillingError extends Error {
 
 export async function getBillingSummary(request: Request) {
   const user = await requireApiUser(request);
-  const config = getBillingConfig();
+  const mercadoPago = getBillingConfig();
+  const paypal = getPayPalConfig();
+  const pepper = getPepperConfig();
+  const providers = buildProviderOptions({ mercadoPago, paypal, pepper });
 
   if (!isUsageLimitsEnabled()) {
     return {
       configured: false,
       managementAvailable: false,
-      provider: "mercado_pago" as const,
+      provider: null as BillingProvider | null,
       currency: "BRL" as const,
-      monthlyPrice: config.monthlyPrice,
+      monthlyPrice: null,
       billingStatus: null,
       externalSubscriptionId: null,
       nextPaymentAt: null,
+      providers,
     };
   }
 
@@ -67,15 +109,19 @@ export async function getBillingSummary(request: Request) {
 
   if (error) throw error;
 
+  const provider = normalizeBillingProvider(data?.billing_provider);
+  const activeOption = provider ? providers.find((item) => item.id === provider) : null;
+
   return {
-    configured: config.checkoutEnabled,
-    managementAvailable: config.managementReady,
-    provider: "mercado_pago" as const,
+    configured: providers.some((item) => item.configured),
+    managementAvailable: activeOption?.managementAvailable ?? false,
+    provider,
     currency: "BRL" as const,
-    monthlyPrice: config.monthlyPrice,
+    monthlyPrice: activeOption?.monthlyPrice ?? null,
     billingStatus: data?.billing_status ?? null,
     externalSubscriptionId: data?.billing_external_id ?? null,
     nextPaymentAt: data?.billing_next_payment_at ?? null,
+    providers,
   };
 }
 
