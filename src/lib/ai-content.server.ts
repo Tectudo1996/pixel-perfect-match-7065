@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { ApiAuthError, requireApiUserId } from "@/lib/api-auth.server";
 import { readJsonBody, RequestBodyError } from "@/lib/request-body.server";
+import { refundAiGeneration, reserveAiGeneration, UsageLimitError } from "@/lib/usage.server";
 import {
   aiContentRequestSchema,
   aiContentResponseSchema,
@@ -52,21 +54,35 @@ const outputJsonSchema = {
 
 export async function handleAiContentRequest(request: Request) {
   try {
-    const userId = await authenticateUser(request);
+    const userId = await requireApiUserId(request);
     const body = aiContentRequestSchema.parse(await readJsonBody(request, 32_768));
     const context = await buildGenerationContext(userId, body);
-    const result = await generateWithOpenAI(context.prompt);
+    const reservation = await reserveAiGeneration(userId);
 
-    return Response.json(
-      aiContentResponseSchema.parse({
-        content: result.content,
-        meta: {
-          provider: "openai",
-          model: result.model,
-          context: context.meta,
-        },
-      }),
-    );
+    try {
+      const result = await generateWithOpenAI(context.prompt);
+
+      return Response.json(
+        aiContentResponseSchema.parse({
+          content: result.content,
+          meta: {
+            provider: "openai",
+            model: result.model,
+            context: context.meta,
+          },
+        }),
+      );
+    } catch (error) {
+      if (reservation.reserved) {
+        try {
+          await refundAiGeneration(userId);
+        } catch (refundError) {
+          console.error("[RadarShop AI] AI usage refund error", refundError);
+        }
+      }
+
+      throw error;
+    }
   } catch (error) {
     const response = normalizeError(error);
     return Response.json(
@@ -74,28 +90,6 @@ export async function handleAiContentRequest(request: Request) {
       { status: response.status },
     );
   }
-}
-
-async function authenticateUser(request: Request) {
-  const authorization = request.headers.get("authorization");
-
-  if (!authorization?.startsWith("Bearer ")) {
-    throw new ApiError(401, "AUTH_REQUIRED", "Entre novamente para usar a geração por IA.");
-  }
-
-  const token = authorization.slice("Bearer ".length).trim();
-
-  if (!token) {
-    throw new ApiError(401, "AUTH_REQUIRED", "Entre novamente para usar a geração por IA.");
-  }
-
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-
-  if (error || !data.user) {
-    throw new ApiError(401, "AUTH_REQUIRED", "Sua sessão expirou. Entre novamente.");
-  }
-
-  return data.user.id;
 }
 
 async function buildGenerationContext(userId: string, body: AiContentRequest) {
@@ -316,6 +310,10 @@ class ApiError extends Error {
 function normalizeError(error: unknown) {
   if (error instanceof ApiError) {
     return error;
+  }
+
+  if (error instanceof ApiAuthError || error instanceof UsageLimitError) {
+    return new ApiError(error.status, error.code, error.message);
   }
 
   if (error instanceof RequestBodyError) {
