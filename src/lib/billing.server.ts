@@ -159,7 +159,6 @@ export async function cancelBilling(request: Request) {
   );
 }
 
-
 export async function createMercadoPagoCheckout(request: Request) {
   const user = await requireApiUser(request);
   const config = requireCheckoutConfig();
@@ -921,22 +920,23 @@ async function getOwnedPayPalSubscription(userId: string, accessToken: string, a
     );
   }
 
-  const subscription = await fetchPayPalSubscription(data.billing_external_id, accessToken, apiBase);
+  const subscription = await fetchPayPalSubscription(
+    data.billing_external_id,
+    accessToken,
+    apiBase,
+  );
   assertOwnedPayPalSubscription(subscription, userId);
   return subscription;
 }
 
 async function fetchPayPalSubscription(id: string, accessToken: string, apiBase: string) {
-  const response = await fetch(
-    `${apiBase}/v1/billing/subscriptions/${encodeURIComponent(id)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(20_000),
+  const response = await fetch(`${apiBase}/v1/billing/subscriptions/${encodeURIComponent(id)}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
-  );
+    signal: AbortSignal.timeout(20_000),
+  });
 
   const payload = (await response.json().catch(() => null)) as PayPalSubscription | null;
 
@@ -992,11 +992,7 @@ async function getPayPalAccessToken(config: {
   const payload = (await response.json().catch(() => null)) as { access_token?: string } | null;
 
   if (!response.ok || !payload?.access_token) {
-    throw new BillingError(
-      502,
-      "BILLING_PROVIDER_ERROR",
-      "Não foi possível autenticar no PayPal.",
-    );
+    throw new BillingError(502, "BILLING_PROVIDER_ERROR", "Não foi possível autenticar no PayPal.");
   }
 
   return payload.access_token;
@@ -1015,7 +1011,11 @@ async function verifyPayPalWebhook(
   const transmissionTime = request.headers.get("paypal-transmission-time");
 
   if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
-    throw new BillingError(401, "INVALID_WEBHOOK_SIGNATURE", "Webhook PayPal sem assinatura válida.");
+    throw new BillingError(
+      401,
+      "INVALID_WEBHOOK_SIGNATURE",
+      "Webhook PayPal sem assinatura válida.",
+    );
   }
 
   const response = await fetch(`${config.apiBase}/v1/notifications/verify-webhook-signature`, {
@@ -1041,7 +1041,11 @@ async function verifyPayPalWebhook(
   } | null;
 
   if (!response.ok || payload?.verification_status !== "SUCCESS") {
-    throw new BillingError(401, "INVALID_WEBHOOK_SIGNATURE", "Webhook PayPal com assinatura inválida.");
+    throw new BillingError(
+      401,
+      "INVALID_WEBHOOK_SIGNATURE",
+      "Webhook PayPal com assinatura inválida.",
+    );
   }
 }
 
@@ -1145,7 +1149,8 @@ function buildProviderOptions({
     {
       id: "pepper",
       label: "Pepper",
-      description: "Checkout brasileiro com Pix, cartão e boleto; ativação automática exige a API da conta.",
+      description:
+        "Checkout brasileiro com Pix, cartão e boleto; ativação automática exige a API da conta.",
       configured: pepper.checkoutEnabled,
       managementAvailable: false,
       automaticEntitlement: false,
@@ -1169,9 +1174,7 @@ function getPayPalConfig() {
   const managementReady = isUsageLimitsEnabled() && Boolean(clientId && clientSecret);
   const webhookReady = Boolean(clientId && clientSecret && webhookId);
   const checkoutEnabled =
-    salesFlagEnabled &&
-    managementReady &&
-    Boolean(planId && publicAppUrl && monthlyPrice);
+    salesFlagEnabled && managementReady && Boolean(planId && publicAppUrl && monthlyPrice);
 
   return {
     environment,
@@ -1233,8 +1236,7 @@ function requirePayPalWebhookConfig() {
 function getPepperConfig() {
   const checkoutUrl = normalizeExternalCheckoutUrl(process.env["PEPPER_CHECKOUT_URL"]);
   const monthlyPrice = readPositiveMoney(process.env["PEPPER_PRO_MONTHLY_BRL"]);
-  const checkoutEnabled =
-    envFlag("PEPPER_BILLING_ENABLED") && Boolean(checkoutUrl && monthlyPrice);
+  const checkoutEnabled = envFlag("PEPPER_BILLING_ENABLED") && Boolean(checkoutUrl && monthlyPrice);
 
   return {
     checkoutUrl,
