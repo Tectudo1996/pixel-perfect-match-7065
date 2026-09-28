@@ -302,3 +302,30 @@ estiverem válidos, o botão **Conectar TikTok Shop** inicia o OAuth server-side
 
 O callback oficial retorna `code` e `state` na Redirect URL; o servidor usa o `code` como
 `auth_code` ao trocar por tokens. O painel nunca recebe access token ou refresh token.
+
+
+### Refresh automático e Showcase
+
+Depois que uma conta Creator estiver conectada, o servidor mantém o ciclo do token sem entregar
+credenciais ao navegador.
+
+Antes de uma chamada Creator:
+
+1. verifica a expiração do refresh token
+2. renova o access token quando estiver ausente ou a menos de 5 minutos da expiração
+3. revalida `user_type`, `open_id` e `granted_scopes`
+4. recifra o novo par de tokens com AES-256-GCM
+5. bloqueia a chamada se a identidade retornada no refresh mudar
+
+A leitura da vitrine usa a API oficial:
+
+- `GET /affiliate_creator/202405/showcases/products`
+- scope aceito: `creator.showcase.read` ou `creator.video.write`
+- `page_size`: 1 a 20
+- `origin`: `SHOWCASE` ou `LIVE`
+
+O RadarShop expõe essa leitura somente por uma rota autenticada:
+`GET /api/integrations/tiktok-shop/showcase`.
+
+Esta etapa ainda não importa automaticamente os itens para o Radar. Primeiro validamos a conexão e
+o payload real da conta autorizada; a normalização/ingestão vem depois.

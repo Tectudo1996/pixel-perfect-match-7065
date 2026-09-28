@@ -22,6 +22,8 @@ export type TikTokShopTokenData = {
   open_id: string;
   user_type: number;
   granted_scopes?: Array<string | { scope: string }> | string;
+  access_token_expires_in?: number;
+  refresh_token_expires_in?: number;
   access_token_expire_in?: number;
   refresh_token_expire_in?: number;
   [key: string]: unknown;
@@ -397,6 +399,147 @@ export async function loadTikTokCreatorTokens(userId: string) {
   return decryptTikTokTokens(data.token_ciphertext);
 }
 
+export async function getTikTokShowcaseProducts(
+  userId: string,
+  {
+    origin = "SHOWCASE",
+    pageSize = 20,
+    pageToken,
+  }: {
+    origin?: "SHOWCASE" | "LIVE";
+    pageSize?: number;
+    pageToken?: string;
+  } = {},
+) {
+  if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 20) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_PAGE_SIZE",
+      "O page_size do TikTok Shop precisa ficar entre 1 e 20.",
+      400,
+    );
+  }
+
+  await requireTikTokShopGrantedScope(userId, ["creator.showcase.read", "creator.video.write"]);
+
+  const accessToken = await getValidTikTokCreatorAccessToken(userId);
+
+  return requestTikTokShopApi<{
+    products?: Array<Record<string, unknown>>;
+    next_page_token?: string;
+    total_count?: number;
+    [key: string]: unknown;
+  }>({
+    accessToken,
+    path: "/affiliate_creator/202405/showcases/products",
+    method: "GET",
+    query: {
+      page_size: pageSize,
+      origin,
+      page_token: pageToken?.trim() || undefined,
+    },
+  });
+}
+
+async function requireTikTokShopGrantedScope(userId: string, acceptableScopes: string[]) {
+  const { data, error } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .select("granted_scopes")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_NOT_CONNECTED",
+      "Nenhuma conta Creator do TikTok Shop está conectada.",
+      404,
+    );
+  }
+
+  const granted = new Set(data.granted_scopes);
+  const allowed = acceptableScopes.some((scope) => granted.has(scope));
+
+  if (!allowed) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_SCOPE_REQUIRED",
+      "Sua autorização do TikTok Shop não concedeu acesso à vitrine. Reautorize a conta com o escopo necessário.",
+      403,
+    );
+  }
+}
+
+export async function getValidTikTokCreatorAccessToken(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .select(
+      "open_id,token_ciphertext,access_token_expires_at,refresh_token_expires_at,granted_scopes",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_NOT_CONNECTED",
+      "Nenhuma conta Creator do TikTok Shop está conectada.",
+      404,
+    );
+  }
+
+  const tokens = decryptTikTokTokens(data.token_ciphertext);
+  const now = Date.now();
+  const refreshExpiresAt = data.refresh_token_expires_at
+    ? new Date(data.refresh_token_expires_at).getTime()
+    : null;
+
+  if (refreshExpiresAt !== null && refreshExpiresAt <= now) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_REAUTH_REQUIRED",
+      "A autorização do TikTok Shop expirou. Conecte sua conta novamente.",
+      401,
+    );
+  }
+
+  const accessExpiresAt = data.access_token_expires_at
+    ? new Date(data.access_token_expires_at).getTime()
+    : null;
+  const refreshNeeded = accessExpiresAt === null || accessExpiresAt <= now + 5 * 60 * 1000;
+
+  if (!refreshNeeded) return tokens.accessToken;
+
+  const refreshed = await refreshTikTokCreatorAccessToken(tokens.refreshToken);
+
+  if (refreshed.open_id !== data.open_id) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_IDENTITY_MISMATCH",
+      "O TikTok Shop retornou uma identidade diferente durante o refresh.",
+      409,
+    );
+  }
+
+  const refreshedScopes = normalizeGrantedScopes(refreshed.granted_scopes);
+
+  const { error: updateError } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .update({
+      user_type: refreshed.user_type,
+      granted_scopes: refreshedScopes,
+      token_ciphertext: encryptTikTokTokens({
+        access_token: refreshed.access_token,
+        refresh_token: refreshed.refresh_token,
+      }),
+      access_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(refreshed, "access")),
+      refresh_token_expires_at: expirationFromSeconds(
+        getTokenLifetimeSeconds(refreshed, "refresh"),
+      ),
+    })
+    .eq("user_id", userId);
+
+  if (updateError) throw updateError;
+
+  return refreshed.access_token;
+}
+
 export async function disconnectTikTokShop(userId: string) {
   const { error } = await supabaseAdmin
     .from("tiktok_shop_connections")
@@ -461,8 +604,10 @@ async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTok
       user_type: tokenData.user_type,
       granted_scopes: grantedScopes,
       token_ciphertext: tokenCiphertext,
-      access_token_expires_at: expirationFromSeconds(tokenData.access_token_expire_in),
-      refresh_token_expires_at: expirationFromSeconds(tokenData.refresh_token_expire_in),
+      access_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(tokenData, "access")),
+      refresh_token_expires_at: expirationFromSeconds(
+        getTokenLifetimeSeconds(tokenData, "refresh"),
+      ),
       connected_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -484,6 +629,14 @@ function normalizeGrantedScopes(scopes: TikTokShopTokenData["granted_scopes"]) {
     .map((scope) => (typeof scope === "string" ? scope : scope.scope))
     .map((scope) => scope.trim())
     .filter(Boolean);
+}
+
+function getTokenLifetimeSeconds(tokenData: TikTokShopTokenData, type: "access" | "refresh") {
+  if (type === "access") {
+    return tokenData.access_token_expires_in ?? tokenData.access_token_expire_in;
+  }
+
+  return tokenData.refresh_token_expires_in ?? tokenData.refresh_token_expire_in;
 }
 
 function expirationFromSeconds(seconds: number | undefined) {

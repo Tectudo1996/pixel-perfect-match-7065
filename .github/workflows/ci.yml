@@ -74,6 +74,7 @@ jobs:
           src/routes/api/integrations/tiktok-shop/authorize.ts
           src/routes/api/integrations/tiktok-shop/callback.ts
           src/routes/api/integrations/tiktok-shop/status.ts
+          src/routes/api/integrations/tiktok-shop/showcase.ts
           src/routes/auth.tsx
           src/routes/index.tsx
           src/routes/transparencia.tsx
