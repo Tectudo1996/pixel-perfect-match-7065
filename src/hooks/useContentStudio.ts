@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Tables } from "@/integrations/supabase/types";
+import { aiContentResponseSchema, type AiContentRequest } from "@/lib/ai-content-schema";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 
 export type StudioProduct = Pick<Tables<"products">, "id" | "name" | "image_url" | "store_name">;
@@ -140,5 +141,43 @@ export function useDeleteContentProject() {
       if (error) throw error;
     },
     onSuccess: () => invalidateStudioQueries(queryClient),
+  });
+}
+
+
+export function useGenerateStudioContent() {
+  return useMutation({
+    mutationFn: async (input: AiContentRequest) => {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) throw error;
+
+      const accessToken = data.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Sua sessão expirou. Entre novamente.");
+      }
+
+      const response = await fetch("/api/ai-content", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message =
+          payload && typeof payload === "object" && typeof payload.error === "string"
+            ? payload.error
+            : "Não foi possível gerar o conteúdo agora.";
+        throw new Error(message);
+      }
+
+      return aiContentResponseSchema.parse(payload);
+    },
   });
 }

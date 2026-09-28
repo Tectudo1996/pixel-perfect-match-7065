@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Clapperboard, FilePenLine, Loader2, PackageOpen, Plus, Save, Trash2 } from "lucide-react";
+import {
+  Clapperboard,
+  FilePenLine,
+  Loader2,
+  PackageOpen,
+  Plus,
+  Save,
+  Sparkles,
+  Trash2,
+  WandSparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +20,7 @@ import {
   useContentProjects,
   useCreateContentProject,
   useDeleteContentProject,
+  useGenerateStudioContent,
   useStudioProducts,
   useUpdateContentProject,
   type ContentProject,
@@ -83,9 +94,11 @@ function ContentStudioPage() {
   const createProject = useCreateContentProject();
   const updateProject = useUpdateContentProject();
   const deleteProject = useDeleteContentProject();
+  const generateContent = useGenerateStudioContent();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StudioForm>(() => emptyForm());
+  const [aiStrategyNotes, setAiStrategyNotes] = useState("");
   const [appliedSearchProduct, setAppliedSearchProduct] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,11 +131,13 @@ function ContentStudioPage() {
       produto && products.some((product) => product.id === produto) ? produto : "";
 
     setEditingId(null);
+    setAiStrategyNotes("");
     setForm(emptyForm(preselectedProduct));
   }
 
   function startEdit(project: ContentProject) {
     setEditingId(project.id);
+    setAiStrategyNotes("");
     setForm({
       productId: project.product_id ?? "",
       title: project.title,
@@ -138,6 +153,66 @@ function ContentStudioPage() {
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleGenerateContent() {
+    if (!form.productId) {
+      toast.error("Selecione um produto antes de gerar com IA.");
+      return;
+    }
+
+    const duration = form.durationSeconds.trim() ? Number(form.durationSeconds) : null;
+
+    if (
+      duration !== null &&
+      (!Number.isInteger(duration) || duration <= 0 || duration > 180)
+    ) {
+      toast.error("A duração precisa ser um número inteiro entre 1 e 180 segundos.");
+      return;
+    }
+
+    const hasExistingContent = Boolean(
+      form.script.trim() || form.caption.trim() || form.hashtags.trim() || form.aiPrompt.trim(),
+    );
+
+    if (
+      hasExistingContent &&
+      !window.confirm(
+        "A nova geração substituirá roteiro, legenda, hashtags e prompt audiovisual atuais. Continuar?",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await generateContent.mutateAsync({
+        productId: form.productId,
+        targetAudience: nullableText(form.targetAudience),
+        videoType: nullableText(form.videoType),
+        durationSeconds: duration,
+        tone: nullableText(form.tone),
+      });
+      const generated = response.content;
+
+      setForm((current) => ({
+        ...current,
+        title: current.title.trim() || generated.title,
+        targetAudience: current.targetAudience.trim() || generated.target_audience,
+        videoType: current.videoType.trim() || generated.video_type,
+        durationSeconds: current.durationSeconds.trim()
+          ? current.durationSeconds
+          : String(generated.duration_seconds),
+        tone: current.tone.trim() || generated.tone,
+        script: generated.script,
+        caption: generated.caption,
+        hashtags: generated.hashtags,
+        aiPrompt: generated.ai_prompt,
+      }));
+      setAiStrategyNotes(generated.strategy_notes);
+      toast.success("Conteúdo gerado. Revise antes de salvar.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar o conteúdo.");
+    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -214,7 +289,7 @@ function ContentStudioPage() {
       <section className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="gold-chip inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium">
-            <Clapperboard className="h-3.5 w-3.5" /> Etapa 6
+            <Clapperboard className="h-3.5 w-3.5" /> Estúdio + IA
           </span>
           <h1 className="mt-3 text-2xl font-bold md:text-3xl">Estúdio de Conteúdo</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -230,11 +305,13 @@ function ContentStudioPage() {
       </section>
 
       <section className="rounded-lg border border-gold/30 bg-gold-soft/50 p-4">
-        <p className="text-sm font-medium">Base real primeiro</p>
+        <p className="flex items-center gap-2 text-sm font-medium">
+          <Sparkles className="h-4 w-4" /> IA personalizada pelo contexto real
+        </p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Nesta etapa o Estúdio salva e edita o trabalho de verdade. A IA automática ainda não é
-          acionada: o campo de prompt guarda o material preparado para a próxima fase, sem simular
-          uma geração que não aconteceu.
+          A geração usa o produto selecionado, suas preferências, projetos anteriores, histórico do
+          produto e itens da mesma categoria. A chave do provedor fica somente no servidor. O
+          resultado sempre volta para revisão antes de você salvar.
         </p>
       </section>
 
@@ -297,10 +374,36 @@ function ContentStudioPage() {
           </section>
 
           <section className="surface-card p-5 md:p-6">
-            <h2 className="text-base font-semibold">Direção do conteúdo</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Defina para quem o conteúdo será feito e como ele deve funcionar.
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold">Direção do conteúdo</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Defina o que quiser manualmente; campos vazios podem ser completados pela IA.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="gold"
+                disabled={!form.productId || generateContent.isPending}
+                onClick={() => void handleGenerateContent()}
+              >
+                {generateContent.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <WandSparkles className="h-4 w-4" />
+                )}
+                Gerar com IA
+              </Button>
+            </div>
+
+            {aiStrategyNotes && (
+              <div className="mt-4 rounded-md border border-border bg-secondary/40 p-3">
+                <p className="text-xs font-semibold">Estratégia sugerida pela IA</p>
+                <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
+                  {aiStrategyNotes}
+                </p>
+              </div>
+            )}
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Field label="Público-alvo" htmlFor="studio-audience">
