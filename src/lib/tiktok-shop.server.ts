@@ -18,6 +18,8 @@ export type TikTokShopConnectorStatus = {
   appKeyConfigured: boolean;
   appSecretConfigured: boolean;
   credentialsReady: boolean;
+  tokenEncryptionReady: boolean;
+  oauthReady: boolean;
 };
 
 export type TikTokShopTokenData = {
@@ -54,11 +56,16 @@ export function getTikTokShopConnectorStatus(): TikTokShopConnectorStatus {
   const appKeyConfigured = hasEnv("TIKTOK_SHOP_APP_KEY");
   const appSecretConfigured = hasStrongSecret("TIKTOK_SHOP_APP_SECRET");
 
+  const credentialsReady = appKeyConfigured && appSecretConfigured;
+  const tokenEncryptionReady = isTikTokTokenEncryptionKeyValid();
+
   return {
     enabled: envFlag("TIKTOK_SHOP_AFFILIATE_ENABLED"),
     appKeyConfigured,
     appSecretConfigured,
-    credentialsReady: appKeyConfigured && appSecretConfigured,
+    credentialsReady,
+    tokenEncryptionReady,
+    oauthReady: credentialsReady && tokenEncryptionReady,
   };
 }
 
@@ -529,6 +536,28 @@ function decryptTikTokTokens(ciphertext: string) {
       "Não foi possível abrir as credenciais armazenadas do TikTok Shop.",
       500,
     );
+  }
+}
+
+export function normalizeTikTokShopError(error: unknown) {
+  if (error instanceof TikTokShopError) return error;
+
+  console.error("[RadarShop AI] TikTok Shop integration error", error);
+  return new TikTokShopError(
+    "TIKTOK_SHOP_INTERNAL_ERROR",
+    "Não foi possível concluir a operação com o TikTok Shop.",
+    500,
+  );
+}
+
+function isTikTokTokenEncryptionKeyValid() {
+  const raw = process.env["TIKTOK_SHOP_TOKEN_ENCRYPTION_KEY"]?.trim() ?? "";
+  if (!raw) return false;
+
+  try {
+    return Buffer.from(raw, "base64").length === 32;
+  } catch {
+    return false;
   }
 }
 
