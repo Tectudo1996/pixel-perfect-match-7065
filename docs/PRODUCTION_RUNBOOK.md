@@ -369,3 +369,24 @@ O catálogo global do RadarShop deve ser abastecido apenas por uma fonte oficial
 tenha autorização adequada para o aplicativo. Não reutilize dados privados da Showcase como fonte
 global.
 
+
+
+### Descoberta Creator no Meu Radar
+
+A busca de oportunidades usa a operação Creator Search Open Collaboration Product:
+
+- método: `POST`
+- path: `/affiliate_creator/202405/open_collaborations/products/search`
+- scope: `creator.affiliate_collaboration.read`
+- `page_size`: 20
+- ordenação disponível no RadarShop: `commission_rate DESC` ou `units_sold DESC`
+- filtro por texto: `title_keywords`
+
+O endpoint interno é `POST /api/integrations/tiktok-shop/discovery`.
+
+Os resultados não são copiados para `products`. A disponibilidade de colaborações é ligada ao
+Creator autorizado e pode depender de região/elegibilidade; por isso a interface aparece em
+**Meu Radar**, separada do catálogo global.
+
+Nenhum score de venda é inventado nesta etapa. O RadarShop exibe somente campos retornados pela
+API oficial, como preço, comissão, loja, unidades vendidas e link do produto quando presentes.
