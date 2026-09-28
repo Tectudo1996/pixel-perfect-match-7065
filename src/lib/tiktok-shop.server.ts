@@ -557,8 +557,7 @@ function normalizeTikTokOpportunity(
     imageUrl: normalizeHttpUrl(product.main_image_url),
     shopName: product.shop?.name?.trim() || null,
     saleRegion: product.sale_region?.trim().toUpperCase() || null,
-    hasInventory:
-      typeof product.has_inventory === "boolean" ? product.has_inventory : null,
+    hasInventory: typeof product.has_inventory === "boolean" ? product.has_inventory : null,
     unitsSold,
     currency: priceRange?.currency?.trim().toUpperCase() || null,
     minimumPrice: parseNonNegativeMoney(priceRange?.minimum_amount),
