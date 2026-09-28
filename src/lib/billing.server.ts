@@ -60,9 +60,7 @@ export async function getBillingSummary(request: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("user_subscriptions")
-    .select(
-      "billing_provider,billing_external_id,billing_status,billing_next_payment_at",
-    )
+    .select("billing_provider,billing_external_id,billing_status,billing_next_payment_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -148,11 +146,7 @@ export async function createMercadoPagoCheckout(request: Request) {
 
   if (!response.ok || !payload?.id || !payload.init_point) {
     console.error("[RadarShop AI] Mercado Pago checkout error", response.status, payload);
-    throw new BillingError(
-      502,
-      "BILLING_PROVIDER_ERROR",
-      "O checkout não pôde ser criado agora.",
-    );
+    throw new BillingError(502, "BILLING_PROVIDER_ERROR", "O checkout não pôde ser criado agora.");
   }
 
   const { error: saveError } = await supabaseAdmin.from("user_subscriptions").upsert(
@@ -194,7 +188,7 @@ export async function handleMercadoPagoWebhook(request: Request) {
   const body = (await readJsonBody(request, 65_536)) as WebhookPayload;
   const resourceId = dataId ?? (body.data?.id ? String(body.data.id) : null);
   const eventType = url.searchParams.get("type") ?? body.type ?? "unknown";
-  const providerEventId = body.id ? String(body.id) : xRequestId ?? randomUUID();
+  const providerEventId = body.id ? String(body.id) : (xRequestId ?? randomUUID());
 
   await recordWebhookEvent({
     providerEventId,
@@ -244,7 +238,11 @@ export async function handleMercadoPagoWebhook(request: Request) {
 }
 
 export function normalizeBillingError(error: unknown) {
-  if (error instanceof BillingError || error instanceof ApiAuthError || error instanceof RequestBodyError) {
+  if (
+    error instanceof BillingError ||
+    error instanceof ApiAuthError ||
+    error instanceof RequestBodyError
+  ) {
     return new BillingError(error.status, error.code, error.message);
   }
 
@@ -256,8 +254,7 @@ async function reconcileMercadoPagoSubscription(subscription: MercadoPagoSubscri
   const userId =
     typeof subscription.external_reference === "string"
       ? subscription.external_reference
-      : subscription.external_reference !== null &&
-          subscription.external_reference !== undefined
+      : subscription.external_reference !== null && subscription.external_reference !== undefined
         ? String(subscription.external_reference)
         : "";
 
@@ -293,7 +290,11 @@ async function reconcileMercadoPagoSubscription(subscription: MercadoPagoSubscri
     return;
   }
 
-  if (providerStatus === "paused" || providerStatus === "cancelled" || providerStatus === "canceled") {
+  if (
+    providerStatus === "paused" ||
+    providerStatus === "cancelled" ||
+    providerStatus === "canceled"
+  ) {
     const { error } = await supabaseAdmin.from("user_subscriptions").upsert(
       {
         ...baseValues,
