@@ -290,3 +290,13 @@ A migration 0004 deve ser aplicada antes de habilitar PayPal ou Pepper em produ�
 - Admin → Prontidão reconhece Lovable AI ou OpenAI externo como provedores válidos
 
 No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
+
+
+### Etapa 11C — segurança do checkout assistido Pepper
+
+- início do checkout Pepper passa a ser registrado como pendente no servidor
+- um checkout Pepper pendente bloqueia a abertura simultânea de Mercado Pago ou PayPal
+- o usuário pode cancelar o checkout Pepper pendente e liberar a escolha de outro gateway
+- o cancelamento local não finge cancelar uma assinatura paga na Pepper
+- contas Pro ativadas manualmente pela Pepper continuam exigindo suporte/API real para cancelamento
+- nenhuma ativação automática do Pro foi adicionada sem Webhook/API validado
