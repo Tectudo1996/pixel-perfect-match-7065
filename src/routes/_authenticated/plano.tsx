@@ -16,9 +16,10 @@ type PlanSearch = {
 
 export const Route = createFileRoute("/_authenticated/plano")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): PlanSearch => ({
-    checkout: typeof search["checkout"] === "string" ? search["checkout"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): PlanSearch => {
+    const checkout = typeof search["checkout"] === "string" ? search["checkout"] : undefined;
+    return checkout ? { checkout } : {};
+  },
   head: () => ({
     meta: [
       { title: "Plano e uso — RadarShop AI" },
