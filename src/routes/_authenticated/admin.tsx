@@ -363,8 +363,7 @@ function ProductsTab({
       imageUrl: product.image_url ?? "",
       categoryId: product.category_id ?? "",
       price: product.price === null ? "" : String(product.price),
-      commissionAmount:
-        product.commission_amount === null ? "" : String(product.commission_amount),
+      commissionAmount: product.commission_amount === null ? "" : String(product.commission_amount),
       commissionPercent:
         product.commission_percent === null ? "" : String(product.commission_percent),
       storeName: product.store_name ?? "",
@@ -819,7 +818,9 @@ function ImportTab({
       await saveDefaults.mutateAsync(source);
       toast.success("Fonte padrão salva.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível salvar a configuração.");
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar a configuração.",
+      );
     }
   }
 
@@ -894,8 +895,9 @@ function ImportTab({
       <section className="rounded-lg border border-border bg-secondary/30 p-4">
         <p className="text-sm font-medium">Integrações futuras</p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          APIs oficiais ou provedores comerciais poderão substituir o CSV. Segredos e chaves privadas
-          deverão permanecer no servidor; esta tela não solicita nem armazena credenciais sensíveis.
+          APIs oficiais ou provedores comerciais poderão substituir o CSV. Segredos e chaves
+          privadas deverão permanecer no servidor; esta tela não solicita nem armazena credenciais
+          sensíveis.
         </p>
       </section>
 
@@ -909,7 +911,12 @@ function ImportTab({
                 {validRows.length} válidas · {invalidRows.length} com erro
               </p>
             </div>
-            <Button type="button" variant="gold" disabled={!canImport} onClick={() => void handleImport()}>
+            <Button
+              type="button"
+              variant="gold"
+              disabled={!canImport}
+              onClick={() => void handleImport()}
+            >
               {importProducts.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

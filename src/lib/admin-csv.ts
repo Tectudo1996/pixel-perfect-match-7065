@@ -129,18 +129,14 @@ function validateRow(
   if (!source) errors.push("Fonte obrigatória no CSV ou nas configurações.");
 
   const categorySlug = data.get("category_slug")?.trim() ?? "";
-  const categoryId = categorySlug ? categoryBySlug.get(categorySlug) ?? null : null;
+  const categoryId = categorySlug ? (categoryBySlug.get(categorySlug) ?? null) : null;
 
   if (categorySlug && !categoryId) {
     errors.push('Categoria "' + categorySlug + '" não existe.');
   }
 
   const price = parseDecimal(data.get("price"), "Preço", errors);
-  const commissionAmount = parseDecimal(
-    data.get("commission_amount"),
-    "Comissão em R$",
-    errors,
-  );
+  const commissionAmount = parseDecimal(data.get("commission_amount"), "Comissão em R$", errors);
   const commissionPercent = parseDecimal(
     data.get("commission_percent"),
     "Comissão percentual",
@@ -198,12 +194,7 @@ function nullableText(value: string | undefined) {
   return normalized ? normalized : null;
 }
 
-function parseDecimal(
-  raw: string | undefined,
-  label: string,
-  errors: string[],
-  max?: number,
-) {
+function parseDecimal(raw: string | undefined, label: string, errors: string[], max?: number) {
   if (!raw?.trim()) return null;
 
   const cleaned = raw.trim().replace(/R\$/gi, "").replace(/%/g, "").replace(/\s/g, "");

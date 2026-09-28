@@ -104,7 +104,9 @@ export function useAdminOverview(enabled: boolean) {
         supabase.from("products").select("source"),
       ]);
 
-      const errors = [users.error, products.error, categories.error, sourceRows.error].filter(Boolean);
+      const errors = [users.error, products.error, categories.error, sourceRows.error].filter(
+        Boolean,
+      );
       if (errors.length) throw errors[0];
 
       const sourceCounts = new Map<string, number>();
@@ -395,9 +397,7 @@ export function useImportAdminProducts() {
         const { data, error } = await supabase
           .from("products")
           .insert(inserts)
-          .select(
-            "id,price,commission_amount,sales_count,creators_count,source,data_updated_at",
-          );
+          .select("id,price,commission_amount,sales_count,creators_count,source,data_updated_at");
 
         if (error) throw error;
 
