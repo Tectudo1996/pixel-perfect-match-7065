@@ -121,3 +121,17 @@ Este repositório continua conectado ao Lovable. Evite force push, rebase ou alt
 - importação CSV com validação linha a linha
 - snapshot inicial de métricas para produtos importados
 - nenhuma credencial privada armazenada no navegador
+
+
+### Etapa 8 — concluída no código
+
+- Inteligência de Mercado baseada em dados observados
+- Índice de Oportunidade de 0–100 com cobertura explícita
+- ritmo de vendas calculado pelo histórico de coletas
+- concorrência relativa baseada em criadores informados
+- comissão comparada sem misturar R$ e percentual
+- Produtos Novos, Baixa Concorrência e Antes de Viralizar
+- Segunda Onda baseada em re-aceleração entre pelo menos três coletas
+- Caçador de Oportunidades com critérios transparentes
+- leitura de crescimento adicionada à página individual do produto
+- nenhum índice é apresentado como probabilidade de venda

@@ -36,16 +36,19 @@ jobs:
           src/hooks/useContentStudio.ts
           src/hooks/useDashboard.ts
           src/hooks/useFavorites.ts
+          src/hooks/useMarketIntelligence.ts
           src/hooks/usePersonalRadar.ts
           src/hooks/useProductDetail.ts
           src/hooks/useProductRadar.ts
           src/lib/admin-csv.ts
+          src/lib/market-intelligence.ts
           src/routes/auth.tsx
           src/routes/_authenticated/admin.tsx
           src/routes/_authenticated/configuracoes.tsx
           src/routes/_authenticated/dashboard.tsx
           src/routes/_authenticated/estudio.tsx
           src/routes/_authenticated/favoritos.tsx
+          src/routes/_authenticated/inteligencia.tsx
           src/routes/_authenticated/meu-radar.tsx
           src/routes/_authenticated/onboarding.tsx
           'src/routes/_authenticated/produto.$id.tsx'
