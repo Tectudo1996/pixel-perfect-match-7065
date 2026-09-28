@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/integrations/tiktok-shop/showcase")({
             await getTikTokShowcaseProducts(userId, {
               origin,
               pageSize,
-              pageToken,
+              ...(pageToken ? { pageToken } : {}),
             }),
           );
         } catch (error) {
