@@ -4,8 +4,7 @@ export const Route = createFileRoute("/api/webhooks/paypal")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { handlePayPalWebhook, normalizeBillingError } =
-          await import("@/lib/billing.server");
+        const { handlePayPalWebhook, normalizeBillingError } = await import("@/lib/billing.server");
 
         try {
           return Response.json(await handlePayPalWebhook(request), { status: 200 });
