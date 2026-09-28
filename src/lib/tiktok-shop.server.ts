@@ -419,10 +419,7 @@ export async function getTikTokShowcaseProducts(
     );
   }
 
-  await requireTikTokShopGrantedScope(userId, [
-    "creator.showcase.read",
-    "creator.video.write",
-  ]);
+  await requireTikTokShopGrantedScope(userId, ["creator.showcase.read", "creator.video.write"]);
 
   const accessToken = await getValidTikTokCreatorAccessToken(userId);
 
@@ -531,9 +528,7 @@ export async function getValidTikTokCreatorAccessToken(userId: string) {
         access_token: refreshed.access_token,
         refresh_token: refreshed.refresh_token,
       }),
-      access_token_expires_at: expirationFromSeconds(
-        getTokenLifetimeSeconds(refreshed, "access"),
-      ),
+      access_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(refreshed, "access")),
       refresh_token_expires_at: expirationFromSeconds(
         getTokenLifetimeSeconds(refreshed, "refresh"),
       ),
@@ -610,7 +605,9 @@ async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTok
       granted_scopes: grantedScopes,
       token_ciphertext: tokenCiphertext,
       access_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(tokenData, "access")),
-      refresh_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(tokenData, "refresh")),
+      refresh_token_expires_at: expirationFromSeconds(
+        getTokenLifetimeSeconds(tokenData, "refresh"),
+      ),
       connected_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -634,10 +631,7 @@ function normalizeGrantedScopes(scopes: TikTokShopTokenData["granted_scopes"]) {
     .filter(Boolean);
 }
 
-function getTokenLifetimeSeconds(
-  tokenData: TikTokShopTokenData,
-  type: "access" | "refresh",
-) {
+function getTokenLifetimeSeconds(tokenData: TikTokShopTokenData, type: "access" | "refresh") {
   if (type === "access") {
     return tokenData.access_token_expires_in ?? tokenData.access_token_expire_in;
   }
