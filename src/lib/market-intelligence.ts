@@ -252,8 +252,13 @@ function calculateDelta<T extends { recorded_at: string }>(
     return { delta: null, weeklyRate: null, periodDays: null };
   }
 
-  const first = points[0];
-  const last = points[points.length - 1];
+  const first = points.at(0);
+  const last = points.at(-1);
+
+  if (!first || !last) {
+    return { delta: null, weeklyRate: null, periodDays: null };
+  }
+
   const periodDays =
     (new Date(last.recorded_at).getTime() - new Date(first.recorded_at).getTime()) / DAY_MS;
 
@@ -273,9 +278,12 @@ function calculateDelta<T extends { recorded_at: string }>(
 function calculateAcceleration(points: Array<IntelligenceMetricPoint & { sales_count: number }>) {
   if (points.length < 3) return false;
 
-  const first = points[0];
-  const previous = points[points.length - 2];
-  const latest = points[points.length - 1];
+  const first = points.at(0);
+  const previous = points.at(-2);
+  const latest = points.at(-1);
+
+  if (!first || !previous || !latest) return false;
+
   const earlierDays =
     (new Date(previous.recorded_at).getTime() - new Date(first.recorded_at).getTime()) / DAY_MS;
   const recentDays =
