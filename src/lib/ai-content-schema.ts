@@ -27,7 +27,7 @@ export const generatedContentSchema = z.object({
 export const aiContentResponseSchema = z.object({
   content: generatedContentSchema,
   meta: z.object({
-    provider: z.literal("openai"),
+    provider: z.enum(["lovable", "openai"]),
     model: z.string().min(1),
     context: z.object({
       preferenceUsed: z.boolean(),
