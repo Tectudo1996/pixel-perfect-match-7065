@@ -278,3 +278,15 @@ para usuários externos.
 - Pepper não concede Pro automaticamente até a API/Webhook específica da conta ser validada
 
 A migration 0004 deve ser aplicada antes de habilitar PayPal ou Pepper em produção.
+
+### Etapa 11B — IA nativa do Lovable
+
+- Estúdio passa a priorizar o Lovable AI Gateway no Lovable Cloud
+- usa `LOVABLE_API_KEY` gerenciada automaticamente pela plataforma
+- nenhuma chave de IA é enviada ao navegador
+- modelo padrão do gateway: `openai/gpt-5.5`, configurável por `LOVABLE_AI_MODEL`
+- OpenAI externo permanece disponível como fallback para outros ambientes
+- saída estruturada, validação factual e devolução de cota em falhas continuam preservadas
+- Admin → Prontidão reconhece Lovable AI ou OpenAI externo como provedores válidos
+
+No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
