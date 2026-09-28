@@ -1,5 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { ProductIngestItem } from "@/lib/product-ingest-schema";
+import { ingestTrustedProductBatch } from "@/lib/product-ingest.server";
 
 const TIKTOK_SHOP_API_BASE_URL = "https://open-api.tiktokglobalshop.com";
 const TIKTOK_SHOP_AUTH_BASE_URL = "https://auth.tiktok-shops.com";
@@ -438,6 +440,238 @@ export async function getTikTokShowcaseProducts(
       page_token: pageToken?.trim() || undefined,
     },
   });
+}
+
+type TikTokOpenCollaborationProduct = {
+  id?: string;
+  title?: string;
+  detail_link?: string;
+  main_image_url?: string;
+  sale_region?: string;
+  has_inventory?: boolean;
+  units_sold?: number;
+  shop?: {
+    name?: string;
+  };
+  original_price?: TikTokMoneyRange;
+  sales_price?: TikTokMoneyRange;
+  commission?: {
+    amount?: string;
+    currency?: string;
+    rate?: number;
+  };
+};
+
+type TikTokMoneyRange = {
+  currency?: string;
+  minimum_amount?: string;
+  maximum_amount?: string;
+};
+
+export async function getTikTokOpenCollaborationProductsByIds(
+  userId: string,
+  productIds: string[],
+) {
+  const normalizedIds = Array.from(
+    new Set(productIds.map((id) => id.trim()).filter(Boolean)),
+  );
+
+  if (!normalizedIds.length) {
+    return { products: [] as TikTokOpenCollaborationProduct[] };
+  }
+
+  if (normalizedIds.length > 20) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_TOO_MANY_PRODUCT_IDS",
+      "Consulte no máximo 20 produtos do TikTok Shop por lote.",
+      400,
+    );
+  }
+
+  await requireTikTokShopGrantedScope(userId, ["creator.affiliate_collaboration.read"]);
+  const accessToken = await getValidTikTokCreatorAccessToken(userId);
+
+  return requestTikTokShopApi<{
+    products?: TikTokOpenCollaborationProduct[];
+    [key: string]: unknown;
+  }>({
+    accessToken,
+    path: "/affiliate_creator/202509/open_collaborations/products",
+    method: "POST",
+    query: {
+      product_ids: normalizedIds.join(","),
+    },
+    body: {},
+  });
+}
+
+export async function syncTikTokShowcaseToRadar(
+  userId: string,
+  {
+    origin = "SHOWCASE",
+    maxPages = 5,
+  }: {
+    origin?: "SHOWCASE" | "LIVE";
+    maxPages?: number;
+  } = {},
+) {
+  if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 5) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_MAX_PAGES",
+      "A sincronização aceita entre 1 e 5 páginas por execução.",
+      400,
+    );
+  }
+
+  const normalizedByUrl = new Map<string, ProductIngestItem>();
+  let pageToken: string | undefined;
+  let showcaseItems = 0;
+  let skipped = 0;
+  let foreignCurrency = 0;
+  let pagesRead = 0;
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const showcase = await getTikTokShowcaseProducts(userId, {
+      origin,
+      pageSize: 20,
+      ...(pageToken ? { pageToken } : {}),
+    });
+    pagesRead += 1;
+
+    const ids = (showcase.products ?? [])
+      .map((product) => readString(product, "id"))
+      .filter((id): id is string => Boolean(id));
+
+    showcaseItems += ids.length;
+
+    if (ids.length) {
+      const enriched = await getTikTokOpenCollaborationProductsByIds(userId, ids);
+
+      for (const product of enriched.products ?? []) {
+        const normalized = normalizeTikTokProductForRadar(product);
+
+        if (!normalized.product) {
+          skipped += 1;
+          continue;
+        }
+
+        if (normalized.foreignCurrency) foreignCurrency += 1;
+        normalizedByUrl.set(normalized.product.original_url, normalized.product);
+      }
+    }
+
+    const next = readString(showcase, "next_page_token");
+    if (!next) break;
+    pageToken = next;
+  }
+
+  const products = Array.from(normalizedByUrl.values());
+
+  if (!products.length) {
+    return {
+      ok: true,
+      source: "tiktok_shop_creator",
+      pages_read: pagesRead,
+      showcase_items: showcaseItems,
+      normalized: 0,
+      skipped,
+      foreign_currency: foreignCurrency,
+      inserted: 0,
+      updated: 0,
+      metric_snapshots: 0,
+    };
+  }
+
+  const result = await ingestTrustedProductBatch({
+    source: "tiktok_shop_creator",
+    collected_at: new Date().toISOString(),
+    products,
+  });
+
+  return {
+    ...result,
+    pages_read: pagesRead,
+    showcase_items: showcaseItems,
+    normalized: products.length,
+    skipped,
+    foreign_currency: foreignCurrency,
+  };
+}
+
+function normalizeTikTokProductForRadar(product: TikTokOpenCollaborationProduct) {
+  const name = product.title?.trim() ?? "";
+  const originalUrl = normalizeHttpUrl(product.detail_link);
+
+  if (!name || !originalUrl) {
+    return { product: null, foreignCurrency: false };
+  }
+
+  const priceRange = product.sales_price ?? product.original_price;
+  const priceCurrency = priceRange?.currency?.trim().toUpperCase() ?? null;
+  const commissionCurrency = product.commission?.currency?.trim().toUpperCase() ?? null;
+  const foreignCurrency =
+    (priceCurrency !== null && priceCurrency !== "BRL") ||
+    (commissionCurrency !== null && commissionCurrency !== "BRL");
+
+  const price = priceCurrency === "BRL" ? parseNonNegativeMoney(priceRange?.minimum_amount) : null;
+  const commissionAmount =
+    commissionCurrency === "BRL"
+      ? parseNonNegativeMoney(product.commission?.amount)
+      : null;
+  const commissionPercent = normalizeCommissionRate(product.commission?.rate);
+  const imageUrl = normalizeHttpUrl(product.main_image_url);
+  const salesCount =
+    Number.isInteger(product.units_sold) && (product.units_sold ?? -1) >= 0
+      ? product.units_sold
+      : null;
+
+  const normalized: ProductIngestItem = {
+    name,
+    original_url: originalUrl,
+    description: product.sale_region
+      ? `TikTok Shop · região ${product.sale_region.trim().toUpperCase()}`
+      : null,
+    image_url: imageUrl,
+    price,
+    commission_amount: commissionAmount,
+    commission_percent: commissionPercent,
+    store_name: product.shop?.name?.trim() || null,
+    sales_count: salesCount,
+  };
+
+  return {
+    product: normalized,
+    foreignCurrency,
+  };
+}
+
+function normalizeCommissionRate(rate: number | undefined) {
+  if (!Number.isFinite(rate) || rate === undefined || rate < 0) return null;
+  const percent = rate / 100;
+  return percent <= 100 ? percent : null;
+}
+
+function parseNonNegativeMoney(value: string | undefined) {
+  if (!value?.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function normalizeHttpUrl(value: string | undefined) {
+  if (!value?.trim()) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function readString(value: unknown, key: string) {
+  if (!value || typeof value !== "object") return null;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.trim() ? field.trim() : null;
 }
 
 async function requireTikTokShopGrantedScope(userId: string, acceptableScopes: string[]) {
