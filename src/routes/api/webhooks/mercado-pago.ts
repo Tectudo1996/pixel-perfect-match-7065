@@ -4,9 +4,8 @@ export const Route = createFileRoute("/api/webhooks/mercado-pago")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { handleMercadoPagoWebhook, normalizeBillingError } = await import(
-          "@/lib/billing.server"
-        );
+        const { handleMercadoPagoWebhook, normalizeBillingError } =
+          await import("@/lib/billing.server");
 
         try {
           const result = await handleMercadoPagoWebhook(request);
