@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/integrations/tiktok-shop/showcase/syn
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { normalizeTikTokShopError, syncTikTokShowcaseToRadar } =
+        const { normalizeTikTokShopError, syncTikTokShowcasePrivateCache } =
           await import("@/lib/tiktok-shop.server");
 
         try {
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/integrations/tiktok-shop/showcase/syn
           const maxPages = maxPagesRaw ? Number(maxPagesRaw) : 5;
 
           return Response.json(
-            await syncTikTokShowcaseToRadar(userId, {
+            await syncTikTokShowcasePrivateCache(userId, {
               origin,
               maxPages,
             }),
