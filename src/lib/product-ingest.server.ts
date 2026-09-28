@@ -154,9 +154,7 @@ async function ingestProducts(body: ProductIngestRequest) {
     const { data, error } = await supabaseAdmin
       .from("products")
       .insert(inserts)
-      .select(
-        "id,price,commission_amount,sales_count,creators_count,source,data_updated_at",
-      );
+      .select("id,price,commission_amount,sales_count,creators_count,source,data_updated_at");
 
     if (error) throw error;
     snapshots.push(...((data ?? []) as ProductSnapshot[]));
@@ -167,9 +165,7 @@ async function ingestProducts(body: ProductIngestRequest) {
       .from("products")
       .update(update.values)
       .eq("id", update.id)
-      .select(
-        "id,price,commission_amount,sales_count,creators_count,source,data_updated_at",
-      )
+      .select("id,price,commission_amount,sales_count,creators_count,source,data_updated_at")
       .single();
 
     if (error) throw error;
