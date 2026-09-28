@@ -246,8 +246,8 @@ function TikTokOpportunitiesSection({
             <h2 className="text-base font-semibold">Oportunidades oficiais do TikTok Shop</h2>
           </div>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Consulte colaborações abertas disponíveis para a sua conta Creator. Esses resultados
-            são pessoais e não entram no catálogo global do RadarShop.
+            Consulte colaborações abertas disponíveis para a sua conta Creator. Esses resultados são
+            pessoais e não entram no catálogo global do RadarShop.
           </p>
         </div>
         <span className="rounded-full border border-border px-2 py-1 text-[10px] uppercase">
@@ -287,7 +287,11 @@ function TikTokOpportunitiesSection({
               <option value="sales">Mais vendidos</option>
             </select>
             <Button type="button" variant="gold" disabled={searching} onClick={onSearch}>
-              {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              {searching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
               Buscar
             </Button>
           </div>
@@ -394,7 +398,11 @@ function formatOpportunityPrice(product: TikTokCreatorOpportunity) {
   if (product.minimumPrice === null) return "—";
 
   const minimum = formatMoney(product.minimumPrice, product.currency);
-  if (product.maximumPrice === null || product.maximumPrice === product.minimumPrice) return minimum;
+  if (
+    product.maximumPrice === null ||
+    product.maximumPrice === product.minimumPrice
+  )
+    return minimum;
 
   return `${minimum} – ${formatMoney(product.maximumPrice, product.currency)}`;
 }
