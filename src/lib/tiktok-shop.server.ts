@@ -419,6 +419,11 @@ export async function getTikTokShowcaseProducts(
     );
   }
 
+  await requireTikTokShopGrantedScope(userId, [
+    "creator.showcase.read",
+    "creator.video.write",
+  ]);
+
   const accessToken = await getValidTikTokCreatorAccessToken(userId);
 
   return requestTikTokShopApi<{
@@ -436,6 +441,34 @@ export async function getTikTokShowcaseProducts(
       page_token: pageToken?.trim() || undefined,
     },
   });
+}
+
+async function requireTikTokShopGrantedScope(userId: string, acceptableScopes: string[]) {
+  const { data, error } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .select("granted_scopes")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_NOT_CONNECTED",
+      "Nenhuma conta Creator do TikTok Shop está conectada.",
+      404,
+    );
+  }
+
+  const granted = new Set(data.granted_scopes);
+  const allowed = acceptableScopes.some((scope) => granted.has(scope));
+
+  if (!allowed) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_SCOPE_REQUIRED",
+      "Sua autorização do TikTok Shop não concedeu acesso à vitrine. Reautorize a conta com o escopo necessário.",
+      403,
+    );
+  }
 }
 
 export async function getValidTikTokCreatorAccessToken(userId: string) {
