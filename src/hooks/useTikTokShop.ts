@@ -39,6 +39,43 @@ export function useConnectTikTokShop() {
   });
 }
 
+export type TikTokShopRadarSyncResult = {
+  ok: true;
+  source: string;
+  pages_read: number;
+  showcase_items: number;
+  normalized: number;
+  skipped: number;
+  foreign_currency: number;
+  inserted: number;
+  updated: number;
+  metric_snapshots: number;
+};
+
+export function useSyncTikTokShowcase() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const token = await requireAccessToken();
+      return requestJson<TikTokShopRadarSyncResult>(
+        "/api/integrations/tiktok-shop/showcase/sync",
+        token,
+        { method: "POST" },
+      );
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["product-radar"] }),
+        queryClient.invalidateQueries({ queryKey: ["personal-radar"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-overview"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-overview"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-ingestion-runs"] }),
+      ]);
+    },
+  });
+}
+
 export function useDisconnectTikTokShop() {
   const queryClient = useQueryClient();
 
