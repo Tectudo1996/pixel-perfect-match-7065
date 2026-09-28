@@ -60,13 +60,13 @@ export async function handleAiContentRequest(request: Request) {
     const reservation = await reserveAiGeneration(userId);
 
     try {
-      const result = await generateWithOpenAI(context.prompt);
+      const result = await generateWithAiProvider(context.prompt);
 
       return Response.json(
         aiContentResponseSchema.parse({
           content: result.content,
           meta: {
-            provider: "openai",
+            provider: result.provider,
             model: result.model,
             context: context.meta,
           },
@@ -197,30 +197,18 @@ async function buildGenerationContext(userId: string, body: AiContentRequest) {
   };
 }
 
-async function generateWithOpenAI(prompt: string) {
-  const apiKey = process.env["OPENAI_API_KEY"];
-  const model = process.env["OPENAI_MODEL"];
-  const baseUrl = (process.env["OPENAI_BASE_URL"] || "https://api.openai.com/v1").replace(
-    /\/$/,
-    "",
-  );
+async function generateWithAiProvider(prompt: string) {
+  const config = getAiProviderConfig();
 
-  if (!apiKey || !model) {
-    throw new ApiError(
-      503,
-      "AI_NOT_CONFIGURED",
-      "A IA ainda não está configurada neste ambiente. Defina OPENAI_API_KEY e OPENAI_MODEL somente no servidor.",
-    );
-  }
-
-  const response = await fetch(`${baseUrl}/responses`, {
+  const response = await fetch(`${config.baseUrl}/responses`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json",
+      ...config.extraHeaders,
     },
     body: JSON.stringify({
-      model,
+      model: config.model,
       store: false,
       max_output_tokens: 2600,
       input: [
@@ -253,7 +241,12 @@ async function generateWithOpenAI(prompt: string) {
   const payload = (await response.json()) as OpenAIResponse;
 
   if (!response.ok) {
-    console.error("[RadarShop AI] OpenAI error", response.status, payload.error?.message);
+    console.error(
+      "[RadarShop AI] AI provider error",
+      config.provider,
+      response.status,
+      payload.error?.message,
+    );
     throw new ApiError(
       502,
       "AI_PROVIDER_ERROR",
@@ -281,8 +274,45 @@ async function generateWithOpenAI(prompt: string) {
 
   return {
     content: generatedContentSchema.parse(parsed),
-    model,
+    provider: config.provider,
+    model: config.model,
   };
+}
+
+function getAiProviderConfig() {
+  const lovableApiKey = process.env["LOVABLE_API_KEY"]?.trim();
+
+  if (lovableApiKey) {
+    return {
+      provider: "lovable" as const,
+      apiKey: lovableApiKey,
+      model: process.env["LOVABLE_AI_MODEL"]?.trim() || "openai/gpt-5.5",
+      baseUrl: "https://ai.gateway.lovable.dev/v1",
+      extraHeaders: {
+        "Lovable-API-Key": lovableApiKey,
+        "X-Lovable-AIG-SDK": "tanstack-ai",
+      },
+    };
+  }
+
+  const openAiApiKey = process.env["OPENAI_API_KEY"]?.trim();
+  const openAiModel = process.env["OPENAI_MODEL"]?.trim();
+
+  if (openAiApiKey && openAiModel) {
+    return {
+      provider: "openai" as const,
+      apiKey: openAiApiKey,
+      model: openAiModel,
+      baseUrl: (process.env["OPENAI_BASE_URL"] || "https://api.openai.com/v1").replace(/\/$/, ""),
+      extraHeaders: {},
+    };
+  }
+
+  throw new ApiError(
+    503,
+    "AI_NOT_CONFIGURED",
+    "A IA ainda não está configurada neste ambiente.",
+  );
 }
 
 function extractOutputText(payload: OpenAIResponse) {
