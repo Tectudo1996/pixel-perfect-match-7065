@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Clapperboard,
   ExternalLink,
   Heart,
   ImageOff,
@@ -157,8 +158,13 @@ function ProductDetailPage() {
             )}
 
             <div className="mt-6 flex flex-wrap gap-3 border-t border-border pt-5">
+              <Button asChild variant="gold">
+                <Link to="/estudio" search={{ produto: product.id }}>
+                  Criar conteúdo <Clapperboard className="h-4 w-4" />
+                </Link>
+              </Button>
               {originalUrl && (
-                <Button asChild variant="gold">
+                <Button asChild variant="outline">
                   <a href={originalUrl} target="_blank" rel="noreferrer noopener">
                     Abrir produto original <ExternalLink className="h-4 w-4" />
                   </a>
