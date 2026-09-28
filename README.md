@@ -393,3 +393,17 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - a Showcase de um Creator não alimenta o catálogo global do RadarShop
 - descoberta global fica reservada para uma API oficial de busca/colaboração aprovada para o app
 
+
+
+### Etapa 12G — oportunidades TikTok no Meu Radar
+
+- integra Creator Search Open Collaboration Product
+- usa `POST /affiliate_creator/202405/open_collaborations/products/search`
+- exige `creator.affiliate_collaboration.read`
+- busca por palavras-chave com até 255 caracteres
+- permite ordenar por maior comissão ou unidades vendidas
+- retorna até 20 oportunidades por chamada
+- resultados ficam ligados à sessão Creator e não são gravados no catálogo global
+- Meu Radar ganhou seção separada de oportunidades oficiais do TikTok Shop
+- exibe preço, comissão, vendas, loja, região e link oficial quando disponíveis
+- não inventa score, preço, comissão ou métrica ausente
