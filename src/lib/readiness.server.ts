@@ -146,25 +146,37 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
   });
 
   const billingEnabled = envFlag("MERCADO_PAGO_BILLING_ENABLED");
-  const billingSecretsReady =
-    hasEnv("MERCADO_PAGO_ACCESS_TOKEN") &&
-    hasStrongSecret("MERCADO_PAGO_WEBHOOK_SECRET") &&
+  const billingAccessReady = hasEnv("MERCADO_PAGO_ACCESS_TOKEN");
+  const webhookSecretReady = hasStrongSecret("MERCADO_PAGO_WEBHOOK_SECRET");
+  const checkoutConfigReady =
+    billingAccessReady &&
     hasPositiveMoney("MERCADO_PAGO_PRO_MONTHLY_BRL") &&
     hasValidPublicUrl("APP_PUBLIC_URL");
 
   checks.push({
-    id: "billing-provider",
-    label: "Mercado Pago",
+    id: "billing-webhook",
+    label: "Reconciliação do Mercado Pago",
+    state:
+      billingAccessReady && webhookSecretReady && billingMigrationReady ? "ready" : "missing",
+    detail:
+      billingAccessReady && webhookSecretReady && billingMigrationReady
+        ? "Webhooks podem continuar sendo validados e reconciliados mesmo com novas vendas pausadas."
+        : "Faltam Access Token, segredo de Webhook ou migration 0003.",
+  });
+
+  checks.push({
+    id: "billing-checkout",
+    label: "Novas assinaturas Pro",
     state: billingEnabled
-      ? billingSecretsReady && billingMigrationReady && usageEnabled
+      ? checkoutConfigReady && billingMigrationReady && usageEnabled
         ? "ready"
         : "error"
       : "disabled",
     detail: billingEnabled
-      ? billingSecretsReady && billingMigrationReady && usageEnabled
-        ? "Billing recorrente está habilitado e com pré-requisitos detectados."
-        : "Billing está ativo, mas faltam credenciais, preço, URL pública, migration 0003 ou limites."
-      : "MERCADO_PAGO_BILLING_ENABLED está desativado.",
+      ? checkoutConfigReady && billingMigrationReady && usageEnabled
+        ? "Checkout recorrente está habilitado para novas assinaturas."
+        : "Novas vendas estão ativas, mas faltam preço, URL pública, credencial, migration 0003 ou limites."
+      : "MERCADO_PAGO_BILLING_ENABLED está desativado; assinaturas existentes ainda podem ser reconciliadas.",
   });
 
   const coreReady = supabaseEnvReady && coreDatabaseReady;
@@ -175,7 +187,8 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
     aiReady &&
     usageEnabled &&
     billingEnabled &&
-    billingSecretsReady;
+    checkoutConfigReady &&
+    webhookSecretReady;
 
   return {
     checkedAt: new Date().toISOString(),
