@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 
 export type TikTokShopConnectionStatus = {
+  enabled: boolean;
+  configured: boolean;
   connected: boolean;
   openId: string | null;
   userType: number | null;
