@@ -349,3 +349,15 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - tabelas de OAuth/tokens ficam sem grants para anon e authenticated
 - somente service_role acessa as credenciais armazenadas
 - migration `0007_tiktok_shop_oauth_storage.sql`
+
+
+### Etapa 12D — conexão TikTok Shop em Configurações
+
+- adiciona card TikTok Shop em Configurações
+- mostra estados: em preparação, configuração pendente, não conectado e conectado
+- só exibe o botão de conexão quando a feature flag e a configuração segura do servidor estão prontas
+- inicia OAuth pelo endpoint autenticado e redireciona para a autorização oficial
+- trata retorno de sucesso/erro do callback sem expor tokens
+- mostra somente metadados não sensíveis da conexão
+- permite desconectar a conta Creator pelo próprio painel
+- integração permanece visualmente em preparação enquanto TIKTOK_SHOP_AFFILIATE_ENABLED=false
