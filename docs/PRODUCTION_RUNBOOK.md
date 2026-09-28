@@ -290,3 +290,15 @@ Rotas preparadas:
 - `DELETE /api/integrations/tiktok-shop/status` — desconecta e remove os tokens
 
 O callback deve ser cadastrado no Partner Center usando o domínio público definitivo.
+
+
+### Interface de conexão
+
+Em **Configurações**, o usuário vê o estado da integração TikTok Shop.
+
+Com `TIKTOK_SHOP_AFFILIATE_ENABLED=false`, a interface mostra **em preparação** e não oferece
+um botão que falharia. Quando a flag estiver ativa e App Key, App Secret e chave de criptografia
+estiverem válidos, o botão **Conectar TikTok Shop** inicia o OAuth server-side.
+
+O callback oficial retorna `code` e `state` na Redirect URL; o servidor usa o `code` como
+`auth_code` ao trocar por tokens. O painel nunca recebe access token ou refresh token.
