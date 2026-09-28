@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Link2, Loader2, Save, Settings2, Unplug } from "lucide-react";
+import { Check, Link2, Loader2, RefreshCw, Save, Settings2, Unplug } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cloudClient as supabase } from "@/lib/cloud-client";
@@ -8,6 +8,7 @@ import { useCategories, usePreferences } from "@/hooks/useAuth";
 import {
   useConnectTikTokShop,
   useDisconnectTikTokShop,
+  useSyncTikTokShowcase,
   useTikTokShopConnection,
 } from "@/hooks/useTikTokShop";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ function SettingsPage() {
   } = useTikTokShopConnection();
   const connectTikTokShop = useConnectTikTokShop();
   const disconnectTikTokShop = useDisconnectTikTokShop();
+  const syncTikTokShowcase = useSyncTikTokShowcase();
 
   const [experienceLevel, setExperienceLevel] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -106,6 +108,137 @@ function SettingsPage() {
       window.location.assign(result.authorizationUrl);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível iniciar a conexão.");
+    }
+  }
+
+  async function handleSyncTikTokShowcase() {
+    try {
+      const result = await syncTikTokShowcase.mutateAsync();
+      const totalChanged = result.inserted + result.updated;
+      const foreignNotice = result.foreign_currency
+        ? ` · ${result.foreign_currency} com moeda diferente de BRL sem valor em Rimport { useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Check, Link2, Loader2, RefreshCw, Save, Settings2, Unplug } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { cloudClient as supabase } from "@/lib/cloud-client";
+import { useCategories, usePreferences } from "@/hooks/useAuth";
+import {
+  useConnectTikTokShop,
+  useDisconnectTikTokShop,
+  useSyncTikTokShowcase,
+  useTikTokShopConnection,
+} from "@/hooks/useTikTokShop";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated/configuracoes")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Configurações — RadarShop AI" },
+      {
+        name: "description",
+        content: "Ajuste as preferências usadas para personalizar o seu Radar.",
+      },
+    ],
+  }),
+  component: SettingsPage,
+});
+
+function SettingsPage() {
+  const queryClient = useQueryClient();
+  const { data: preferences, isLoading: loadingPreferences } = usePreferences();
+  const { data: categories = [], isLoading: loadingCategories } = useCategories();
+  const {
+    data: tiktokShop,
+    isLoading: loadingTikTokShop,
+    isError: tiktokShopError,
+    error: tiktokShopErrorDetail,
+  } = useTikTokShopConnection();
+  const connectTikTokShop = useConnectTikTokShop();
+  const disconnectTikTokShop = useDisconnectTikTokShop();
+  const syncTikTokShowcase = useSyncTikTokShowcase();
+
+  const [experienceLevel, setExperienceLevel] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [goal, setGoal] = useState("");
+  const [videoStyle, setVideoStyle] = useState("");
+  const [commissionMin, setCommissionMin] = useState("");
+  const [commissionMax, setCommissionMax] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("integracao") !== "tiktok-shop") return;
+
+    const status = params.get("status");
+
+    if (status === "connected") {
+      toast.success("TikTok Shop conectado com segurança.");
+      void queryClient.invalidateQueries({ queryKey: ["tiktok-shop-connection"] });
+    } else if (status === "error") {
+      toast.error("Não foi possível concluir a conexão com o TikTok Shop.");
+    }
+
+    params.delete("integracao");
+    params.delete("status");
+    const search = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`,
+    );
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (!preferences || hydrated) return;
+
+    setExperienceLevel(preferences.experience_level ?? "");
+    setSelectedCategories(preferences.categories ?? []);
+    setGoal(preferences.goal ?? "");
+    setVideoStyle(preferences.video_style ?? "");
+    setCommissionMin(preferences.commission_min === null ? "" : String(preferences.commission_min));
+    setCommissionMax(preferences.commission_max === null ? "" : String(preferences.commission_max));
+    setHydrated(true);
+  }, [preferences, hydrated]);
+
+  const canSave = useMemo(
+    () =>
+      hydrated &&
+      experienceLevel.length > 0 &&
+      selectedCategories.length > 0 &&
+      goal.length > 0 &&
+      videoStyle.length > 0 &&
+      !saving,
+    [hydrated, experienceLevel, selectedCategories, goal, videoStyle, saving],
+  );
+
+  async function handleConnectTikTokShop() {
+    try {
+      const result = await connectTikTokShop.mutateAsync();
+      window.location.assign(result.authorizationUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível iniciar a conexão.");
+    }
+  }
+
+
+        : "";
+
+      toast.success(
+        `Radar atualizado: ${totalChanged} produtos processados${foreignNotice}.`,
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível atualizar o Radar pelo TikTok.",
+      );
     }
   }
 
@@ -216,8 +349,10 @@ function SettingsPage() {
         errorDetail={tiktokShopErrorDetail}
         connecting={connectTikTokShop.isPending}
         disconnecting={disconnectTikTokShop.isPending}
+        syncing={syncTikTokShowcase.isPending}
         onConnect={() => void handleConnectTikTokShop()}
         onDisconnect={() => void handleDisconnectTikTokShop()}
+        onSync={() => void handleSyncTikTokShowcase()}
       />
 
       <form onSubmit={handleSave} className="space-y-5">
@@ -353,8 +488,10 @@ function TikTokShopConnectionCard({
   errorDetail,
   connecting,
   disconnecting,
+  syncing,
   onConnect,
   onDisconnect,
+  onSync,
 }: {
   data: ReturnType<typeof useTikTokShopConnection>["data"];
   loading: boolean;
@@ -362,8 +499,10 @@ function TikTokShopConnectionCard({
   errorDetail: unknown;
   connecting: boolean;
   disconnecting: boolean;
+  syncing: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
+  onSync: () => void;
 }) {
   if (loading) {
     return (
@@ -461,16 +600,36 @@ function TikTokShopConnectionCard({
           </div>
         </div>
 
-        <div className="shrink-0">
+        <div className="flex shrink-0 flex-wrap gap-2">
           {connected ? (
-            <Button type="button" variant="outline" disabled={disconnecting} onClick={onDisconnect}>
-              {disconnecting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Unplug className="h-4 w-4" />
-              )}
-              Desconectar
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="gold"
+                disabled={syncing || disconnecting}
+                onClick={onSync}
+              >
+                {syncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Atualizar Radar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={disconnecting || syncing}
+                onClick={onDisconnect}
+              >
+                {disconnecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Unplug className="h-4 w-4" />
+                )}
+                Desconectar
+              </Button>
+            </>
           ) : canConnect ? (
             <Button type="button" variant="gold" disabled={connecting} onClick={onConnect}>
               {connecting ? (
