@@ -181,11 +181,7 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
   checks.push({
     id: "tiktok-shop-affiliate",
     label: "TikTok Shop Affiliate",
-    state: tiktokShop.enabled
-      ? tiktokShop.credentialsReady
-        ? "ready"
-        : "error"
-      : "disabled",
+    state: tiktokShop.enabled ? (tiktokShop.credentialsReady ? "ready" : "error") : "disabled",
     detail: tiktokShop.enabled
       ? tiktokShop.credentialsReady
         ? "Base server-side configurada. O acesso efetivo ainda depende da aprovação do Affiliate API e da autorização do Creator no Partner Center."
