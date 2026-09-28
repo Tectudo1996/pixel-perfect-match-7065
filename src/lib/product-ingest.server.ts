@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { readJsonBody, RequestBodyError } from "@/lib/request-body.server";
 import {
   productIngestRequestSchema,
   type ProductIngestItem,
@@ -21,7 +22,7 @@ export async function handleProductIngestRequest(request: Request) {
   try {
     authorizeIngestion(request);
 
-    const body = productIngestRequestSchema.parse(await request.json());
+    const body = productIngestRequestSchema.parse(await readJsonBody(request, 1_048_576));
     assertUniqueUrls(body);
     const result = await ingestProducts(body);
 
@@ -295,6 +296,9 @@ class ApiError extends Error {
 
 function normalizeError(error: unknown) {
   if (error instanceof ApiError) return error;
+  if (error instanceof RequestBodyError) {
+    return new ApiError(error.status, error.code, error.message);
+  }
 
   console.error("[RadarShop AI] product ingestion error", error);
 

@@ -8,6 +8,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Database,
+  TrendingUp,
   Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,11 @@ const features = [
     text: "Recomendações baseadas nas suas preferências de categoria e faixa de comissão.",
   },
   {
+    icon: TrendingUp,
+    title: "Inteligência de Mercado",
+    text: "Compare sinais de crescimento, concorrência, comissão e novidade com critérios explicáveis.",
+  },
+  {
     icon: Heart,
     title: "Favoritos",
     text: "Salve produtos e mantenha sua lista de trabalho sempre à mão.",
@@ -56,7 +62,7 @@ const features = [
   {
     icon: Wand2,
     title: "Estúdio de Conteúdo",
-    text: "Organize roteiro, legenda, hashtags e prompt audiovisual por projeto.",
+    text: "Crie e organize roteiro, legenda, hashtags e prompt audiovisual, com geração por IA quando configurada.",
   },
   {
     icon: ShieldCheck,
@@ -192,7 +198,12 @@ function Landing() {
       <footer className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span className="font-semibold text-foreground">RadarShop AI</span>
-          <span>Inteligência para afiliados do TikTok Shop · Brasil</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link to="/transparencia" className="hover:text-foreground">
+              Transparência
+            </Link>
+            <span>Inteligência para afiliados do TikTok Shop · Brasil</span>
+          </div>
         </div>
       </footer>
     </div>

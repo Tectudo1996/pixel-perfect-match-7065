@@ -158,3 +158,15 @@ A rota `POST /api/integrations/products` recebe lotes normalizados de até 100 p
 Ela exige `Authorization: Bearer <PRODUCT_INGEST_SECRET>`. A URL original junto com a fonte
 funciona como identidade do produto para decidir entre inserir e atualizar. O endpoint aceita
 campos ausentes sem fabricar valores e registra um snapshot de métricas em cada sincronização.
+
+
+### Etapa 10A — concluída no código
+
+- headers de segurança globais sem bloquear o preview incorporado
+- respostas de API com no-store e Vary: Authorization
+- rotas privadas e APIs marcadas como noindex
+- limite de payload para geração por IA e ingestão externa
+- endpoint GET /api/health
+- página pública de Transparência
+- robots.txt preparado para impedir indexação das áreas privadas
+- preços, planos e gateway de pagamento continuam sem valores inventados

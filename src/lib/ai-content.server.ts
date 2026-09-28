@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { readJsonBody, RequestBodyError } from "@/lib/request-body.server";
 import {
   aiContentRequestSchema,
   aiContentResponseSchema,
@@ -52,7 +53,7 @@ const outputJsonSchema = {
 export async function handleAiContentRequest(request: Request) {
   try {
     const userId = await authenticateUser(request);
-    const body = aiContentRequestSchema.parse(await request.json());
+    const body = aiContentRequestSchema.parse(await readJsonBody(request, 32_768));
     const context = await buildGenerationContext(userId, body);
     const result = await generateWithOpenAI(context.prompt);
 
@@ -315,6 +316,10 @@ class ApiError extends Error {
 function normalizeError(error: unknown) {
   if (error instanceof ApiError) {
     return error;
+  }
+
+  if (error instanceof RequestBodyError) {
+    return new ApiError(error.status, error.code, error.message);
   }
 
   console.error("[RadarShop AI] AI route error", error);
