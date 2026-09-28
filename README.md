@@ -361,3 +361,17 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - mostra somente metadados não sensíveis da conexão
 - permite desconectar a conta Creator pelo próprio painel
 - integração permanece visualmente em preparação enquanto TIKTOK_SHOP_AFFILIATE_ENABLED=false
+
+
+### Etapa 12E — ciclo de token e vitrine Creator
+
+- corrige os nomes oficiais de expiração `access_token_expires_in` e `refresh_token_expires_in`
+- mantém compatibilidade defensiva com a variação antiga já tipada
+- faz refresh automático do access token antes de expirar
+- valida que o `open_id` permanece o mesmo depois do refresh
+- atualiza tokens novamente com AES-256-GCM, sem expor credenciais
+- valida `granted_scopes` antes de chamar a API
+- adiciona leitura autenticada de Get Showcase Products
+- usa o endpoint oficial `GET /affiliate_creator/202405/showcases/products`
+- limita `page_size` ao intervalo oficial de 1 a 20
+- endpoint interno: `GET /api/integrations/tiktok-shop/showcase`
