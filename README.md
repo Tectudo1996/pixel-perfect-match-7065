@@ -336,3 +336,16 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - credenciais permanecem exclusivamente no servidor
 - integração fica desativada por padrão até aprovação no Partner Center
 - Admin → Prontidão passa a mostrar o estado básico do conector
+
+
+### Etapa 12C — OAuth seguro do TikTok Shop
+
+- cria estado OAuth aleatório de uso único e armazena somente o hash no banco
+- estado expira em 10 minutos e não pode ser reutilizado
+- adiciona callback server-side do TikTok Shop
+- tokens de Creator são criptografados com AES-256-GCM antes de persistir
+- access token e refresh token nunca são enviados ao navegador
+- adiciona status e desconexão autenticados
+- tabelas de OAuth/tokens ficam sem grants para anon e authenticated
+- somente service_role acessa as credenciais armazenadas
+- migration `0007_tiktok_shop_oauth_storage.sql`

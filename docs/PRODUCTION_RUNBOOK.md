@@ -24,6 +24,7 @@ Aplique no Lovable Cloud / Supabase de produção, nesta ordem:
 4. `drizzle/migrations/0004_multi_gateway_billing.sql`
 5. `drizzle/migrations/0005_multi_gateway_readiness.sql`
 6. `drizzle/migrations/0006_ingestion_observability.sql`
+7. `drizzle/migrations/0007_tiktok_shop_oauth_storage.sql`
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
@@ -66,8 +67,9 @@ Mantenha desativado até o app receber acesso/allowlist no Partner Center:
 - `TIKTOK_SHOP_AFFILIATE_ENABLED=false`
 - `TIKTOK_SHOP_APP_KEY`
 - `TIKTOK_SHOP_APP_SECRET`
+- `TIKTOK_SHOP_TOKEN_ENCRYPTION_KEY` — 32 bytes aleatórios em base64
 
-`TIKTOK_SHOP_APP_SECRET` é estritamente server-side e nunca deve existir como variável `VITE_*`.
+`TIKTOK_SHOP_APP_SECRET` e `TIKTOK_SHOP_TOKEN_ENCRYPTION_KEY` são estritamente server-side e nunca deve existir como variável `VITE_*`.
 A feature flag impede chamadas externas acidentais antes da aprovação do aplicativo.
 
 ### Planos
@@ -111,7 +113,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. aplique as migrations 0001, 0002, 0003, 0004, 0005 e 0006
+2. aplique as migrations 0001, 0002, 0003, 0004, 0005, 0006 e 0007
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível
@@ -268,3 +270,23 @@ fora do navegador.
 Esta etapa não persiste tokens de Creator. Persistência multiusuário só deve ser adicionada junto
 com armazenamento seguro/criptografado e fluxo de revogação/refresh. Até isso existir, não coloque
 access token ou refresh token em tabelas comuns nem em variáveis `VITE_*`.
+
+
+### OAuth e tokens por usuário
+
+A migration `0007_tiktok_shop_oauth_storage.sql` adiciona duas tabelas server-only:
+
+- `tiktok_shop_oauth_states`: guarda somente SHA-256 do state, usuário, expiração e consumo
+- `tiktok_shop_connections`: guarda metadados da conexão e um payload de tokens criptografado
+
+Os tokens são protegidos com AES-256-GCM usando `TIKTOK_SHOP_TOKEN_ENCRYPTION_KEY`.
+Gere uma chave independente das demais credenciais, com exatamente 32 bytes e codificada em base64.
+
+Rotas preparadas:
+
+- `POST /api/integrations/tiktok-shop/authorize` — cria state e devolve URL de autorização
+- `GET /api/integrations/tiktok-shop/callback` — consome state, troca code e salva tokens
+- `GET /api/integrations/tiktok-shop/status` — retorna apenas metadados não sensíveis
+- `DELETE /api/integrations/tiktok-shop/status` — desconecta e remove os tokens
+
+O callback deve ser cadastrado no Partner Center usando o domínio público definitivo.
