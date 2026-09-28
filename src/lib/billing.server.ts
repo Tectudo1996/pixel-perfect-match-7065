@@ -125,6 +125,41 @@ export async function getBillingSummary(request: Request) {
   };
 }
 
+export async function createBillingCheckout(request: Request) {
+  const provider = getRequestedBillingProvider(request);
+
+  if (provider === "mercado_pago") return createMercadoPagoCheckout(request);
+  if (provider === "paypal") return createPayPalCheckout(request);
+  return createPepperCheckout(request);
+}
+
+export async function syncBilling(request: Request) {
+  const provider = await getUserBillingProvider(request);
+
+  if (provider === "mercado_pago") return syncMercadoPagoBilling(request);
+  if (provider === "paypal") return syncPayPalBilling(request);
+
+  throw new BillingError(
+    409,
+    "BILLING_MANAGEMENT_UNAVAILABLE",
+    "A sincronização automática ainda não está disponível para este gateway.",
+  );
+}
+
+export async function cancelBilling(request: Request) {
+  const provider = await getUserBillingProvider(request);
+
+  if (provider === "mercado_pago") return cancelMercadoPagoSubscription(request);
+  if (provider === "paypal") return cancelPayPalSubscription(request);
+
+  throw new BillingError(
+    409,
+    "BILLING_MANAGEMENT_UNAVAILABLE",
+    "O cancelamento automático ainda não está disponível para este gateway.",
+  );
+}
+
+
 export async function createMercadoPagoCheckout(request: Request) {
   const user = await requireApiUser(request);
   const config = requireCheckoutConfig();
