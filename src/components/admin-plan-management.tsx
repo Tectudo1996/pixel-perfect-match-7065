@@ -8,8 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export function AdminPlanManagement({ enabled }: { enabled: boolean }) {
-  const { data, isLoading, isError, error, refetch, isFetching } =
-    useAdminPlanAccounts(enabled);
+  const { data, isLoading, isError, error, refetch, isFetching } = useAdminPlanAccounts(enabled);
   const updatePlan = useUpdateAdminPlan();
 
   if (isLoading) {
