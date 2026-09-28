@@ -74,7 +74,9 @@ function PlanPage() {
 
       {!data.enforcementEnabled && (
         <section className="rounded-lg border border-gold/30 bg-gold-soft/50 p-4">
-          <p className="text-sm font-medium">Limites preparados, ainda não ativados neste ambiente</p>
+          <p className="text-sm font-medium">
+            Limites preparados, ainda não ativados neste ambiente
+          </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             A estrutura de planos está pronta no código. O bloqueio de uso só entra em vigor após a
             migration correspondente ser aplicada e a configuração do servidor ser habilitada.
