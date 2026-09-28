@@ -56,6 +56,7 @@ jobs:
           src/lib/product-ingest.server.ts
           src/lib/readiness.server.ts
           src/lib/request-body.server.ts
+          src/lib/tiktok-shop.server.ts
           src/lib/usage.server.ts
           src/routes/api/admin/readiness.ts
           src/routes/api/admin/subscriptions.ts

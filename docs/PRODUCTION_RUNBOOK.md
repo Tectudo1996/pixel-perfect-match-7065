@@ -59,6 +59,17 @@ Fora do Lovable Cloud, o fallback externo usa:
 
 - `PRODUCT_INGEST_SECRET` com valor longo e aleatório
 
+### TikTok Shop Affiliate
+
+Mantenha desativado até o app receber acesso/allowlist no Partner Center:
+
+- `TIKTOK_SHOP_AFFILIATE_ENABLED=false`
+- `TIKTOK_SHOP_APP_KEY`
+- `TIKTOK_SHOP_APP_SECRET`
+
+`TIKTOK_SHOP_APP_SECRET` é estritamente server-side e nunca deve existir como variável `VITE_*`.
+A feature flag impede chamadas externas acidentais antes da aprovação do aplicativo.
+
 ### Planos
 
 - `AI_USAGE_LIMITS_ENABLED=false` durante preparação
@@ -234,3 +245,26 @@ consultar/gravar pelo painel, enquanto integrações server-to-server usam o ser
 
 A observabilidade é propositalmente best-effort: uma falha ao registrar o histórico não deve
 interromper uma ingestão válida de produtos.
+
+
+## 12. TikTok Shop Affiliate
+
+A base server-side do conector segue a documentação e o sample oficial do TikTok Shop.
+
+Fluxo preparado:
+
+1. registrar/aprovar o aplicativo Affiliate no TikTok Shop Partner Center
+2. configurar `TIKTOK_SHOP_APP_KEY` e `TIKTOK_SHOP_APP_SECRET`
+3. manter `TIKTOK_SHOP_AFFILIATE_ENABLED=false` enquanto o acesso não estiver liberado
+4. após aprovação, gerar um `state` imprevisível e construir a URL de autorização do Creator
+5. validar o `state` no callback antes de aceitar o `code`
+6. trocar o auth code pelo access/refresh token no servidor
+7. validar `code == 0`, `user_type == 1` e os scopes concedidos
+8. somente depois conectar APIs Affiliate e alimentar a ingestão normalizada do RadarShop
+
+O cliente implementa a assinatura HMAC-SHA256 usada pela Open API e mantém app secret e tokens
+fora do navegador.
+
+Esta etapa não persiste tokens de Creator. Persistência multiusuário só deve ser adicionada junto
+com armazenamento seguro/criptografado e fluxo de revogação/refresh. Até isso existir, não coloque
+access token ou refresh token em tabelas comuns nem em variáveis `VITE_*`.
