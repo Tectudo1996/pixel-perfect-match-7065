@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ApiAuthError, requireApiUser } from "@/lib/api-auth.server";
 import { readJsonBody, RequestBodyError } from "@/lib/request-body.server";
@@ -194,7 +194,7 @@ export async function handleMercadoPagoWebhook(request: Request) {
   const body = (await readJsonBody(request, 65_536)) as WebhookPayload;
   const resourceId = dataId ?? (body.data?.id ? String(body.data.id) : null);
   const eventType = url.searchParams.get("type") ?? body.type ?? "unknown";
-  const providerEventId = body.id ? String(body.id) : xRequestId ?? crypto.randomUUID();
+  const providerEventId = body.id ? String(body.id) : xRequestId ?? randomUUID();
 
   await recordWebhookEvent({
     providerEventId,
