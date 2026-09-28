@@ -39,17 +39,13 @@ export function useConnectTikTokShop() {
   });
 }
 
-export type TikTokShopRadarSyncResult = {
+export type TikTokShopShowcaseSyncResult = {
   ok: true;
-  source: string;
   pages_read: number;
   showcase_items: number;
-  normalized: number;
+  saved: number;
   skipped: number;
-  foreign_currency: number;
-  inserted: number;
-  updated: number;
-  metric_snapshots: number;
+  synced_at: string;
 };
 
 export function useSyncTikTokShowcase() {
@@ -58,20 +54,14 @@ export function useSyncTikTokShowcase() {
   return useMutation({
     mutationFn: async () => {
       const token = await requireAccessToken();
-      return requestJson<TikTokShopRadarSyncResult>(
+      return requestJson<TikTokShopShowcaseSyncResult>(
         "/api/integrations/tiktok-shop/showcase/sync",
         token,
         { method: "POST" },
       );
     },
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["product-radar"] }),
-        queryClient.invalidateQueries({ queryKey: ["personal-radar"] }),
-        queryClient.invalidateQueries({ queryKey: ["dashboard-overview"] }),
-        queryClient.invalidateQueries({ queryKey: ["admin-overview"] }),
-        queryClient.invalidateQueries({ queryKey: ["admin-ingestion-runs"] }),
-      ]);
+      await queryClient.invalidateQueries({ queryKey: ["tiktok-shop-connection"] });
     },
   });
 }
