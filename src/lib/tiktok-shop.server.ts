@@ -142,8 +142,7 @@ export function generateTikTokShopSignature({
     .join("");
 
   const normalizedContentType = contentType.toLowerCase();
-  const bodyString =
-    body && !normalizedContentType.startsWith("multipart/form-data") ? body : "";
+  const bodyString = body && !normalizedContentType.startsWith("multipart/form-data") ? body : "";
   const signString = `${appSecret}${path}${paramString}${bodyString}${appSecret}`;
 
   return createHmac("sha256", appSecret).update(signString).digest("hex");
@@ -235,9 +234,9 @@ async function requestCreatorToken(path: string, query: Record<string, string>) 
   }
 
   const response = await fetch(url, { method: "GET" });
-  const payload = (await response.json().catch(() => null)) as
-    | TikTokShopEnvelope<TikTokShopTokenData>
-    | null;
+  const payload = (await response
+    .json()
+    .catch(() => null)) as TikTokShopEnvelope<TikTokShopTokenData> | null;
 
   if (!response.ok) {
     throw new TikTokShopError(
