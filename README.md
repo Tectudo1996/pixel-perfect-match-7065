@@ -137,7 +137,7 @@ Este repositório continua conectado ao Lovable. Evite force push, rebase ou alt
 - nenhum índice é apresentado como probabilidade de venda
 
 
-### Etapa 9 — em desenvolvimento
+### Etapa 9 — concluída no código
 
 - geração real de conteúdo pelo servidor usando um provedor de IA
 - saída estruturada para roteiro, legenda, hashtags e prompt audiovisual
@@ -145,4 +145,16 @@ Este repositório continua conectado ao Lovable. Evite force push, rebase ou alt
 - comparação com produtos da mesma categoria para sugerir diferenciação
 - nenhuma chave de IA é enviada ao navegador
 - o usuário revisa a geração antes de salvar no Estúdio
-- integrações externas de catálogo ainda dependem da escolha e das credenciais do provedor de dados
+- endpoint server-to-server para ingestão de produtos por integrações externas
+- autenticação da ingestão por segredo mantido apenas no servidor
+- atualização do produto identificada por fonte + URL original
+- cada sincronização grava um novo snapshot no histórico de métricas
+- integração não fica presa a um fornecedor específico; crawlers e parceiros podem usar o mesmo contrato
+
+
+## API de ingestão externa
+
+A rota `POST /api/integrations/products` recebe lotes normalizados de até 100 produtos.
+Ela exige `Authorization: Bearer <PRODUCT_INGEST_SECRET>`. A URL original junto com a fonte
+funciona como identidade do produto para decidir entre inserir e atualizar. O endpoint aceita
+campos ausentes sem fabricar valores e registra um snapshot de métricas em cada sincronização.
