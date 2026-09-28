@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark,
   Clapperboard,
+  Crown,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -31,6 +32,7 @@ const primaryNav = [
 ] as const;
 
 const accountNav = [
+  { to: "/plano", label: "Plano e uso", icon: Crown },
   { to: "/perfil", label: "Perfil", icon: UserRound },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
@@ -140,6 +142,7 @@ type NavItem = {
     | "/inteligencia"
     | "/favoritos"
     | "/estudio"
+    | "/plano"
     | "/perfil"
     | "/configuracoes"
     | "/admin";
