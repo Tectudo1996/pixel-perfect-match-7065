@@ -46,12 +46,13 @@ export async function getBillingSummary(request: Request) {
   const user = await requireApiUser(request);
   const config = getBillingConfig();
 
-  if (!config.enabled) {
+  if (!isUsageLimitsEnabled()) {
     return {
       configured: false,
+      managementAvailable: false,
       provider: "mercado_pago" as const,
       currency: "BRL" as const,
-      monthlyPrice: null,
+      monthlyPrice: config.monthlyPrice,
       billingStatus: null,
       externalSubscriptionId: null,
       nextPaymentAt: null,
@@ -67,7 +68,8 @@ export async function getBillingSummary(request: Request) {
   if (error) throw error;
 
   return {
-    configured: true,
+    configured: config.checkoutEnabled,
+    managementAvailable: config.managementReady,
     provider: "mercado_pago" as const,
     currency: "BRL" as const,
     monthlyPrice: config.monthlyPrice,
@@ -79,7 +81,7 @@ export async function getBillingSummary(request: Request) {
 
 export async function createMercadoPagoCheckout(request: Request) {
   const user = await requireApiUser(request);
-  const config = requireBillingConfig();
+  const config = requireCheckoutConfig();
 
   if (!user.email) {
     throw new BillingError(
@@ -173,7 +175,7 @@ export async function createMercadoPagoCheckout(request: Request) {
 
 export async function syncMercadoPagoBilling(request: Request) {
   const user = await requireApiUser(request);
-  const config = requireBillingConfig();
+  const config = requireManagementConfig();
   const subscription = await getOwnedMercadoPagoSubscription(user.id, config.accessToken);
 
   await reconcileMercadoPagoSubscription(subscription);
@@ -186,7 +188,7 @@ export async function syncMercadoPagoBilling(request: Request) {
 
 export async function cancelMercadoPagoSubscription(request: Request) {
   const user = await requireApiUser(request);
-  const config = requireBillingConfig();
+  const config = requireManagementConfig();
   const current = await getOwnedMercadoPagoSubscription(user.id, config.accessToken);
 
   if (current.status === "canceled" || current.status === "cancelled") {
@@ -228,7 +230,7 @@ export async function cancelMercadoPagoSubscription(request: Request) {
 }
 
 export async function handleMercadoPagoWebhook(request: Request) {
-  const config = requireBillingConfig();
+  const config = requireWebhookConfig();
   const url = new URL(request.url);
   const dataId = url.searchParams.get("data.id") ?? url.searchParams.get("data_id");
   const xSignature = request.headers.get("x-signature");
@@ -545,13 +547,19 @@ function getBillingConfig() {
   const publicAppUrl = normalizePublicUrl(process.env["APP_PUBLIC_URL"]);
   const accessToken = process.env["MERCADO_PAGO_ACCESS_TOKEN"]?.trim() ?? "";
   const webhookSecret = process.env["MERCADO_PAGO_WEBHOOK_SECRET"]?.trim() ?? "";
-  const enabled =
-    process.env["MERCADO_PAGO_BILLING_ENABLED"]?.trim().toLowerCase() === "true" &&
-    isUsageLimitsEnabled() &&
-    Boolean(accessToken && webhookSecret && monthlyPrice && publicAppUrl);
+  const salesFlagEnabled =
+    process.env["MERCADO_PAGO_BILLING_ENABLED"]?.trim().toLowerCase() === "true";
+  const managementReady = isUsageLimitsEnabled() && Boolean(accessToken);
+  const webhookReady = Boolean(accessToken && webhookSecret);
+  const checkoutEnabled =
+    salesFlagEnabled &&
+    managementReady &&
+    Boolean(monthlyPrice && publicAppUrl);
 
   return {
-    enabled,
+    checkoutEnabled,
+    managementReady,
+    webhookReady,
     monthlyPrice,
     publicAppUrl,
     accessToken,
@@ -560,14 +568,14 @@ function getBillingConfig() {
   };
 }
 
-function requireBillingConfig() {
+function requireCheckoutConfig() {
   const config = getBillingConfig();
 
-  if (!config.enabled || !config.monthlyPrice || !config.publicAppUrl) {
+  if (!config.checkoutEnabled || !config.monthlyPrice || !config.publicAppUrl) {
     throw new BillingError(
       503,
       "BILLING_NOT_CONFIGURED",
-      "A cobrança do plano Pro ainda não está configurada neste ambiente.",
+      "Novas assinaturas do plano Pro estão desativadas ou incompletas neste ambiente.",
     );
   }
 
@@ -576,6 +584,34 @@ function requireBillingConfig() {
     monthlyPrice: config.monthlyPrice,
     publicAppUrl: config.publicAppUrl,
   };
+}
+
+function requireManagementConfig() {
+  const config = getBillingConfig();
+
+  if (!config.managementReady) {
+    throw new BillingError(
+      503,
+      "BILLING_MANAGEMENT_NOT_CONFIGURED",
+      "A gestão de assinaturas ainda não está configurada neste ambiente.",
+    );
+  }
+
+  return config;
+}
+
+function requireWebhookConfig() {
+  const config = getBillingConfig();
+
+  if (!config.webhookReady) {
+    throw new BillingError(
+      503,
+      "BILLING_WEBHOOK_NOT_CONFIGURED",
+      "A reconciliação de Webhooks ainda não está configurada neste ambiente.",
+    );
+  }
+
+  return config;
 }
 
 function readPositiveMoney(value: string | undefined) {
