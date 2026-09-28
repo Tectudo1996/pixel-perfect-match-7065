@@ -174,7 +174,7 @@ export async function createMercadoPagoCheckout(request: Request) {
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("user_subscriptions")
-    .select("plan,billing_external_id,billing_status")
+    .select("plan,billing_provider,billing_external_id,billing_status")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -184,7 +184,13 @@ export async function createMercadoPagoCheckout(request: Request) {
     throw new BillingError(409, "ALREADY_PRO", "Seu plano Pro já está ativo.");
   }
 
-  if (existing?.billing_external_id && existing.billing_status === "pending") {
+  assertGatewaySwitchAllowed(existing, "mercado_pago");
+
+  if (
+    existing?.billing_provider === "mercado_pago" &&
+    existing.billing_external_id &&
+    existing.billing_status === "pending"
+  ) {
     const current = await fetchMercadoPagoSubscription(
       existing.billing_external_id,
       config.accessToken,
@@ -337,6 +343,8 @@ export async function createPayPalCheckout(request: Request) {
   ) {
     throw new BillingError(409, "ALREADY_PRO", "Seu plano Pro já está ativo.");
   }
+
+  assertGatewaySwitchAllowed(existing, "paypal");
 
   const accessToken = await getPayPalAccessToken(config);
 
@@ -1057,6 +1065,34 @@ async function getUserBillingProvider(request: Request): Promise<BillingProvider
   }
 
   return provider;
+}
+
+function assertGatewaySwitchAllowed(
+  existing: {
+    billing_provider: string | null;
+    billing_external_id: string | null;
+    billing_status: string | null;
+  } | null,
+  requestedProvider: BillingProvider,
+) {
+  if (
+    !existing?.billing_provider ||
+    !existing.billing_external_id ||
+    existing.billing_provider === requestedProvider
+  ) {
+    return;
+  }
+
+  const terminalStatuses = new Set(["canceled", "cancelled", "expired", "inactive"]);
+  if (existing.billing_status && terminalStatuses.has(existing.billing_status.toLowerCase())) {
+    return;
+  }
+
+  throw new BillingError(
+    409,
+    "BILLING_GATEWAY_CONFLICT",
+    "Já existe uma assinatura ou checkout vinculado a outro gateway. Atualize ou cancele esse fluxo antes de trocar.",
+  );
 }
 
 function getRequestedBillingProvider(request: Request): BillingProvider {
