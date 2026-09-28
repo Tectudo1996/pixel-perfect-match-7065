@@ -23,10 +23,7 @@ export async function handleAdminReadinessGet(request: Request) {
     return Response.json(await buildReadinessReport());
   } catch (error) {
     if (error instanceof ApiAuthError || error instanceof ApiAdminError) {
-      return Response.json(
-        { error: error.message, code: error.code },
-        { status: error.status },
-      );
+      return Response.json({ error: error.message, code: error.code }, { status: error.status });
     }
 
     console.error("[RadarShop AI] readiness error", error);
@@ -40,8 +37,7 @@ export async function handleAdminReadinessGet(request: Request) {
 async function buildReadinessReport(): Promise<ReadinessReport> {
   const checks: ReadinessCheck[] = [];
 
-  const supabaseEnvReady =
-    hasEnv("SUPABASE_URL") && hasEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const supabaseEnvReady = hasEnv("SUPABASE_URL") && hasEnv("SUPABASE_SERVICE_ROLE_KEY");
 
   checks.push({
     id: "supabase-env",
