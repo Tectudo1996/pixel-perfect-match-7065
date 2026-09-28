@@ -40,6 +40,41 @@ export function useStartProCheckout() {
   });
 }
 
+export function useSyncBilling() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const token = await requireAccessToken();
+      return requestJson<{ ok: true; status: string }>("/api/billing/sync", token, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => invalidateBillingQueries(queryClient),
+  });
+}
+
+export function useCancelBilling() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const token = await requireAccessToken();
+      return requestJson<{ ok: true; status: string }>("/api/billing/cancel", token, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => invalidateBillingQueries(queryClient),
+  });
+}
+
+async function invalidateBillingQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["billing-summary"] }),
+    queryClient.invalidateQueries({ queryKey: ["plan-usage"] }),
+  ]);
+}
+
 async function requireAccessToken() {
   const { data, error } = await supabase.auth.getSession();
 

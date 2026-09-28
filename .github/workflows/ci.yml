@@ -55,8 +55,10 @@ jobs:
           src/lib/request-body.server.ts
           src/lib/usage.server.ts
           src/routes/api/admin/subscriptions.ts
+          src/routes/api/billing/cancel.ts
           src/routes/api/billing/checkout.ts
           src/routes/api/billing/status.ts
+          src/routes/api/billing/sync.ts
           src/routes/api/ai-content.ts
           src/routes/api/health.ts
           src/routes/api/usage.ts
