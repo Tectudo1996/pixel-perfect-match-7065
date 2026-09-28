@@ -4,8 +4,7 @@ export const Route = createFileRoute("/api/billing/sync")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { normalizeBillingError, syncBilling } =
-          await import("@/lib/billing.server");
+        const { normalizeBillingError, syncBilling } = await import("@/lib/billing.server");
 
         try {
           return Response.json(await syncBilling(request));
