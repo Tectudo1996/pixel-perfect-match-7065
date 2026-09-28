@@ -192,6 +192,14 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
 async function checkTable(
   table: "profiles" | "products" | "user_subscriptions" | "billing_webhook_events",
 ) {
+  if (table === "user_subscriptions") {
+    const { error } = await supabaseAdmin
+      .from("user_subscriptions")
+      .select("user_id", { head: true })
+      .limit(1);
+    return !error;
+  }
+
   const { error } = await supabaseAdmin.from(table).select("id", { head: true }).limit(1);
   return !error;
 }
