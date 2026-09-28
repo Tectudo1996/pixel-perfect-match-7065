@@ -43,7 +43,8 @@ import { useIsAdmin } from "@/hooks/useAuth";
 import { parseAdminProductCsv } from "@/lib/admin-csv";
 import { cn } from "@/lib/utils";
 
-type AdminTab = "visao" | "fontes" | "produtos" | "categorias" | "importacao" | "planos" | "prontidao";
+type AdminTab =
+  "visao" | "fontes" | "produtos" | "categorias" | "importacao" | "planos" | "prontidao";
 
 type ProductForm = {
   name: string;
