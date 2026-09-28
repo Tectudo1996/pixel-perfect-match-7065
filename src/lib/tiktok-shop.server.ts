@@ -1,7 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import type { ProductIngestItem } from "@/lib/product-ingest-schema";
-import { ingestTrustedProductBatch } from "@/lib/product-ingest.server";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 const TIKTOK_SHOP_API_BASE_URL = "https://open-api.tiktokglobalshop.com";
 const TIKTOK_SHOP_AUTH_BASE_URL = "https://auth.tiktok-shops.com";
@@ -472,9 +471,7 @@ export async function getTikTokOpenCollaborationProductsByIds(
   userId: string,
   productIds: string[],
 ) {
-  const normalizedIds = Array.from(
-    new Set(productIds.map((id) => id.trim()).filter(Boolean)),
-  );
+  const normalizedIds = Array.from(new Set(productIds.map((id) => id.trim()).filter(Boolean)));
 
   if (!normalizedIds.length) {
     return { products: [] as TikTokOpenCollaborationProduct[] };
@@ -505,7 +502,7 @@ export async function getTikTokOpenCollaborationProductsByIds(
   });
 }
 
-export async function syncTikTokShowcaseToRadar(
+export async function syncTikTokShowcasePrivateCache(
   userId: string,
   {
     origin = "SHOWCASE",
@@ -523,12 +520,12 @@ export async function syncTikTokShowcaseToRadar(
     );
   }
 
-  const normalizedByUrl = new Map<string, ProductIngestItem>();
+  const rowsByProductId = new Map<string, TablesInsert<"user_tiktok_showcase_products">>();
   let pageToken: string | undefined;
   let showcaseItems = 0;
   let skipped = 0;
-  let foreignCurrency = 0;
   let pagesRead = 0;
+  const syncedAt = new Date().toISOString();
 
   for (let page = 0; page < maxPages; page += 1) {
     const showcase = await getTikTokShowcaseProducts(userId, {
@@ -548,15 +545,14 @@ export async function syncTikTokShowcaseToRadar(
       const enriched = await getTikTokOpenCollaborationProductsByIds(userId, ids);
 
       for (const product of enriched.products ?? []) {
-        const normalized = normalizeTikTokProductForRadar(product);
+        const row = normalizeTikTokProductForPrivateCache(userId, product, syncedAt);
 
-        if (!normalized.product) {
+        if (!row) {
           skipped += 1;
           continue;
         }
 
-        if (normalized.foreignCurrency) foreignCurrency += 1;
-        normalizedByUrl.set(normalized.product.original_url, normalized.product);
+        rowsByProductId.set(row.product_id, row);
       }
     }
 
@@ -565,88 +561,66 @@ export async function syncTikTokShowcaseToRadar(
     pageToken = next;
   }
 
-  const products = Array.from(normalizedByUrl.values());
+  const rows = Array.from(rowsByProductId.values());
 
-  if (!products.length) {
-    return {
-      ok: true,
-      source: "tiktok_shop_creator",
-      pages_read: pagesRead,
-      showcase_items: showcaseItems,
-      normalized: 0,
-      skipped,
-      foreign_currency: foreignCurrency,
-      inserted: 0,
-      updated: 0,
-      metric_snapshots: 0,
-    };
+  if (rows.length) {
+    const { error } = await supabaseAdmin
+      .from("user_tiktok_showcase_products")
+      .upsert(rows, { onConflict: "user_id,product_id" });
+
+    if (error) throw error;
   }
 
-  const result = await ingestTrustedProductBatch({
-    source: "tiktok_shop_creator",
-    collected_at: new Date().toISOString(),
-    products,
-  });
-
   return {
-    ...result,
+    ok: true,
     pages_read: pagesRead,
     showcase_items: showcaseItems,
-    normalized: products.length,
+    saved: rows.length,
     skipped,
-    foreign_currency: foreignCurrency,
+    synced_at: syncedAt,
   };
 }
 
-function normalizeTikTokProductForRadar(product: TikTokOpenCollaborationProduct) {
-  const name = product.title?.trim() ?? "";
-  const originalUrl = normalizeHttpUrl(product.detail_link);
+function normalizeTikTokProductForPrivateCache(
+  userId: string,
+  product: TikTokOpenCollaborationProduct,
+  syncedAt: string,
+): TablesInsert<"user_tiktok_showcase_products"> | null {
+  const productId = product.id?.trim() ?? "";
+  const title = product.title?.trim() ?? "";
 
-  if (!name || !originalUrl) {
-    return { product: null, foreignCurrency: false };
-  }
+  if (!productId || !title) return null;
 
   const priceRange = product.sales_price ?? product.original_price;
-  const priceCurrency = priceRange?.currency?.trim().toUpperCase() ?? null;
-  const commissionCurrency = product.commission?.currency?.trim().toUpperCase() ?? null;
-  const foreignCurrency =
-    (priceCurrency !== null && priceCurrency !== "BRL") ||
-    (commissionCurrency !== null && commissionCurrency !== "BRL");
-
-  const price = priceCurrency === "BRL" ? parseNonNegativeMoney(priceRange?.minimum_amount) : null;
-  const commissionAmount =
-    commissionCurrency === "BRL"
-      ? parseNonNegativeMoney(product.commission?.amount)
-      : null;
-  const commissionPercent = normalizeCommissionRate(product.commission?.rate);
-  const imageUrl = normalizeHttpUrl(product.main_image_url);
-  const salesCount =
+  const commissionRate = normalizeCommissionRate(product.commission?.rate);
+  const unitsSold =
     Number.isInteger(product.units_sold) && (product.units_sold ?? -1) >= 0
       ? product.units_sold
       : null;
 
-  const normalized: ProductIngestItem = {
-    name,
-    original_url: originalUrl,
-    description: product.sale_region
-      ? `TikTok Shop · região ${product.sale_region.trim().toUpperCase()}`
-      : null,
-    image_url: imageUrl,
-    price,
-    commission_amount: commissionAmount,
-    commission_percent: commissionPercent,
-    store_name: product.shop?.name?.trim() || null,
-    sales_count: salesCount,
-  };
-
   return {
-    product: normalized,
-    foreignCurrency,
+    user_id: userId,
+    product_id: productId,
+    title,
+    detail_link: normalizeHttpUrl(product.detail_link),
+    image_url: normalizeHttpUrl(product.main_image_url),
+    shop_name: product.shop?.name?.trim() || null,
+    sale_region: product.sale_region?.trim().toUpperCase() || null,
+    currency: priceRange?.currency?.trim().toUpperCase() || null,
+    minimum_price: parseNonNegativeMoney(priceRange?.minimum_amount),
+    maximum_price: parseNonNegativeMoney(priceRange?.maximum_amount),
+    commission_amount: parseNonNegativeMoney(product.commission?.amount),
+    commission_currency: product.commission?.currency?.trim().toUpperCase() || null,
+    commission_percent: commissionRate,
+    units_sold: unitsSold,
+    has_inventory:
+      typeof product.has_inventory === "boolean" ? product.has_inventory : null,
+    synced_at: syncedAt,
   };
 }
 
 function normalizeCommissionRate(rate: number | undefined) {
-  if (!Number.isFinite(rate) || rate === undefined || rate < 0) return null;
+  if (rate === undefined || !Number.isFinite(rate) || rate < 0) return null;
   const percent = rate / 100;
   return percent <= 100 ? percent : null;
 }
