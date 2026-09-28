@@ -43,14 +43,7 @@ import { useIsAdmin } from "@/hooks/useAuth";
 import { parseAdminProductCsv } from "@/lib/admin-csv";
 import { cn } from "@/lib/utils";
 
-type AdminTab =
-  | "visao"
-  | "fontes"
-  | "produtos"
-  | "categorias"
-  | "importacao"
-  | "planos"
-  | "prontidao";
+type AdminTab = "visao" | "fontes" | "produtos" | "categorias" | "importacao" | "planos" | "prontidao";
 
 type ProductForm = {
   name: string;
@@ -276,8 +269,8 @@ function SourcesTab({
           <h2 className="text-base font-semibold">Saúde das fontes de dados</h2>
         </div>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Acompanhe quando cada fonte atualizou o catálogo e o resultado das últimas ingestões.
-          O histórico não interfere na importação caso a observabilidade esteja indisponível.
+          Acompanhe quando cada fonte atualizou o catálogo e o resultado das últimas ingestões. O
+          histórico não interfere na importação caso a observabilidade esteja indisponível.
         </p>
       </section>
 
