@@ -263,7 +263,7 @@ function PlanPage() {
                 )}
               </div>
 
-              {billing?.configured && billing.externalSubscriptionId && (
+              {billing?.managementAvailable && billing.externalSubscriptionId && (
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
@@ -307,7 +307,7 @@ function PlanPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {billing.externalSubscriptionId && (
+                {billing.managementAvailable && billing.externalSubscriptionId && (
                   <Button
                     type="button"
                     variant="outline"
@@ -332,6 +332,28 @@ function PlanPage() {
                   {billing.billingStatus === "pending" ? "Continuar pagamento" : "Assinar Pro"}
                 </Button>
               </div>
+            </div>
+          ) : billing?.managementAvailable && billing.externalSubscriptionId ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Novas assinaturas estão pausadas.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Sua assinatura já vinculada continua podendo ser sincronizada com o Mercado Pago.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={syncBilling.isPending}
+                onClick={() => void handleSyncBilling()}
+              >
+                {syncBilling.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Atualizar status
+              </Button>
             </div>
           ) : (
             <div>
