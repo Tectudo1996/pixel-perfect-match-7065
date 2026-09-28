@@ -109,3 +109,15 @@ Nunca versione chaves secretas. Chaves com privilégios administrativos, como `S
 ## Sincronização com Lovable
 
 Este repositório continua conectado ao Lovable. Evite force push, rebase ou alteração do histórico já publicado, pois isso pode quebrar a sincronização do projeto.
+
+
+### Etapa 7 — concluída no código
+
+- painel administrativo protegido por role
+- visão de usuários e roles para auditoria
+- cadastro, edição e exclusão de produtos
+- gestão de categorias
+- fontes registradas e fonte padrão de importação
+- importação CSV com validação linha a linha
+- snapshot inicial de métricas para produtos importados
+- nenhuma credencial privada armazenada no navegador
