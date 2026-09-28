@@ -32,6 +32,7 @@ jobs:
           npx eslint
           src/components/app-shell.tsx
           src/components/product-card.tsx
+          src/hooks/useAdmin.ts
           src/hooks/useContentStudio.ts
           src/hooks/useDashboard.ts
           src/hooks/useFavorites.ts
