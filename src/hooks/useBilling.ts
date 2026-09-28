@@ -3,6 +3,7 @@ import { cloudClient as supabase } from "@/lib/cloud-client";
 
 export type BillingSummary = {
   configured: boolean;
+  managementAvailable: boolean;
   provider: "mercado_pago";
   currency: "BRL";
   monthlyPrice: number | null;
