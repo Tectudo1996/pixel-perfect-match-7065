@@ -355,6 +355,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           ai_generations_used: number
@@ -406,27 +427,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -439,17 +439,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      refund_ai_generation: {
-        Args: {
-          _user_id: string
-        }
-        Returns: number
-      }
+      refund_ai_generation: { Args: { _user_id: string }; Returns: number }
       reserve_ai_generation: {
-        Args: {
-          _limit: number
-          _user_id: string
-        }
+        Args: { _limit: number; _user_id: string }
         Returns: {
           allowed: boolean
           period_end: string

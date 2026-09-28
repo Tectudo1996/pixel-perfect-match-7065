@@ -8,6 +8,13 @@
       "when": 1790399539395,
       "tag": "0000_radarshop_core_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790620958978,
+      "tag": "0001_billing_mercado_pago",
+      "breakpoints": true
     }
   ]
 }

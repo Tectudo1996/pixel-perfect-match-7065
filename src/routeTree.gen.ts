@@ -13,16 +13,30 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TransparenciaRouteImport } from './routes/transparencia'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEstudioRouteImport } from './routes/_authenticated/estudio'
 import { Route as AuthenticatedFavoritosRouteImport } from './routes/_authenticated/favoritos'
+import { Route as AuthenticatedInteligenciaRouteImport } from './routes/_authenticated/inteligencia'
 import { Route as AuthenticatedMeuRadarRouteImport } from './routes/_authenticated/meu-radar'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedPlanoRouteImport } from './routes/_authenticated/plano'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
+import { Route as ApiAiContentRouteImport } from './routes/api/ai-content'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiUsageRouteImport } from './routes/api/usage'
 import { Route as AuthenticatedProdutoIdRouteImport } from './routes/_authenticated/produto.$id'
+import { Route as ApiAdminReadinessRouteImport } from './routes/api/admin/readiness'
+import { Route as ApiAdminSubscriptionsRouteImport } from './routes/api/admin/subscriptions'
+import { Route as ApiBillingCancelRouteImport } from './routes/api/billing/cancel'
+import { Route as ApiBillingCheckoutRouteImport } from './routes/api/billing/checkout'
+import { Route as ApiBillingStatusRouteImport } from './routes/api/billing/status'
+import { Route as ApiBillingSyncRouteImport } from './routes/api/billing/sync'
+import { Route as ApiIntegrationsProductsRouteImport } from './routes/api/integrations/products'
+import { Route as ApiWebhooksMercadoPagoRouteImport } from './routes/api/webhooks/mercado-pago'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +55,11 @@ const AuthRoute = AuthRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransparenciaRoute = TransparenciaRouteImport.update({
+  id: '/transparencia',
+  path: '/transparencia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -69,6 +88,12 @@ const AuthenticatedFavoritosRoute = AuthenticatedFavoritosRouteImport.update({
   path: '/favoritos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInteligenciaRoute =
+  AuthenticatedInteligenciaRouteImport.update({
+    id: '/inteligencia',
+    path: '/inteligencia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeuRadarRoute = AuthenticatedMeuRadarRouteImport.update({
   id: '/meu-radar',
   path: '/meu-radar',
@@ -84,46 +109,134 @@ const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlanoRoute = AuthenticatedPlanoRouteImport.update({
+  id: '/plano',
+  path: '/plano',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRadarRoute = AuthenticatedRadarRouteImport.update({
   id: '/radar',
   path: '/radar',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiAiContentRoute = ApiAiContentRouteImport.update({
+  id: '/api/ai-content',
+  path: '/api/ai-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUsageRoute = ApiUsageRouteImport.update({
+  id: '/api/usage',
+  path: '/api/usage',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProdutoIdRoute = AuthenticatedProdutoIdRouteImport.update({
   id: '/produto/$id',
   path: '/produto/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAdminReadinessRoute = ApiAdminReadinessRouteImport.update({
+  id: '/api/admin/readiness',
+  path: '/api/admin/readiness',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSubscriptionsRoute = ApiAdminSubscriptionsRouteImport.update({
+  id: '/api/admin/subscriptions',
+  path: '/api/admin/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBillingCancelRoute = ApiBillingCancelRouteImport.update({
+  id: '/api/billing/cancel',
+  path: '/api/billing/cancel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBillingCheckoutRoute = ApiBillingCheckoutRouteImport.update({
+  id: '/api/billing/checkout',
+  path: '/api/billing/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBillingStatusRoute = ApiBillingStatusRouteImport.update({
+  id: '/api/billing/status',
+  path: '/api/billing/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBillingSyncRoute = ApiBillingSyncRouteImport.update({
+  id: '/api/billing/sync',
+  path: '/api/billing/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiIntegrationsProductsRoute = ApiIntegrationsProductsRouteImport.update({
+  id: '/api/integrations/products',
+  path: '/api/integrations/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksMercadoPagoRoute = ApiWebhooksMercadoPagoRouteImport.update({
+  id: '/api/webhooks/mercado-pago',
+  path: '/api/webhooks/mercado-pago',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/transparencia': typeof TransparenciaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estudio': typeof AuthenticatedEstudioRoute
   '/favoritos': typeof AuthenticatedFavoritosRoute
+  '/inteligencia': typeof AuthenticatedInteligenciaRoute
   '/meu-radar': typeof AuthenticatedMeuRadarRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/plano': typeof AuthenticatedPlanoRoute
   '/radar': typeof AuthenticatedRadarRoute
+  '/api/ai-content': typeof ApiAiContentRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/usage': typeof ApiUsageRoute
   '/produto/$id': typeof AuthenticatedProdutoIdRoute
+  '/api/admin/readiness': typeof ApiAdminReadinessRoute
+  '/api/admin/subscriptions': typeof ApiAdminSubscriptionsRoute
+  '/api/billing/cancel': typeof ApiBillingCancelRoute
+  '/api/billing/checkout': typeof ApiBillingCheckoutRoute
+  '/api/billing/status': typeof ApiBillingStatusRoute
+  '/api/billing/sync': typeof ApiBillingSyncRoute
+  '/api/integrations/products': typeof ApiIntegrationsProductsRoute
+  '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/transparencia': typeof TransparenciaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estudio': typeof AuthenticatedEstudioRoute
   '/favoritos': typeof AuthenticatedFavoritosRoute
+  '/inteligencia': typeof AuthenticatedInteligenciaRoute
   '/meu-radar': typeof AuthenticatedMeuRadarRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/plano': typeof AuthenticatedPlanoRoute
   '/radar': typeof AuthenticatedRadarRoute
+  '/api/ai-content': typeof ApiAiContentRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/usage': typeof ApiUsageRoute
   '/produto/$id': typeof AuthenticatedProdutoIdRoute
+  '/api/admin/readiness': typeof ApiAdminReadinessRoute
+  '/api/admin/subscriptions': typeof ApiAdminSubscriptionsRoute
+  '/api/billing/cancel': typeof ApiBillingCancelRoute
+  '/api/billing/checkout': typeof ApiBillingCheckoutRoute
+  '/api/billing/status': typeof ApiBillingStatusRoute
+  '/api/billing/sync': typeof ApiBillingSyncRoute
+  '/api/integrations/products': typeof ApiIntegrationsProductsRoute
+  '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,16 +244,30 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/transparencia': typeof TransparenciaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estudio': typeof AuthenticatedEstudioRoute
   '/_authenticated/favoritos': typeof AuthenticatedFavoritosRoute
+  '/_authenticated/inteligencia': typeof AuthenticatedInteligenciaRoute
   '/_authenticated/meu-radar': typeof AuthenticatedMeuRadarRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/plano': typeof AuthenticatedPlanoRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
+  '/api/ai-content': typeof ApiAiContentRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/usage': typeof ApiUsageRoute
   '/_authenticated/produto/$id': typeof AuthenticatedProdutoIdRoute
+  '/api/admin/readiness': typeof ApiAdminReadinessRoute
+  '/api/admin/subscriptions': typeof ApiAdminSubscriptionsRoute
+  '/api/billing/cancel': typeof ApiBillingCancelRoute
+  '/api/billing/checkout': typeof ApiBillingCheckoutRoute
+  '/api/billing/status': typeof ApiBillingStatusRoute
+  '/api/billing/sync': typeof ApiBillingSyncRoute
+  '/api/integrations/products': typeof ApiIntegrationsProductsRoute
+  '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,47 +275,89 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/transparencia'
     | '/admin'
     | '/configuracoes'
     | '/dashboard'
     | '/estudio'
     | '/favoritos'
+    | '/inteligencia'
     | '/meu-radar'
     | '/onboarding'
     | '/perfil'
+    | '/plano'
     | '/radar'
+    | '/api/ai-content'
+    | '/api/health'
+    | '/api/usage'
     | '/produto/$id'
+    | '/api/admin/readiness'
+    | '/api/admin/subscriptions'
+    | '/api/billing/cancel'
+    | '/api/billing/checkout'
+    | '/api/billing/status'
+    | '/api/billing/sync'
+    | '/api/integrations/products'
+    | '/api/webhooks/mercado-pago'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/transparencia'
     | '/admin'
     | '/configuracoes'
     | '/dashboard'
     | '/estudio'
     | '/favoritos'
+    | '/inteligencia'
     | '/meu-radar'
     | '/onboarding'
     | '/perfil'
+    | '/plano'
     | '/radar'
+    | '/api/ai-content'
+    | '/api/health'
+    | '/api/usage'
     | '/produto/$id'
+    | '/api/admin/readiness'
+    | '/api/admin/subscriptions'
+    | '/api/billing/cancel'
+    | '/api/billing/checkout'
+    | '/api/billing/status'
+    | '/api/billing/sync'
+    | '/api/integrations/products'
+    | '/api/webhooks/mercado-pago'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/transparencia'
     | '/_authenticated/admin'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/estudio'
     | '/_authenticated/favoritos'
+    | '/_authenticated/inteligencia'
     | '/_authenticated/meu-radar'
     | '/_authenticated/onboarding'
     | '/_authenticated/perfil'
+    | '/_authenticated/plano'
     | '/_authenticated/radar'
+    | '/api/ai-content'
+    | '/api/health'
+    | '/api/usage'
     | '/_authenticated/produto/$id'
+    | '/api/admin/readiness'
+    | '/api/admin/subscriptions'
+    | '/api/billing/cancel'
+    | '/api/billing/checkout'
+    | '/api/billing/status'
+    | '/api/billing/sync'
+    | '/api/integrations/products'
+    | '/api/webhooks/mercado-pago'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -196,6 +365,18 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TransparenciaRoute: typeof TransparenciaRoute
+  ApiAiContentRoute: typeof ApiAiContentRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiUsageRoute: typeof ApiUsageRoute
+  ApiAdminReadinessRoute: typeof ApiAdminReadinessRoute
+  ApiAdminSubscriptionsRoute: typeof ApiAdminSubscriptionsRoute
+  ApiBillingCancelRoute: typeof ApiBillingCancelRoute
+  ApiBillingCheckoutRoute: typeof ApiBillingCheckoutRoute
+  ApiBillingStatusRoute: typeof ApiBillingStatusRoute
+  ApiBillingSyncRoute: typeof ApiBillingSyncRoute
+  ApiIntegrationsProductsRoute: typeof ApiIntegrationsProductsRoute
+  ApiWebhooksMercadoPagoRoute: typeof ApiWebhooksMercadoPagoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -226,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transparencia': {
+      id: '/transparencia'
+      path: '/transparencia'
+      fullPath: '/transparencia'
+      preLoaderRoute: typeof TransparenciaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -263,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFavoritosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inteligencia': {
+      id: '/_authenticated/inteligencia'
+      path: '/inteligencia'
+      fullPath: '/inteligencia'
+      preLoaderRoute: typeof AuthenticatedInteligenciaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/meu-radar': {
       id: '/_authenticated/meu-radar'
       path: '/meu-radar'
@@ -284,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/plano': {
+      id: '/_authenticated/plano'
+      path: '/plano'
+      fullPath: '/plano'
+      preLoaderRoute: typeof AuthenticatedPlanoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/radar': {
       id: '/_authenticated/radar'
       path: '/radar'
@@ -291,12 +493,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRadarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/ai-content': {
+      id: '/api/ai-content'
+      path: '/api/ai-content'
+      fullPath: '/api/ai-content'
+      preLoaderRoute: typeof ApiAiContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/usage': {
+      id: '/api/usage'
+      path: '/api/usage'
+      fullPath: '/api/usage'
+      preLoaderRoute: typeof ApiUsageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/produto/$id': {
       id: '/_authenticated/produto/$id'
       path: '/produto/$id'
       fullPath: '/produto/$id'
       preLoaderRoute: typeof AuthenticatedProdutoIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/admin/readiness': {
+      id: '/api/admin/readiness'
+      path: '/api/admin/readiness'
+      fullPath: '/api/admin/readiness'
+      preLoaderRoute: typeof ApiAdminReadinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/subscriptions': {
+      id: '/api/admin/subscriptions'
+      path: '/api/admin/subscriptions'
+      fullPath: '/api/admin/subscriptions'
+      preLoaderRoute: typeof ApiAdminSubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/billing/cancel': {
+      id: '/api/billing/cancel'
+      path: '/api/billing/cancel'
+      fullPath: '/api/billing/cancel'
+      preLoaderRoute: typeof ApiBillingCancelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/billing/checkout': {
+      id: '/api/billing/checkout'
+      path: '/api/billing/checkout'
+      fullPath: '/api/billing/checkout'
+      preLoaderRoute: typeof ApiBillingCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/billing/status': {
+      id: '/api/billing/status'
+      path: '/api/billing/status'
+      fullPath: '/api/billing/status'
+      preLoaderRoute: typeof ApiBillingStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/billing/sync': {
+      id: '/api/billing/sync'
+      path: '/api/billing/sync'
+      fullPath: '/api/billing/sync'
+      preLoaderRoute: typeof ApiBillingSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/products': {
+      id: '/api/integrations/products'
+      path: '/api/integrations/products'
+      fullPath: '/api/integrations/products'
+      preLoaderRoute: typeof ApiIntegrationsProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/mercado-pago': {
+      id: '/api/webhooks/mercado-pago'
+      path: '/api/webhooks/mercado-pago'
+      fullPath: '/api/webhooks/mercado-pago'
+      preLoaderRoute: typeof ApiWebhooksMercadoPagoRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -307,9 +586,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstudioRoute: typeof AuthenticatedEstudioRoute
   AuthenticatedFavoritosRoute: typeof AuthenticatedFavoritosRoute
+  AuthenticatedInteligenciaRoute: typeof AuthenticatedInteligenciaRoute
   AuthenticatedMeuRadarRoute: typeof AuthenticatedMeuRadarRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedPlanoRoute: typeof AuthenticatedPlanoRoute
   AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
   AuthenticatedProdutoIdRoute: typeof AuthenticatedProdutoIdRoute
 }
@@ -320,9 +601,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstudioRoute: AuthenticatedEstudioRoute,
   AuthenticatedFavoritosRoute: AuthenticatedFavoritosRoute,
+  AuthenticatedInteligenciaRoute: AuthenticatedInteligenciaRoute,
   AuthenticatedMeuRadarRoute: AuthenticatedMeuRadarRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedPlanoRoute: AuthenticatedPlanoRoute,
   AuthenticatedRadarRoute: AuthenticatedRadarRoute,
   AuthenticatedProdutoIdRoute: AuthenticatedProdutoIdRoute,
 }
@@ -335,6 +618,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TransparenciaRoute: TransparenciaRoute,
+  ApiAiContentRoute: ApiAiContentRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiUsageRoute: ApiUsageRoute,
+  ApiAdminReadinessRoute: ApiAdminReadinessRoute,
+  ApiAdminSubscriptionsRoute: ApiAdminSubscriptionsRoute,
+  ApiBillingCancelRoute: ApiBillingCancelRoute,
+  ApiBillingCheckoutRoute: ApiBillingCheckoutRoute,
+  ApiBillingStatusRoute: ApiBillingStatusRoute,
+  ApiBillingSyncRoute: ApiBillingSyncRoute,
+  ApiIntegrationsProductsRoute: ApiIntegrationsProductsRoute,
+  ApiWebhooksMercadoPagoRoute: ApiWebhooksMercadoPagoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
