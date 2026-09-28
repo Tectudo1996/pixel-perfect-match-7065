@@ -613,8 +613,7 @@ function normalizeTikTokProductForPrivateCache(
     commission_currency: product.commission?.currency?.trim().toUpperCase() || null,
     commission_percent: commissionRate,
     units_sold: unitsSold,
-    has_inventory:
-      typeof product.has_inventory === "boolean" ? product.has_inventory : null,
+    has_inventory: typeof product.has_inventory === "boolean" ? product.has_inventory : null,
     synced_at: syncedAt,
   };
 }
