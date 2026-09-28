@@ -12,6 +12,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AdminPlanManagement } from "@/components/admin-plan-management";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +39,7 @@ import { useIsAdmin } from "@/hooks/useAuth";
 import { parseAdminProductCsv } from "@/lib/admin-csv";
 import { cn } from "@/lib/utils";
 
-type AdminTab = "visao" | "produtos" | "categorias" | "importacao";
+type AdminTab = "visao" | "produtos" | "categorias" | "importacao" | "planos";
 
 type ProductForm = {
   name: string;
@@ -140,6 +141,9 @@ function AdminPage() {
         <TabButton active={tab === "importacao"} onClick={() => setTab("importacao")}>
           Importação CSV
         </TabButton>
+        <TabButton active={tab === "planos"} onClick={() => setTab("planos")}>
+          Planos
+        </TabButton>
       </nav>
 
       {tab === "visao" && (
@@ -167,6 +171,8 @@ function AdminPage() {
       {tab === "importacao" && (
         <ImportTab categories={categories} defaultSource={importDefaults?.defaultSource ?? ""} />
       )}
+
+      {tab === "planos" && <AdminPlanManagement enabled={enabled} />}
     </div>
   );
 }
