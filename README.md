@@ -187,3 +187,15 @@ Para ativar os limites em um ambiente real, aplique primeiro a migration
 `drizzle/migrations/0002_plan_usage.sql` no Supabase e só depois configure
 `AI_USAGE_LIMITS_ENABLED=true`. Os valores `AI_FREE_MONTHLY_LIMIT` e
 `AI_PRO_MONTHLY_LIMIT` podem ser ajustados no servidor sem alterar o frontend.
+
+### Etapa 10C — concluída no código
+
+- gestão manual de planos Free/Pro para beta e suporte
+- consulta de uso por usuário dentro do painel administrativo
+- alteração de plano, ativação/inativação e reset de uso
+- autorização administrativa revalidada no servidor em cada alteração
+- service role permanece exclusivamente no servidor
+- painel de planos permanece inativo enquanto a migration 0002 e a feature flag não estiverem ativas
+- nenhuma decisão de preço ou gateway foi embutida nesta etapa
+
+Essa administração manual permite validar o fluxo Free/Pro antes de conectar um checkout real.

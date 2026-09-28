@@ -30,6 +30,7 @@ jobs:
       - name: Lint owned application files
         run: >-
           npx eslint
+          src/components/admin-plan-management.tsx
           src/components/app-shell.tsx
           src/components/product-card.tsx
           src/hooks/useAdmin.ts
@@ -51,6 +52,7 @@ jobs:
           src/lib/product-ingest.server.ts
           src/lib/request-body.server.ts
           src/lib/usage.server.ts
+          src/routes/api/admin/subscriptions.ts
           src/routes/api/ai-content.ts
           src/routes/api/health.ts
           src/routes/api/usage.ts
