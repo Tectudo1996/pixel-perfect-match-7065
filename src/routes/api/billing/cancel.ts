@@ -4,8 +4,7 @@ export const Route = createFileRoute("/api/billing/cancel")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { cancelBilling, normalizeBillingError } =
-          await import("@/lib/billing.server");
+        const { cancelBilling, normalizeBillingError } = await import("@/lib/billing.server");
 
         try {
           return Response.json(await cancelBilling(request));
