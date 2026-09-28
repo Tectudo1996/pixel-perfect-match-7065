@@ -135,3 +135,14 @@ Este repositório continua conectado ao Lovable. Evite force push, rebase ou alt
 - Caçador de Oportunidades com critérios transparentes
 - leitura de crescimento adicionada à página individual do produto
 - nenhum índice é apresentado como probabilidade de venda
+
+
+### Etapa 9 — em desenvolvimento
+
+- geração real de conteúdo pelo servidor usando um provedor de IA
+- saída estruturada para roteiro, legenda, hashtags e prompt audiovisual
+- contexto inclui produto, preferências, histórico do produto e projetos anteriores
+- comparação com produtos da mesma categoria para sugerir diferenciação
+- nenhuma chave de IA é enviada ao navegador
+- o usuário revisa a geração antes de salvar no Estúdio
+- integrações externas de catálogo ainda dependem da escolha e das credenciais do provedor de dados
