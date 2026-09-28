@@ -26,6 +26,7 @@ import {
   type ContentProject,
   type ContentProjectValues,
 } from "@/hooks/useContentStudio";
+import { usePlanUsage } from "@/hooks/usePlanUsage";
 
 type StudioSearch = {
   produto?: string;
@@ -95,6 +96,7 @@ function ContentStudioPage() {
   const updateProject = useUpdateContentProject();
   const deleteProject = useDeleteContentProject();
   const generateContent = useGenerateStudioContent();
+  const { data: planUsage } = usePlanUsage();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StudioForm>(() => emptyForm());
@@ -117,6 +119,9 @@ function ContentStudioPage() {
   }, [produto, products, productsLoading, editingId, appliedSearchProduct]);
 
   const saving = createProject.isPending || updateProject.isPending;
+  const aiLimitReached = Boolean(
+    planUsage?.enforcementEnabled && planUsage.remaining <= 0,
+  );
   const canSave = useMemo(
     () => form.productId.length > 0 && form.title.trim().length > 0 && !saving,
     [form.productId, form.title, saving],
@@ -310,6 +315,17 @@ function ContentStudioPage() {
           produto e itens da mesma categoria. A chave do provedor fica somente no servidor. O
           resultado sempre volta para revisão antes de você salvar.
         </p>
+        {planUsage && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gold/20 pt-3 text-xs">
+            <span className="text-muted-foreground">
+              Plano {planUsage.plan === "pro" ? "Pro" : "Grátis"} · {planUsage.used}/
+              {planUsage.limit} gerações no período
+            </span>
+            <Link to="/plano" className="font-medium hover:underline">
+              Ver plano e uso
+            </Link>
+          </div>
+        )}
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -381,7 +397,7 @@ function ContentStudioPage() {
               <Button
                 type="button"
                 variant="gold"
-                disabled={!form.productId || generateContent.isPending}
+                disabled={!form.productId || generateContent.isPending || aiLimitReached}
                 onClick={() => void handleGenerateContent()}
               >
                 {generateContent.isPending ? (
@@ -389,7 +405,7 @@ function ContentStudioPage() {
                 ) : (
                   <WandSparkles className="h-4 w-4" />
                 )}
-                Gerar com IA
+                {aiLimitReached ? "Limite atingido" : "Gerar com IA"}
               </Button>
             </div>
 
