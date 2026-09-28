@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
+  Activity,
   FileSpreadsheet,
   FolderCog,
   Loader2,
@@ -21,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   useAdminCategories,
   useAdminImportDefaults,
+  useAdminIngestionRuns,
   useAdminOverview,
   useAdminProducts,
   useAdminUsers,
@@ -33,6 +35,7 @@ import {
   useUpdateAdminCategory,
   useUpdateAdminProduct,
   type AdminCategory,
+  type AdminIngestionRun,
   type AdminProduct,
   type AdminProductValues,
 } from "@/hooks/useAdmin";
@@ -40,7 +43,14 @@ import { useIsAdmin } from "@/hooks/useAuth";
 import { parseAdminProductCsv } from "@/lib/admin-csv";
 import { cn } from "@/lib/utils";
 
-type AdminTab = "visao" | "produtos" | "categorias" | "importacao" | "planos" | "prontidao";
+type AdminTab =
+  | "visao"
+  | "fontes"
+  | "produtos"
+  | "categorias"
+  | "importacao"
+  | "planos"
+  | "prontidao";
 
 type ProductForm = {
   name: string;
@@ -97,6 +107,11 @@ function AdminPage() {
   const { data: products = [], isLoading: productsLoading } = useAdminProducts(enabled);
   const { data: categories = [], isLoading: categoriesLoading } = useAdminCategories(enabled);
   const { data: importDefaults } = useAdminImportDefaults(enabled);
+  const {
+    data: ingestionRuns = [],
+    isLoading: ingestionRunsLoading,
+    isError: ingestionRunsError,
+  } = useAdminIngestionRuns(enabled);
 
   if (adminLoading) {
     return <AdminLoading />;
@@ -133,6 +148,9 @@ function AdminPage() {
         <TabButton active={tab === "visao"} onClick={() => setTab("visao")}>
           Visão geral
         </TabButton>
+        <TabButton active={tab === "fontes"} onClick={() => setTab("fontes")}>
+          Fontes
+        </TabButton>
         <TabButton active={tab === "produtos"} onClick={() => setTab("produtos")}>
           Produtos
         </TabButton>
@@ -156,6 +174,15 @@ function AdminPage() {
           overviewLoading={overviewLoading}
           users={users}
           usersLoading={usersLoading}
+        />
+      )}
+
+      {tab === "fontes" && (
+        <SourcesTab
+          overview={overview}
+          runs={ingestionRuns}
+          loading={overviewLoading || ingestionRunsLoading}
+          historyError={ingestionRunsError}
         />
       )}
 
@@ -206,6 +233,161 @@ function TabButton({
       {children}
     </button>
   );
+}
+
+function SourcesTab({
+  overview,
+  runs,
+  loading,
+  historyError,
+}: {
+  overview: ReturnType<typeof useAdminOverview>["data"];
+  runs: AdminIngestionRun[];
+  loading: boolean;
+  historyError: boolean;
+}) {
+  const sourceNames = new Set<string>();
+
+  for (const source of overview?.sources ?? []) sourceNames.add(source.source);
+  for (const run of runs) sourceNames.add(run.source);
+
+  const latestRunBySource = new Map<string, AdminIngestionRun>();
+  for (const run of runs) {
+    if (!latestRunBySource.has(run.source)) latestRunBySource.set(run.source, run);
+  }
+
+  const sources = Array.from(sourceNames)
+    .map((source) => {
+      const catalog = overview?.sources.find((item) => item.source === source);
+      return {
+        source,
+        count: catalog?.count ?? 0,
+        latestDataAt: catalog?.latestDataAt ?? null,
+        latestRun: latestRunBySource.get(source) ?? null,
+      };
+    })
+    .sort((a, b) => b.count - a.count || a.source.localeCompare(b.source));
+
+  return (
+    <div className="space-y-5">
+      <section className="surface-card p-5 md:p-6">
+        <div className="flex items-center gap-2">
+          <Activity className="h-4 w-4" />
+          <h2 className="text-base font-semibold">Saúde das fontes de dados</h2>
+        </div>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+          Acompanhe quando cada fonte atualizou o catálogo e o resultado das últimas ingestões.
+          O histórico não interfere na importação caso a observabilidade esteja indisponível.
+        </p>
+      </section>
+
+      {historyError && (
+        <section className="rounded-lg border border-border bg-secondary/30 p-4">
+          <p className="text-sm font-medium">Histórico de ingestão indisponível</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Verifique se a migration 0006 foi aplicada. O catálogo continua funcionando
+            independentemente deste histórico.
+          </p>
+        </section>
+      )}
+
+      {loading ? (
+        <div className="surface-card h-40 animate-pulse" />
+      ) : sources.length ? (
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {sources.map((item) => (
+            <article key={item.source} className="surface-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{item.source}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.count.toLocaleString("pt-BR")} produtos no catálogo
+                  </p>
+                </div>
+                {item.latestRun && (
+                  <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase">
+                    {ingestionStatusLabel(item.latestRun.status)}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+                <p>
+                  Dados mais recentes:{" "}
+                  {item.latestDataAt ? dateTimeBR(item.latestDataAt) : "sem dados"}
+                </p>
+                <p>
+                  Última ingestão:{" "}
+                  {item.latestRun ? dateTimeBR(item.latestRun.started_at) : "não registrada"}
+                </p>
+                {item.latestRun && (
+                  <p>
+                    Canal: {ingestionChannelLabel(item.latestRun.channel)} · recebidos{" "}
+                    {item.latestRun.accepted_count} · inseridos {item.latestRun.inserted_count} ·
+                    atualizados {item.latestRun.updated_count}
+                  </p>
+                )}
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : (
+        <div className="surface-card p-6 text-sm text-muted-foreground">
+          Nenhuma fonte com produtos ou execuções registradas.
+        </div>
+      )}
+
+      <section className="surface-card p-5">
+        <h2 className="text-base font-semibold">Execuções recentes</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Últimas importações recebidas pela API de ingestão ou pelo CSV administrativo.
+        </p>
+
+        {runs.length ? (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-xs">
+              <thead className="border-b border-border text-muted-foreground">
+                <tr>
+                  <th className="pb-2 font-medium">Fonte</th>
+                  <th className="pb-2 font-medium">Canal</th>
+                  <th className="pb-2 font-medium">Status</th>
+                  <th className="pb-2 font-medium">Recebidos</th>
+                  <th className="pb-2 font-medium">Inseridos</th>
+                  <th className="pb-2 font-medium">Atualizados</th>
+                  <th className="pb-2 font-medium">Início</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {runs.slice(0, 30).map((run) => (
+                  <tr key={run.id}>
+                    <td className="max-w-52 truncate py-2.5 font-medium">{run.source}</td>
+                    <td className="py-2.5">{ingestionChannelLabel(run.channel)}</td>
+                    <td className="py-2.5">{ingestionStatusLabel(run.status)}</td>
+                    <td className="py-2.5">{run.accepted_count}</td>
+                    <td className="py-2.5">{run.inserted_count}</td>
+                    <td className="py-2.5">{run.updated_count}</td>
+                    <td className="py-2.5">{dateTimeBR(run.started_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">Nenhuma execução registrada ainda.</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function ingestionStatusLabel(status: string) {
+  if (status === "succeeded") return "sucesso";
+  if (status === "failed") return "erro";
+  return "em andamento";
+}
+
+function ingestionChannelLabel(channel: string) {
+  return channel === "csv" ? "CSV" : "API";
 }
 
 function OverviewTab({
