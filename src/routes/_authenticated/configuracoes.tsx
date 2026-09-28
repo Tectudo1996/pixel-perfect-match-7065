@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Loader2, Save, Settings2 } from "lucide-react";
+import { Check, Link2, Loader2, Save, Settings2, Unplug } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 import { useCategories, usePreferences } from "@/hooks/useAuth";
+import {
+  useConnectTikTokShop,
+  useDisconnectTikTokShop,
+  useTikTokShopConnection,
+} from "@/hooks/useTikTokShop";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +33,14 @@ function SettingsPage() {
   const queryClient = useQueryClient();
   const { data: preferences, isLoading: loadingPreferences } = usePreferences();
   const { data: categories = [], isLoading: loadingCategories } = useCategories();
+  const {
+    data: tiktokShop,
+    isLoading: loadingTikTokShop,
+    isError: tiktokShopError,
+    error: tiktokShopErrorDetail,
+  } = useTikTokShopConnection();
+  const connectTikTokShop = useConnectTikTokShop();
+  const disconnectTikTokShop = useDisconnectTikTokShop();
 
   const [experienceLevel, setExperienceLevel] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -37,6 +50,32 @@ function SettingsPage() {
   const [commissionMax, setCommissionMax] = useState("");
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("integracao") !== "tiktok-shop") return;
+
+    const status = params.get("status");
+
+    if (status === "connected") {
+      toast.success("TikTok Shop conectado com segurança.");
+      void queryClient.invalidateQueries({ queryKey: ["tiktok-shop-connection"] });
+    } else if (status === "error") {
+      toast.error("Não foi possível concluir a conexão com o TikTok Shop.");
+    }
+
+    params.delete("integracao");
+    params.delete("status");
+    const search = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`,
+    );
+  }, [queryClient]);
 
   useEffect(() => {
     if (!preferences || hydrated) return;
@@ -60,6 +99,28 @@ function SettingsPage() {
       !saving,
     [hydrated, experienceLevel, selectedCategories, goal, videoStyle, saving],
   );
+
+  async function handleConnectTikTokShop() {
+    try {
+      const result = await connectTikTokShop.mutateAsync();
+      window.location.assign(result.authorizationUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível iniciar a conexão.");
+    }
+  }
+
+  async function handleDisconnectTikTokShop() {
+    if (!window.confirm("Desconectar sua conta do TikTok Shop deste RadarShop?")) return;
+
+    try {
+      await disconnectTikTokShop.mutateAsync();
+      toast.success("TikTok Shop desconectado.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível desconectar o TikTok Shop.",
+      );
+    }
+  }
 
   function toggleCategory(slug: string) {
     setSelectedCategories((current) =>
@@ -147,6 +208,17 @@ function SettingsPage() {
           Ajuste os dados que o Meu Radar usa para filtrar e organizar o catálogo.
         </p>
       </section>
+
+      <TikTokShopConnectionCard
+        data={tiktokShop}
+        loading={loadingTikTokShop}
+        error={tiktokShopError}
+        errorDetail={tiktokShopErrorDetail}
+        connecting={connectTikTokShop.isPending}
+        disconnecting={disconnectTikTokShop.isPending}
+        onConnect={() => void handleConnectTikTokShop()}
+        onDisconnect={() => void handleDisconnectTikTokShop()}
+      />
 
       <form onSubmit={handleSave} className="space-y-5">
         <section className="surface-card p-5 md:p-6">
@@ -272,6 +344,151 @@ function SettingsPage() {
       </form>
     </div>
   );
+}
+
+function TikTokShopConnectionCard({
+  data,
+  loading,
+  error,
+  errorDetail,
+  connecting,
+  disconnecting,
+  onConnect,
+  onDisconnect,
+}: {
+  data: ReturnType<typeof useTikTokShopConnection>["data"];
+  loading: boolean;
+  error: boolean;
+  errorDetail: unknown;
+  connecting: boolean;
+  disconnecting: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+}) {
+  if (loading) {
+    return (
+      <section className="surface-card flex min-h-36 items-center justify-center p-5">
+        <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Verificando conexão com TikTok Shop
+        </span>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="surface-card p-5 md:p-6">
+        <div className="flex items-start gap-3">
+          <Link2 className="mt-0.5 h-5 w-5" />
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold">TikTok Shop</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              A integração ainda não está disponível neste ambiente.
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              {errorDetail instanceof Error
+                ? errorDetail.message
+                : "Conclua a configuração server-side antes de conectar sua conta."}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const connected = data?.connected === true;
+  const enabled = data?.enabled === true;
+  const configured = data?.configured === true;
+  const canConnect = enabled && configured && !connected;
+  const statusLabel = connected
+    ? "conectado"
+    : !enabled
+      ? "em preparação"
+      : configured
+        ? "não conectado"
+        : "configuração pendente";
+
+  return (
+    <section className="surface-card p-5 md:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <Link2 className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-semibold">TikTok Shop</h2>
+              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase">
+                {statusLabel}
+              </span>
+            </div>
+
+            {!enabled ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                A integração oficial está preparada no RadarShop, mas permanece desligada até o
+                aplicativo receber acesso no TikTok Shop Partner Center.
+              </p>
+            ) : !configured ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                A integração foi habilitada, mas a configuração segura do servidor ainda não está
+                completa.
+              </p>
+            ) : (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Conecte sua conta Creator para permitir que o RadarShop use as integrações oficiais
+                do TikTok Shop autorizadas para o aplicativo.
+              </p>
+            )}
+
+            {connected && (
+              <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                <p>
+                  Conectado em:{" "}
+                  {data.connectedAt ? dateTimeBR(data.connectedAt) : "data indisponível"}
+                </p>
+                <p>
+                  Escopos concedidos:{" "}
+                  {data.grantedScopes.length ? data.grantedScopes.join(", ") : "não informados"}
+                </p>
+                {data.accessTokenExpiresAt && (
+                  <p>Access token expira em: {dateTimeBR(data.accessTokenExpiresAt)}</p>
+                )}
+              </div>
+            )}
+
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Tokens e App Secret permanecem no servidor e não são exibidos nesta página.
+            </p>
+          </div>
+        </div>
+
+        <div className="shrink-0">
+          {connected ? (
+            <Button type="button" variant="outline" disabled={disconnecting} onClick={onDisconnect}>
+              {disconnecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Unplug className="h-4 w-4" />
+              )}
+              Desconectar
+            </Button>
+          ) : canConnect ? (
+            <Button type="button" variant="gold" disabled={connecting} onClick={onConnect}>
+              {connecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Link2 className="h-4 w-4" />
+              )}
+              Conectar TikTok Shop
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function dateTimeBR(value: string) {
+  return new Date(value).toLocaleString("pt-BR");
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

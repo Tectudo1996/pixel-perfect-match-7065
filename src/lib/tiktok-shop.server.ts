@@ -337,6 +337,23 @@ export async function completeTikTokCreatorAuthorization(state: string, authCode
 }
 
 export async function getTikTokShopConnectionStatus(userId: string) {
+  const connector = getTikTokShopConnectorStatus();
+
+  if (!connector.enabled || !connector.oauthReady) {
+    return {
+      enabled: connector.enabled,
+      configured: connector.oauthReady,
+      connected: false,
+      openId: null,
+      userType: null,
+      grantedScopes: [],
+      accessTokenExpiresAt: null,
+      refreshTokenExpiresAt: null,
+      connectedAt: null,
+      updatedAt: null,
+    };
+  }
+
   const { data, error } = await supabaseAdmin
     .from("tiktok_shop_connections")
     .select(
@@ -348,6 +365,8 @@ export async function getTikTokShopConnectionStatus(userId: string) {
   if (error) throw error;
 
   return {
+    enabled: connector.enabled,
+    configured: connector.oauthReady,
     connected: Boolean(data),
     openId: data?.open_id ?? null,
     userType: data?.user_type ?? null,
