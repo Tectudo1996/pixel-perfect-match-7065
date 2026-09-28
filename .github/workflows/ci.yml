@@ -34,6 +34,7 @@ jobs:
           src/components/app-shell.tsx
           src/components/product-card.tsx
           src/hooks/useAdmin.ts
+          src/hooks/useBilling.ts
           src/hooks/useContentStudio.ts
           src/hooks/useDashboard.ts
           src/hooks/useFavorites.ts
@@ -46,6 +47,7 @@ jobs:
           src/lib/api-auth.server.ts
           src/lib/ai-content-schema.ts
           src/lib/ai-content.server.ts
+          src/lib/billing.server.ts
           src/lib/http-security.ts
           src/lib/market-intelligence.ts
           src/lib/product-ingest-schema.ts
@@ -53,9 +55,12 @@ jobs:
           src/lib/request-body.server.ts
           src/lib/usage.server.ts
           src/routes/api/admin/subscriptions.ts
+          src/routes/api/billing/checkout.ts
+          src/routes/api/billing/status.ts
           src/routes/api/ai-content.ts
           src/routes/api/health.ts
           src/routes/api/usage.ts
+          src/routes/api/webhooks/mercado-pago.ts
           src/routes/api/integrations/products.ts
           src/routes/auth.tsx
           src/routes/transparencia.tsx
