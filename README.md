@@ -375,3 +375,21 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - usa o endpoint oficial `GET /affiliate_creator/202405/showcases/products`
 - limita `page_size` ao intervalo oficial de 1 a 20
 - endpoint interno: `GET /api/integrations/tiktok-shop/showcase`
+
+
+### Etapa 12F — cache privado da Showcase TikTok
+
+- lê até 5 páginas da vitrine Creator por execução
+- extrai IDs retornados pela Showcase oficial
+- enriquece cada lote com `POST /affiliate_creator/202509/open_collaborations/products`
+- exige `creator.affiliate_collaboration.read` para dados de colaboração
+- preserva título, link, imagem, loja, vendas, preço, comissão e moeda nativa
+- converte commission rate da API para percentual
+- salva os itens em `user_tiktok_showcase_products`, isolados por usuário
+- migration `0008_tiktok_showcase_private_cache.sql`
+- tabela server-only com RLS e sem grants para `anon` ou `authenticated`
+- adiciona botão **Sincronizar vitrine** em Configurações
+- endpoint interno: `POST /api/integrations/tiktok-shop/showcase/sync`
+- a Showcase de um Creator não alimenta o catálogo global do RadarShop
+- descoberta global fica reservada para uma API oficial de busca/colaboração aprovada para o app
+

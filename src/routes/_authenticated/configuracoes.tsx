@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Link2, Loader2, Save, Settings2, Unplug } from "lucide-react";
+import { Check, Link2, Loader2, RefreshCw, Save, Settings2, Unplug } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cloudClient as supabase } from "@/lib/cloud-client";
@@ -8,6 +8,7 @@ import { useCategories, usePreferences } from "@/hooks/useAuth";
 import {
   useConnectTikTokShop,
   useDisconnectTikTokShop,
+  useSyncTikTokShowcase,
   useTikTokShopConnection,
 } from "@/hooks/useTikTokShop";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ function SettingsPage() {
   } = useTikTokShopConnection();
   const connectTikTokShop = useConnectTikTokShop();
   const disconnectTikTokShop = useDisconnectTikTokShop();
+  const syncTikTokShowcase = useSyncTikTokShowcase();
 
   const [experienceLevel, setExperienceLevel] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -106,6 +108,23 @@ function SettingsPage() {
       window.location.assign(result.authorizationUrl);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível iniciar a conexão.");
+    }
+  }
+
+  async function handleSyncTikTokShowcase() {
+    try {
+      const result = await syncTikTokShowcase.mutateAsync();
+      const skippedNotice = result.skipped
+        ? ` · ${result.skipped} ignorados por dados incompletos`
+        : "";
+
+      toast.success(`Vitrine sincronizada: ${result.saved} produtos salvos${skippedNotice}.`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível sincronizar sua vitrine do TikTok Shop.",
+      );
     }
   }
 
@@ -216,8 +235,10 @@ function SettingsPage() {
         errorDetail={tiktokShopErrorDetail}
         connecting={connectTikTokShop.isPending}
         disconnecting={disconnectTikTokShop.isPending}
+        syncing={syncTikTokShowcase.isPending}
         onConnect={() => void handleConnectTikTokShop()}
         onDisconnect={() => void handleDisconnectTikTokShop()}
+        onSync={() => void handleSyncTikTokShowcase()}
       />
 
       <form onSubmit={handleSave} className="space-y-5">
@@ -353,8 +374,10 @@ function TikTokShopConnectionCard({
   errorDetail,
   connecting,
   disconnecting,
+  syncing,
   onConnect,
   onDisconnect,
+  onSync,
 }: {
   data: ReturnType<typeof useTikTokShopConnection>["data"];
   loading: boolean;
@@ -362,8 +385,10 @@ function TikTokShopConnectionCard({
   errorDetail: unknown;
   connecting: boolean;
   disconnecting: boolean;
+  syncing: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
+  onSync: () => void;
 }) {
   if (loading) {
     return (
@@ -455,22 +480,49 @@ function TikTokShopConnectionCard({
               </div>
             )}
 
+            {connected && (
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                Sua vitrine sincronizada fica isolada na sua conta e não é adicionada ao catálogo
+                global do RadarShop.
+              </p>
+            )}
+
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
               Tokens e App Secret permanecem no servidor e não são exibidos nesta página.
             </p>
           </div>
         </div>
 
-        <div className="shrink-0">
+        <div className="flex shrink-0 flex-wrap gap-2">
           {connected ? (
-            <Button type="button" variant="outline" disabled={disconnecting} onClick={onDisconnect}>
-              {disconnecting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Unplug className="h-4 w-4" />
-              )}
-              Desconectar
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="gold"
+                disabled={syncing || disconnecting}
+                onClick={onSync}
+              >
+                {syncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Sincronizar vitrine
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={disconnecting || syncing}
+                onClick={onDisconnect}
+              >
+                {disconnecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Unplug className="h-4 w-4" />
+                )}
+                Desconectar
+              </Button>
+            </>
           ) : canConnect ? (
             <Button type="button" variant="gold" disabled={connecting} onClick={onConnect}>
               {connecting ? (

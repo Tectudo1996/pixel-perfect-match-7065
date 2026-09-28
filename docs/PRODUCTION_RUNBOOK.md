@@ -25,6 +25,7 @@ Aplique no Lovable Cloud / Supabase de produção, nesta ordem:
 5. `drizzle/migrations/0005_multi_gateway_readiness.sql`
 6. `drizzle/migrations/0006_ingestion_observability.sql`
 7. `drizzle/migrations/0007_tiktok_shop_oauth_storage.sql`
+8. `drizzle/migrations/0008_tiktok_showcase_private_cache.sql`
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
@@ -113,7 +114,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. aplique as migrations 0001, 0002, 0003, 0004, 0005, 0006 e 0007
+2. aplique as migrations 0001, 0002, 0003, 0004, 0005, 0006, 0007 e 0008
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível
@@ -329,3 +330,42 @@ O RadarShop expõe essa leitura somente por uma rota autenticada:
 
 Esta etapa ainda não importa automaticamente os itens para o Radar. Primeiro validamos a conexão e
 o payload real da conta autorizada; a normalização/ingestão vem depois.
+
+
+### Cache privado da Showcase
+
+Com a conta Creator conectada, **Configurações → TikTok Shop → Sincronizar vitrine** executa uma
+sincronização autenticada da Showcase daquele usuário.
+
+Fluxo:
+
+1. lê até 5 páginas da Showcase oficial, com até 20 itens por página
+2. coleta os IDs retornados pelo TikTok Shop
+3. enriquece cada lote via
+   `POST /affiliate_creator/202509/open_collaborations/products`
+4. valida o scope `creator.affiliate_collaboration.read`
+5. normaliza somente campos documentados
+6. salva em `user_tiktok_showcase_products` usando `(user_id, product_id)` como chave
+7. preserva a moeda retornada pelo TikTok Shop, sem fingir conversão para BRL
+
+A migration `0008_tiktok_showcase_private_cache.sql` mantém a tabela com RLS ativo e remove
+grants de `anon` e `authenticated`; o acesso ocorre apenas pelo servidor com service role.
+
+A Showcase é informação autorizada e específica do Creator. **Ela não é copiada para a tabela
+global `products` e não vira catálogo para outros usuários.**
+
+Mapeamento principal:
+
+- `title` → título privado
+- `detail_link` → link
+- `main_image_url` → imagem
+- `shop.name` → loja
+- `units_sold` → vendas
+- `commission.rate` → percentual, dividindo o valor da API por 100
+- `commission.amount/currency` → comissão e moeda
+- `sales_price` ou `original_price` → faixa de preço e moeda
+
+O catálogo global do RadarShop deve ser abastecido apenas por uma fonte oficial de descoberta que
+tenha autorização adequada para o aplicativo. Não reutilize dados privados da Showcase como fonte
+global.
+

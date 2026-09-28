@@ -427,6 +427,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tiktok_showcase_products: {
+        Row: {
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_percent: number | null
+          currency: string | null
+          detail_link: string | null
+          has_inventory: boolean | null
+          image_url: string | null
+          maximum_price: number | null
+          minimum_price: number | null
+          product_id: string
+          sale_region: string | null
+          shop_name: string | null
+          synced_at: string
+          title: string
+          units_sold: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id: string
+          sale_region?: string | null
+          shop_name?: string | null
+          synced_at?: string
+          title: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id?: string
+          sale_region?: string | null
+          shop_name?: string | null
+          synced_at?: string
+          title?: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           categories: string[]

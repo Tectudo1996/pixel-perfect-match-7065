@@ -39,6 +39,33 @@ export function useConnectTikTokShop() {
   });
 }
 
+export type TikTokShopShowcaseSyncResult = {
+  ok: true;
+  pages_read: number;
+  showcase_items: number;
+  saved: number;
+  skipped: number;
+  synced_at: string;
+};
+
+export function useSyncTikTokShowcase() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const token = await requireAccessToken();
+      return requestJson<TikTokShopShowcaseSyncResult>(
+        "/api/integrations/tiktok-shop/showcase/sync",
+        token,
+        { method: "POST" },
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["tiktok-shop-connection"] });
+    },
+  });
+}
+
 export function useDisconnectTikTokShop() {
   const queryClient = useQueryClient();
 
