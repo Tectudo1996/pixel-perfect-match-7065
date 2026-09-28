@@ -329,3 +329,35 @@ O RadarShop expõe essa leitura somente por uma rota autenticada:
 
 Esta etapa ainda não importa automaticamente os itens para o Radar. Primeiro validamos a conexão e
 o payload real da conta autorizada; a normalização/ingestão vem depois.
+
+
+### Sincronização com o Radar
+
+Com a conta Creator conectada, **Configurações → TikTok Shop → Atualizar Radar** executa uma
+sincronização autenticada.
+
+Fluxo:
+
+1. lê até 5 páginas da Showcase oficial (20 itens por página)
+2. coleta apenas os IDs retornados pelo TikTok Shop
+3. enriquece cada lote via
+   `POST /affiliate_creator/202509/open_collaborations/products`
+4. valida o scope `creator.affiliate_collaboration.read`
+5. normaliza os campos documentados para o schema interno do RadarShop
+6. envia o lote pelo mesmo pipeline confiável de ingestão usado pelas outras fontes
+7. grava snapshots e histórico em `ingestion_runs`
+
+Mapeamento principal:
+
+- `title` → nome
+- `detail_link` → URL original
+- `main_image_url` → imagem
+- `shop.name` → loja
+- `units_sold` → vendas
+- `commission.rate` → percentual, dividindo o valor da API por 100
+- `commission.amount` → comissão em R$ somente quando `currency=BRL`
+- `sales_price.minimum_amount` ou `original_price.minimum_amount` → preço apenas quando a moeda é BRL
+
+Não convertemos automaticamente USD/EUR/outras moedas para BRL. Enquanto o catálogo interno não
+possuir coluna de moeda e taxa de câmbio auditável, esses valores ficam nulos para evitar mostrar
+um preço estrangeiro como se fosse real.
