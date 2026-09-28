@@ -331,9 +331,7 @@ async function checkMultiGatewayBillingSchema() {
 
   return {
     diagnosticsReady: true,
-    multiGatewayReady: Boolean(
-      row?.subscription_constraint_ready && row?.webhook_constraint_ready,
-    ),
+    multiGatewayReady: Boolean(row?.subscription_constraint_ready && row?.webhook_constraint_ready),
   };
 }
 
