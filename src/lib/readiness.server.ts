@@ -156,8 +156,7 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
   checks.push({
     id: "billing-webhook",
     label: "Reconciliação do Mercado Pago",
-    state:
-      billingAccessReady && webhookSecretReady && billingMigrationReady ? "ready" : "missing",
+    state: billingAccessReady && webhookSecretReady && billingMigrationReady ? "ready" : "missing",
     detail:
       billingAccessReady && webhookSecretReady && billingMigrationReady
         ? "Webhooks podem continuar sendo validados e reconciliados mesmo com novas vendas pausadas."
