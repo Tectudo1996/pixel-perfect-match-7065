@@ -310,6 +310,225 @@ export async function cancelMercadoPagoSubscription(request: Request) {
   };
 }
 
+export async function createPayPalCheckout(request: Request) {
+  const user = await requireApiUser(request);
+  const config = requirePayPalCheckoutConfig();
+
+  if (!user.email) {
+    throw new BillingError(
+      400,
+      "BILLING_EMAIL_REQUIRED",
+      "Sua conta precisa ter um e-mail válido para iniciar a assinatura.",
+    );
+  }
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("plan,billing_provider,billing_external_id,billing_status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+
+  if (
+    existing?.plan === "pro" &&
+    existing.billing_provider === "paypal" &&
+    existing.billing_status === "authorized"
+  ) {
+    throw new BillingError(409, "ALREADY_PRO", "Seu plano Pro já está ativo.");
+  }
+
+  const accessToken = await getPayPalAccessToken(config);
+
+  if (
+    existing?.billing_provider === "paypal" &&
+    existing.billing_external_id &&
+    existing.billing_status === "pending"
+  ) {
+    const current = await fetchPayPalSubscription(
+      existing.billing_external_id,
+      accessToken,
+      config.apiBase,
+    );
+    assertOwnedPayPalSubscription(current, user.id);
+    const approvalUrl = findPayPalApprovalUrl(current);
+
+    if (approvalUrl) {
+      return {
+        checkoutUrl: approvalUrl,
+        provider: "paypal" as const,
+        reused: true,
+      };
+    }
+  }
+
+  const response = await fetch(`${config.apiBase}/v1/billing/subscriptions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "PayPal-Request-Id": randomUUID(),
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      plan_id: config.planId,
+      custom_id: user.id,
+      subscriber: {
+        email_address: user.email,
+      },
+      application_context: {
+        brand_name: config.brandName,
+        locale: "pt-BR",
+        shipping_preference: "NO_SHIPPING",
+        user_action: "SUBSCRIBE_NOW",
+        return_url: `${config.publicAppUrl}/plano?checkout=retorno&gateway=paypal`,
+        cancel_url: `${config.publicAppUrl}/plano?checkout=cancelado&gateway=paypal`,
+      },
+    }),
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  const payload = (await response.json().catch(() => null)) as PayPalSubscription | null;
+  const approvalUrl = payload ? findPayPalApprovalUrl(payload) : null;
+
+  if (!response.ok || !payload?.id || !approvalUrl) {
+    console.error("[RadarShop AI] PayPal checkout error", response.status, payload);
+    throw new BillingError(502, "BILLING_PROVIDER_ERROR", "O checkout PayPal não pôde ser criado.");
+  }
+
+  const { error: saveError } = await supabaseAdmin.from("user_subscriptions").upsert(
+    {
+      user_id: user.id,
+      billing_provider: "paypal",
+      billing_external_id: payload.id,
+      billing_status: normalizePayPalStatus(payload.status),
+      billing_payer_id: payload.subscriber?.payer_id ?? null,
+      billing_next_payment_at: payload.billing_info?.next_billing_time ?? null,
+      billing_updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (saveError) throw saveError;
+
+  return {
+    checkoutUrl: approvalUrl,
+    provider: "paypal" as const,
+    reused: false,
+  };
+}
+
+export async function syncPayPalBilling(request: Request) {
+  const user = await requireApiUser(request);
+  const config = requirePayPalManagementConfig();
+  const accessToken = await getPayPalAccessToken(config);
+  const subscription = await getOwnedPayPalSubscription(user.id, accessToken, config.apiBase);
+
+  await reconcilePayPalSubscription(subscription);
+
+  return {
+    ok: true,
+    status: normalizePayPalStatus(subscription.status),
+  };
+}
+
+export async function cancelPayPalSubscription(request: Request) {
+  const user = await requireApiUser(request);
+  const config = requirePayPalManagementConfig();
+  const accessToken = await getPayPalAccessToken(config);
+  const current = await getOwnedPayPalSubscription(user.id, accessToken, config.apiBase);
+  const normalized = normalizePayPalStatus(current.status);
+
+  if (normalized === "canceled") {
+    await reconcilePayPalSubscription(current);
+    return { ok: true, status: normalized };
+  }
+
+  const response = await fetch(
+    `${config.apiBase}/v1/billing/subscriptions/${encodeURIComponent(current.id)}/cancel`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason: "Cancelado pelo usuário no RadarShop AI." }),
+      signal: AbortSignal.timeout(20_000),
+    },
+  );
+
+  if (!response.ok && response.status !== 204) {
+    const payload = await response.json().catch(() => null);
+    console.error("[RadarShop AI] PayPal cancellation error", response.status, payload);
+    throw new BillingError(
+      502,
+      "BILLING_PROVIDER_ERROR",
+      "A assinatura PayPal não pôde ser cancelada agora.",
+    );
+  }
+
+  const updated = await fetchPayPalSubscription(current.id, accessToken, config.apiBase);
+  await reconcilePayPalSubscription(updated);
+
+  return {
+    ok: true,
+    status: normalizePayPalStatus(updated.status),
+  };
+}
+
+export async function createPepperCheckout(request: Request) {
+  await requireApiUser(request);
+  const config = requirePepperCheckoutConfig();
+
+  return {
+    checkoutUrl: config.checkoutUrl,
+    provider: "pepper" as const,
+    reused: true,
+    requiresManualActivation: true,
+  };
+}
+
+export async function handlePayPalWebhook(request: Request) {
+  const config = requirePayPalWebhookConfig();
+  const event = (await readJsonBody(request, 131_072)) as PayPalWebhook;
+  const accessToken = await getPayPalAccessToken(config);
+
+  await verifyPayPalWebhook(request, event, accessToken, config);
+
+  const eventId = event.id ?? randomUUID();
+  const eventType = event.event_type ?? "unknown";
+  const resourceId = event.resource?.id ?? null;
+
+  await recordWebhookEvent({
+    provider: "paypal",
+    providerEventId: eventId,
+    eventType,
+    resourceId,
+    status: "received",
+  });
+
+  try {
+    if (!resourceId || !eventType.startsWith("BILLING.SUBSCRIPTION.")) {
+      await markWebhookEvent("paypal", eventId, "ignored");
+      return { ok: true, ignored: true };
+    }
+
+    const subscription = await fetchPayPalSubscription(resourceId, accessToken, config.apiBase);
+    await reconcilePayPalSubscription(subscription);
+    await markWebhookEvent("paypal", eventId, "processed");
+
+    return { ok: true };
+  } catch (error) {
+    await markWebhookEvent(
+      "paypal",
+      eventId,
+      "failed",
+      error instanceof Error ? error.message.slice(0, 500) : "Erro desconhecido",
+    );
+    throw error;
+  }
+}
+
 export async function handleMercadoPagoWebhook(request: Request) {
   const config = requireWebhookConfig();
   const url = new URL(request.url);
