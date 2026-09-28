@@ -170,3 +170,20 @@ campos ausentes sem fabricar valores e registra um snapshot de métricas em cada
 - página pública de Transparência
 - robots.txt preparado para impedir indexação das áreas privadas
 - preços, planos e gateway de pagamento continuam sem valores inventados
+
+### Etapa 10B — concluída no código
+
+- estrutura de planos Grátis e Pro sem preços inventados
+- página autenticada de Plano e uso
+- limites mensais de geração por IA definidos no servidor
+- reserva atômica de uso para impedir estouro por requisições simultâneas
+- devolução automática da cota quando o provedor de IA falha
+- bloqueio efetivo acontece no servidor, não apenas na interface
+- migration `drizzle/migrations/0002_plan_usage.sql` com RLS e privilégios mínimos
+- feature flag mantém os limites desligados até o banco do ambiente estar sincronizado
+- checkout, preço e gateway de pagamento continuam para uma etapa separada
+
+Para ativar os limites em um ambiente real, aplique primeiro a migration
+`drizzle/migrations/0002_plan_usage.sql` no Supabase e só depois configure
+`AI_USAGE_LIMITS_ENABLED=true`. Os valores `AI_FREE_MONTHLY_LIMIT` e
+`AI_PRO_MONTHLY_LIMIT` podem ser ajustados no servidor sem alterar o frontend.
