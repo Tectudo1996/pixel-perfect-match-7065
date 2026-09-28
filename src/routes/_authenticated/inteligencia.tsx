@@ -23,12 +23,7 @@ import {
 import { brl, num, percent, NA } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-type IntelligenceView =
-  | "hunter"
-  | "beforeViral"
-  | "newProducts"
-  | "lowCompetition"
-  | "secondWave";
+type IntelligenceView = "hunter" | "beforeViral" | "newProducts" | "lowCompetition" | "secondWave";
 
 const views: Array<{
   id: IntelligenceView;
@@ -45,7 +40,8 @@ const views: Array<{
   {
     id: "beforeViral",
     label: "Antes de Viralizar",
-    description: "Aceleração observada em produtos ainda recentes e com concorrência relativa menor.",
+    description:
+      "Aceleração observada em produtos ainda recentes e com concorrência relativa menor.",
     icon: Sparkles,
   },
   {
@@ -156,9 +152,7 @@ function MarketIntelligencePage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <Icon className="h-4 w-4" />
-                <span className="text-xs text-muted-foreground">
-                  {isLoading ? "…" : count}
-                </span>
+                <span className="text-xs text-muted-foreground">{isLoading ? "…" : count}</span>
               </div>
               <p className="mt-3 text-sm font-semibold">{item.label}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -217,7 +211,12 @@ function IntelligenceCard({ item }: { item: ProductIntelligence }) {
       <div className="flex gap-4 p-4 md:p-5">
         <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
           {product.image_url ? (
-            <img src={product.image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+            <img
+              src={product.image_url}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
           ) : (
             <PackageSearch className="h-6 w-6 text-muted-foreground" />
           )}
@@ -238,9 +237,7 @@ function IntelligenceCard({ item }: { item: ProductIntelligence }) {
             </div>
 
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                Índice
-              </p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Índice</p>
               <p className="text-2xl font-bold">
                 {item.opportunityIndex === null ? "—" : item.opportunityIndex}
               </p>

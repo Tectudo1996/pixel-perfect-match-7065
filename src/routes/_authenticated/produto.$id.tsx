@@ -191,10 +191,7 @@ function ProductDetailPage() {
         </div>
         {growth.salesDelta !== null ? (
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <InfoCard
-              label="Vendas no período"
-              value={formatSigned(growth.salesDelta)}
-            />
+            <InfoCard label="Vendas no período" value={formatSigned(growth.salesDelta)} />
             <InfoCard
               label="Ritmo equivalente"
               value={

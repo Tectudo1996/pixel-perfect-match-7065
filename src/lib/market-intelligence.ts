@@ -20,11 +20,7 @@ export type GrowthSummary = {
   accelerating: boolean;
 };
 
-export type OpportunityTag =
-  | "antes_de_viralizar"
-  | "novo"
-  | "baixa_concorrencia"
-  | "segunda_onda";
+export type OpportunityTag = "antes_de_viralizar" | "novo" | "baixa_concorrencia" | "segunda_onda";
 
 export type ProductIntelligence = {
   product: IntelligenceProduct;
@@ -134,10 +130,7 @@ export function buildMarketIntelligence(
       (signal): signal is { score: number; weight: number } => signal.score !== null,
     );
     const weightAvailable = available.reduce((sum, signal) => sum + signal.weight, 0);
-    const weightedScore = available.reduce(
-      (sum, signal) => sum + signal.score * signal.weight,
-      0,
-    );
+    const weightedScore = available.reduce((sum, signal) => sum + signal.score * signal.weight, 0);
     const opportunityIndex =
       weightAvailable >= 0.45 ? Math.round(weightedScore / weightAvailable) : null;
     const coverage = Math.round(weightAvailable * 100);
@@ -189,7 +182,9 @@ export function buildMarketIntelligence(
     }
 
     if (item.commissionValue !== null && commissionScore !== null) {
-      reasons.push(`Comissão relativa ${Math.round(commissionScore)}/100 dentro do mesmo tipo de dado`);
+      reasons.push(
+        `Comissão relativa ${Math.round(commissionScore)}/100 dentro do mesmo tipo de dado`,
+      );
     }
 
     reasons.push(`Produto identificado há ${Math.floor(item.ageDays)} dias`);
@@ -275,9 +270,7 @@ function calculateDelta<T extends { recorded_at: string }>(
   };
 }
 
-function calculateAcceleration(
-  points: Array<IntelligenceMetricPoint & { sales_count: number }>,
-) {
+function calculateAcceleration(points: Array<IntelligenceMetricPoint & { sales_count: number }>) {
   if (points.length < 3) return false;
 
   const first = points[0];
@@ -322,8 +315,7 @@ function compareOpportunity(a: ProductIntelligence, b: ProductIntelligence) {
   return (
     b.opportunityIndex - a.opportunityIndex ||
     b.coverage - a.coverage ||
-    new Date(b.product.data_updated_at).getTime() -
-      new Date(a.product.data_updated_at).getTime()
+    new Date(b.product.data_updated_at).getTime() - new Date(a.product.data_updated_at).getTime()
   );
 }
 
