@@ -264,3 +264,17 @@ desatualizado enquanto o Mercado Pago continua processando eventos.
 
 Consulte `docs/PRODUCTION_RUNBOOK.md` antes de ativar limites, billing ou liberar o checkout
 para usuários externos.
+
+### Etapa 11A — multi-gateway e home mobile
+
+- home pública centralizada e refinada no mobile sem alterar o layout desktop
+- billing preparado para múltiplos gateways
+- Mercado Pago preservado como integração automática existente
+- PayPal adicionado com assinatura recorrente via API oficial, Webhook verificado e autoatendimento
+- Pepper adicionada como checkout alternativo em modo assistido
+- bloqueio contra duas assinaturas simultâneas em gateways diferentes
+- migration `0004_multi_gateway_billing.sql` amplia os provedores permitidos para Mercado Pago, PayPal e Pepper
+- Admin → Prontidão passa a diagnosticar cada gateway separadamente
+- Pepper não concede Pro automaticamente até a API/Webhook específica da conta ser validada
+
+A migration 0004 deve ser aplicada antes de habilitar PayPal ou Pepper em produção.
