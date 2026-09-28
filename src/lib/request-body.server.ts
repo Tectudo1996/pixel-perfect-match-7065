@@ -39,6 +39,10 @@ export async function readJsonBody(request: Request, maxBytes: number) {
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new RequestBodyError(400, "INVALID_JSON", "O corpo da requisição não contém JSON válido.");
+    throw new RequestBodyError(
+      400,
+      "INVALID_JSON",
+      "O corpo da requisição não contém JSON válido.",
+    );
   }
 }
