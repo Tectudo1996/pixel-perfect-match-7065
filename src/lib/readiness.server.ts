@@ -113,14 +113,18 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
     );
   }
 
-  const aiReady = hasEnv("OPENAI_API_KEY");
+  const lovableAiReady = hasEnv("LOVABLE_API_KEY");
+  const openAiReady = hasEnv("OPENAI_API_KEY") && hasEnv("OPENAI_MODEL");
+  const aiReady = lovableAiReady || openAiReady;
   checks.push({
     id: "ai-provider",
     label: "Geração por IA",
     state: aiReady ? "ready" : "missing",
-    detail: aiReady
-      ? "A chave do provedor de IA está configurada no servidor."
-      : "OPENAI_API_KEY ainda não está configurada.",
+    detail: lovableAiReady
+      ? "Lovable AI Gateway está disponível com a chave gerenciada pelo projeto."
+      : openAiReady
+        ? "OpenAI externo está configurado como fallback."
+        : "Nenhum provedor de IA server-side está configurado.",
   });
 
   const ingestionReady = hasStrongSecret("PRODUCT_INGEST_SECRET");
