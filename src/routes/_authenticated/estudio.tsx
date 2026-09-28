@@ -119,9 +119,7 @@ function ContentStudioPage() {
   }, [produto, products, productsLoading, editingId, appliedSearchProduct]);
 
   const saving = createProject.isPending || updateProject.isPending;
-  const aiLimitReached = Boolean(
-    planUsage?.enforcementEnabled && planUsage.remaining <= 0,
-  );
+  const aiLimitReached = Boolean(planUsage?.enforcementEnabled && planUsage.remaining <= 0);
   const canSave = useMemo(
     () => form.productId.length > 0 && form.title.trim().length > 0 && !saving,
     [form.productId, form.title, saving],
