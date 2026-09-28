@@ -77,9 +77,7 @@ function PlanPage() {
 
   async function handleCancelBilling() {
     const cancelingPepperCheckout =
-      data?.plan !== "pro" &&
-      billing?.provider === "pepper" &&
-      billing.billingStatus === "pending";
+      data?.plan !== "pro" && billing?.provider === "pepper" && billing.billingStatus === "pending";
 
     const confirmed = window.confirm(
       cancelingPepperCheckout
