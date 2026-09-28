@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/api/billing/cancel")({
+export const Route = createFileRoute("/api/webhooks/paypal")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { cancelBilling, normalizeBillingError } = await import("@/lib/billing.server");
+        const { handlePayPalWebhook, normalizeBillingError } = await import("@/lib/billing.server");
 
         try {
-          return Response.json(await cancelBilling(request));
+          return Response.json(await handlePayPalWebhook(request), { status: 200 });
         } catch (error) {
           const normalized = normalizeBillingError(error);
           return Response.json(

@@ -157,3 +157,40 @@ Antes de merge na `main`, o projeto deve passar por:
 - `tsc --noEmit`
 
 Não ignore um erro de typecheck apenas porque o bundler conseguiu gerar o build.
+
+## 10. Gateways adicionais
+
+### PayPal
+
+Variáveis:
+
+- `PAYPAL_BILLING_ENABLED`
+- `PAYPAL_ENVIRONMENT=sandbox|live`
+- `PAYPAL_CLIENT_ID`
+- `PAYPAL_CLIENT_SECRET`
+- `PAYPAL_PLAN_ID`
+- `PAYPAL_WEBHOOK_ID`
+- `PAYPAL_PRO_MONTHLY_BRL`
+- `PAYPAL_BRAND_NAME`
+
+Webhook:
+
+`POST /api/webhooks/paypal`
+
+Comece em sandbox. O valor em `PAYPAL_PRO_MONTHLY_BRL` deve corresponder ao plano cadastrado no PayPal.
+
+### Pepper
+
+Variáveis:
+
+- `PEPPER_BILLING_ENABLED`
+- `PEPPER_CHECKOUT_URL`
+- `PEPPER_PRO_MONTHLY_BRL`
+
+A Pepper fica disponível como checkout alternativo, mas a ativação automática do Pro permanece
+desabilitada até o contrato de API/Webhook da conta ser validado. Não trate retorno visual do
+checkout como confirmação de pagamento.
+
+### Migration multi-gateway
+
+Aplique `drizzle/migrations/0004_multi_gateway_billing.sql` antes de habilitar PayPal ou Pepper.

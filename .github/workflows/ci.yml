@@ -67,8 +67,10 @@ jobs:
           src/routes/api/health.ts
           src/routes/api/usage.ts
           src/routes/api/webhooks/mercado-pago.ts
+          src/routes/api/webhooks/paypal.ts
           src/routes/api/integrations/products.ts
           src/routes/auth.tsx
+          src/routes/index.tsx
           src/routes/transparencia.tsx
           src/routes/_authenticated/admin.tsx
           src/routes/_authenticated/configuracoes.tsx
