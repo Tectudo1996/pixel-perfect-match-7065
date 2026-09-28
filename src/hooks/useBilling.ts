@@ -1,15 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 
+export type BillingProvider = "mercado_pago" | "paypal" | "pepper";
+
+export type BillingProviderOption = {
+  id: BillingProvider;
+  label: string;
+  description: string;
+  configured: boolean;
+  managementAvailable: boolean;
+  automaticEntitlement: boolean;
+  monthlyPrice: number | null;
+};
+
 export type BillingSummary = {
   configured: boolean;
   managementAvailable: boolean;
-  provider: "mercado_pago";
+  provider: BillingProvider | null;
   currency: "BRL";
   monthlyPrice: number | null;
   billingStatus: string | null;
   externalSubscriptionId: string | null;
   nextPaymentAt: string | null;
+  providers: BillingProviderOption[];
 };
 
 export function useBillingSummary() {
@@ -27,13 +40,15 @@ export function useStartProCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (provider: BillingProvider) => {
       const token = await requireAccessToken();
-      return requestJson<{ checkoutUrl: string; provider: "mercado_pago"; reused: boolean }>(
-        "/api/billing/checkout",
-        token,
-        { method: "POST" },
-      );
+      const params = new URLSearchParams({ provider });
+      return requestJson<{
+        checkoutUrl: string;
+        provider: BillingProvider;
+        reused: boolean;
+        requiresManualActivation?: boolean;
+      }>(`/api/billing/checkout?${params.toString()}`, token, { method: "POST" });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["billing-summary"] });
