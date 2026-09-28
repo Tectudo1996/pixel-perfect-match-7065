@@ -219,3 +219,18 @@ Para habilitar cobrança real, aplique primeiro as migrations 0002 e 0003, mante
 `MERCADO_PAGO_PRO_MONTHLY_BRL`, configure `APP_PUBLIC_URL` e então altere
 `MERCADO_PAGO_BILLING_ENABLED=true`. O endpoint de webhook é
 `POST /api/webhooks/mercado-pago`.
+
+### Etapa 10E — concluída no código
+
+- sincronização manual segura do status da assinatura com o Mercado Pago
+- endpoint autenticado `POST /api/billing/sync`
+- cancelamento da assinatura pelo próprio usuário
+- endpoint autenticado `POST /api/billing/cancel`
+- propriedade da assinatura validada pela `external_reference` antes de sincronizar ou cancelar
+- cancelamento enviado ao Mercado Pago e reconciliado antes de atualizar o plano local
+- página Plano e uso permite atualizar status, continuar checkout pendente e cancelar o Pro
+- toda sincronização invalida os caches de cobrança e de limites de IA
+
+O cancelamento nesta implementação é imediato: depois da confirmação do provedor, o usuário
+retorna ao plano Grátis. Uma política futura de acesso até o fim do período pago exigirá guardar
+e aplicar explicitamente o término do entitlement.
