@@ -32,6 +32,42 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_type: string
+          id: string
+          processed_at: string | null
+          provider: string
+          provider_event_id: string
+          received_at: string
+          resource_id: string | null
+          status: string
+        }
+        Insert: {
+          error_message?: string | null
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          provider: string
+          provider_event_id: string
+          received_at?: string
+          resource_id?: string | null
+          status?: string
+        }
+        Update: {
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          provider?: string
+          provider_event_id?: string
+          received_at?: string
+          resource_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -343,6 +379,12 @@ export type Database = {
       user_subscriptions: {
         Row: {
           ai_generations_used: number
+          billing_external_id: string | null
+          billing_next_payment_at: string | null
+          billing_payer_id: string | null
+          billing_provider: string | null
+          billing_status: string | null
+          billing_updated_at: string | null
           created_at: string
           current_period_end: string
           current_period_start: string
@@ -353,6 +395,12 @@ export type Database = {
         }
         Insert: {
           ai_generations_used?: number
+          billing_external_id?: string | null
+          billing_next_payment_at?: string | null
+          billing_payer_id?: string | null
+          billing_provider?: string | null
+          billing_status?: string | null
+          billing_updated_at?: string | null
           created_at?: string
           current_period_end?: string
           current_period_start?: string
@@ -363,6 +411,12 @@ export type Database = {
         }
         Update: {
           ai_generations_used?: number
+          billing_external_id?: string | null
+          billing_next_payment_at?: string | null
+          billing_payer_id?: string | null
+          billing_provider?: string | null
+          billing_status?: string | null
+          billing_updated_at?: string | null
           created_at?: string
           current_period_end?: string
           current_period_start?: string
