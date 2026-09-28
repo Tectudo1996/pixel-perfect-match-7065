@@ -145,49 +145,103 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
       : "AI_USAGE_LIMITS_ENABLED está desativado.",
   });
 
-  const billingEnabled = envFlag("MERCADO_PAGO_BILLING_ENABLED");
-  const billingAccessReady = hasEnv("MERCADO_PAGO_ACCESS_TOKEN");
-  const webhookSecretReady = hasStrongSecret("MERCADO_PAGO_WEBHOOK_SECRET");
-  const checkoutConfigReady =
-    billingAccessReady &&
+  const mercadoPagoEnabled = envFlag("MERCADO_PAGO_BILLING_ENABLED");
+  const mercadoPagoAccessReady = hasEnv("MERCADO_PAGO_ACCESS_TOKEN");
+  const mercadoPagoWebhookReady = hasStrongSecret("MERCADO_PAGO_WEBHOOK_SECRET");
+  const mercadoPagoCheckoutReady =
+    mercadoPagoAccessReady &&
     hasPositiveMoney("MERCADO_PAGO_PRO_MONTHLY_BRL") &&
     hasValidPublicUrl("APP_PUBLIC_URL");
 
   checks.push({
-    id: "billing-webhook",
+    id: "mercado-pago-webhook",
     label: "Reconciliação do Mercado Pago",
-    state: billingAccessReady && webhookSecretReady && billingMigrationReady ? "ready" : "missing",
+    state:
+      mercadoPagoAccessReady && mercadoPagoWebhookReady && billingMigrationReady
+        ? "ready"
+        : "missing",
     detail:
-      billingAccessReady && webhookSecretReady && billingMigrationReady
-        ? "Webhooks podem continuar sendo validados e reconciliados mesmo com novas vendas pausadas."
+      mercadoPagoAccessReady && mercadoPagoWebhookReady && billingMigrationReady
+        ? "Webhooks do Mercado Pago podem ser validados e reconciliados."
         : "Faltam Access Token, segredo de Webhook ou migration 0003.",
   });
 
   checks.push({
-    id: "billing-checkout",
-    label: "Novas assinaturas Pro",
-    state: billingEnabled
-      ? checkoutConfigReady && billingMigrationReady && usageEnabled
+    id: "mercado-pago-checkout",
+    label: "Checkout Mercado Pago",
+    state: mercadoPagoEnabled
+      ? mercadoPagoCheckoutReady && billingMigrationReady && usageEnabled
         ? "ready"
         : "error"
       : "disabled",
-    detail: billingEnabled
-      ? checkoutConfigReady && billingMigrationReady && usageEnabled
-        ? "Checkout recorrente está habilitado para novas assinaturas."
-        : "Novas vendas estão ativas, mas faltam preço, URL pública, credencial, migration 0003 ou limites."
-      : "MERCADO_PAGO_BILLING_ENABLED está desativado; assinaturas existentes ainda podem ser reconciliadas.",
+    detail: mercadoPagoEnabled
+      ? mercadoPagoCheckoutReady && billingMigrationReady && usageEnabled
+        ? "Novas assinaturas via Mercado Pago estão habilitadas."
+        : "Mercado Pago está ativo, mas faltam preço, URL pública, credencial, migration 0003 ou limites."
+      : "Novas assinaturas via Mercado Pago estão desativadas.",
+  });
+
+  const paypalEnabled = envFlag("PAYPAL_BILLING_ENABLED");
+  const paypalCredentialsReady =
+    hasEnv("PAYPAL_CLIENT_ID") && hasStrongSecret("PAYPAL_CLIENT_SECRET");
+  const paypalWebhookReady = paypalCredentialsReady && hasEnv("PAYPAL_WEBHOOK_ID");
+  const paypalCheckoutReady =
+    paypalCredentialsReady &&
+    hasEnv("PAYPAL_PLAN_ID") &&
+    hasPositiveMoney("PAYPAL_PRO_MONTHLY_BRL") &&
+    hasValidPublicUrl("APP_PUBLIC_URL");
+
+  checks.push({
+    id: "paypal-webhook",
+    label: "Reconciliação do PayPal",
+    state: paypalWebhookReady && billingMigrationReady ? "ready" : "missing",
+    detail:
+      paypalWebhookReady && billingMigrationReady
+        ? "Webhook e credenciais do PayPal estão preparados."
+        : "Faltam Client ID, Client Secret, Webhook ID ou migration 0003.",
+  });
+
+  checks.push({
+    id: "paypal-checkout",
+    label: "Checkout PayPal",
+    state: paypalEnabled
+      ? paypalCheckoutReady && billingMigrationReady && usageEnabled
+        ? "ready"
+        : "error"
+      : "disabled",
+    detail: paypalEnabled
+      ? paypalCheckoutReady && billingMigrationReady && usageEnabled
+        ? "Novas assinaturas via PayPal estão habilitadas."
+        : "PayPal está ativo, mas faltam plano, preço, URL pública, credenciais, migration 0003 ou limites."
+      : "Novas assinaturas via PayPal estão desativadas.",
+  });
+
+  const pepperEnabled = envFlag("PEPPER_BILLING_ENABLED");
+  const pepperCheckoutReady =
+    hasValidPublicUrl("PEPPER_CHECKOUT_URL") && hasPositiveMoney("PEPPER_PRO_MONTHLY_BRL");
+
+  checks.push({
+    id: "pepper-checkout",
+    label: "Checkout Pepper",
+    state: pepperEnabled ? (pepperCheckoutReady ? "ready" : "error") : "disabled",
+    detail: pepperEnabled
+      ? pepperCheckoutReady
+        ? "Checkout Pepper está disponível em modo assistido; a ativação automática ainda depende da API/Webhook da conta."
+        : "Pepper está ativo, mas faltam URL de checkout ou preço."
+      : "Checkout Pepper está desativado.",
   });
 
   const coreReady = supabaseEnvReady && coreDatabaseReady;
+  const automaticBillingReady =
+    (mercadoPagoEnabled && mercadoPagoCheckoutReady && mercadoPagoWebhookReady) ||
+    (paypalEnabled && paypalCheckoutReady && paypalWebhookReady);
   const paidLaunchReady =
     coreReady &&
     planMigrationReady &&
     billingMigrationReady &&
     aiReady &&
     usageEnabled &&
-    billingEnabled &&
-    checkoutConfigReady &&
-    webhookSecretReady;
+    automaticBillingReady;
 
   return {
     checkedAt: new Date().toISOString(),
