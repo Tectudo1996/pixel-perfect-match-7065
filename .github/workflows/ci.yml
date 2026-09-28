@@ -70,6 +70,9 @@ jobs:
           src/routes/api/webhooks/mercado-pago.ts
           src/routes/api/webhooks/paypal.ts
           src/routes/api/integrations/products.ts
+          src/routes/api/integrations/tiktok-shop/authorize.ts
+          src/routes/api/integrations/tiktok-shop/callback.ts
+          src/routes/api/integrations/tiktok-shop/status.ts
           src/routes/auth.tsx
           src/routes/index.tsx
           src/routes/transparencia.tsx
