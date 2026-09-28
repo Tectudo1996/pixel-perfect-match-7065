@@ -69,7 +69,9 @@ export async function getPlanUsage(userId: string): Promise<PlanUsageSummary> {
     used,
     limit,
     remaining: Math.max(limit - used, 0),
-    periodStart: periodExpired ? startOfCurrentMonth().toISOString() : subscription.current_period_start,
+    periodStart: periodExpired
+      ? startOfCurrentMonth().toISOString()
+      : subscription.current_period_start,
     periodEnd: periodExpired ? startOfNextMonth().toISOString() : subscription.current_period_end,
     catalog,
   };
