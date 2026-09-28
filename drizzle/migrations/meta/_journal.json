@@ -15,6 +15,13 @@
       "when": 1790620958978,
       "tag": "0001_billing_mercado_pago",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790622627658,
+      "tag": "0002_0004_multi_gateway_billing",
+      "breakpoints": true
     }
   ]
 }
