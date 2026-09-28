@@ -3,6 +3,7 @@ import type { Json, Tables } from "@/integrations/supabase/types";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 
 export type AdminCategory = Tables<"categories">;
+export type AdminIngestionRun = Tables<"ingestion_runs">;
 
 type ProductCategory = {
   name: string;
@@ -28,7 +29,7 @@ export type AdminOverview = {
   usersCount: number;
   productsCount: number;
   categoriesCount: number;
-  sources: Array<{ source: string; count: number }>;
+  sources: Array<{ source: string; count: number; latestDataAt: string | null }>;
 };
 
 export type AdminProductValues = {
@@ -83,6 +84,7 @@ async function invalidateAdminQueries(queryClient: ReturnType<typeof useQueryCli
     queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
     queryClient.invalidateQueries({ queryKey: ["admin-categories"] }),
     queryClient.invalidateQueries({ queryKey: ["admin-settings"] }),
+    queryClient.invalidateQueries({ queryKey: ["admin-ingestion-runs"] }),
     queryClient.invalidateQueries({ queryKey: ["categories"] }),
     queryClient.invalidateQueries({ queryKey: ["product-radar"] }),
     queryClient.invalidateQueries({ queryKey: ["personal-radar"] }),
@@ -101,7 +103,7 @@ export function useAdminOverview(enabled: boolean) {
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("products").select("id", { count: "exact", head: true }),
         supabase.from("categories").select("id", { count: "exact", head: true }),
-        supabase.from("products").select("source"),
+        supabase.from("products").select("source,data_updated_at"),
       ]);
 
       const errors = [users.error, products.error, categories.error, sourceRows.error].filter(
@@ -109,15 +111,24 @@ export function useAdminOverview(enabled: boolean) {
       );
       if (errors.length) throw errors[0];
 
-      const sourceCounts = new Map<string, number>();
+      const sourceCounts = new Map<string, { count: number; latestDataAt: string | null }>();
 
       for (const row of sourceRows.data ?? []) {
         const source = row.source?.trim() || "não informada";
-        sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1);
+        const current = sourceCounts.get(source) ?? { count: 0, latestDataAt: null };
+        const latestDataAt =
+          !current.latestDataAt || row.data_updated_at > current.latestDataAt
+            ? row.data_updated_at
+            : current.latestDataAt;
+
+        sourceCounts.set(source, {
+          count: current.count + 1,
+          latestDataAt,
+        });
       }
 
       const sources = Array.from(sourceCounts.entries())
-        .map(([source, count]) => ({ source, count }))
+        .map(([source, values]) => ({ source, ...values }))
         .sort((a, b) => b.count - a.count || a.source.localeCompare(b.source));
 
       return {
@@ -128,6 +139,26 @@ export function useAdminOverview(enabled: boolean) {
       };
     },
     staleTime: 30_000,
+  });
+}
+
+export function useAdminIngestionRuns(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin-ingestion-runs"],
+    enabled,
+    queryFn: async (): Promise<AdminIngestionRun[]> => {
+      await requireAdmin();
+
+      const { data, error } = await supabase
+        .from("ingestion_runs")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 20_000,
   });
 }
 
@@ -382,49 +413,88 @@ export function useImportAdminProducts() {
   return useMutation({
     mutationFn: async (rows: AdminImportProduct[]) => {
       const userId = await requireAdmin();
+      const rowsBySource = new Map<string, AdminImportProduct[]>();
+
+      for (const row of rows) {
+        const source = row.source.trim() || "admin_csv";
+        const current = rowsBySource.get(source) ?? [];
+        current.push(row);
+        rowsBySource.set(source, current);
+      }
+
       let imported = 0;
 
-      for (let index = 0; index < rows.length; index += 100) {
-        const batch = rows.slice(index, index + 100);
-        const inserts = batch.map(({ collected_at, ...row }) => ({
-          ...row,
-          created_by: userId,
-          identified_at: collected_at,
-          data_updated_at: collected_at,
-          is_demo: false,
-        }));
+      for (const [source, sourceRows] of rowsBySource) {
+        const collectedAt =
+          sourceRows.map((row) => row.collected_at).sort().at(-1) ?? new Date().toISOString();
+        const runId = await startAdminIngestionRun({
+          source,
+          acceptedCount: sourceRows.length,
+          collectedAt,
+          userId,
+        });
+        let sourceImported = 0;
 
-        const { data, error } = await supabase
-          .from("products")
-          .insert(inserts)
-          .select("id,price,commission_amount,sales_count,creators_count,source,data_updated_at");
+        try {
+          for (let index = 0; index < sourceRows.length; index += 100) {
+            const batch = sourceRows.slice(index, index + 100);
+            const inserts = batch.map(({ collected_at, ...row }) => ({
+              ...row,
+              created_by: userId,
+              identified_at: collected_at,
+              data_updated_at: collected_at,
+              is_demo: false,
+            }));
 
-        if (error) throw error;
+            const { data, error } = await supabase
+              .from("products")
+              .insert(inserts)
+              .select(
+                "id,price,commission_amount,sales_count,creators_count,source,data_updated_at",
+              );
 
-        const inserted = data ?? [];
-        const historyRows = inserted.map((product) => ({
-          product_id: product.id,
-          price: product.price,
-          commission_amount: product.commission_amount,
-          sales_count: product.sales_count,
-          creators_count: product.creators_count,
-          source: product.source,
-          recorded_at: product.data_updated_at,
-        }));
+            if (error) throw error;
 
-        if (historyRows.length) {
-          const { error: historyError } = await supabase
-            .from("product_metrics_history")
-            .insert(historyRows);
+            const inserted = data ?? [];
+            const historyRows = inserted.map((product) => ({
+              product_id: product.id,
+              price: product.price,
+              commission_amount: product.commission_amount,
+              sales_count: product.sales_count,
+              creators_count: product.creators_count,
+              source: product.source,
+              recorded_at: product.data_updated_at,
+            }));
 
-          if (historyError) {
-            const ids = inserted.map((product) => product.id);
-            await supabase.from("products").delete().in("id", ids);
-            throw historyError;
+            if (historyRows.length) {
+              const { error: historyError } = await supabase
+                .from("product_metrics_history")
+                .insert(historyRows);
+
+              if (historyError) {
+                const ids = inserted.map((product) => product.id);
+                await supabase.from("products").delete().in("id", ids);
+                throw historyError;
+              }
+            }
+
+            sourceImported += inserted.length;
+            imported += inserted.length;
           }
-        }
 
-        imported += inserted.length;
+          await finishAdminIngestionRun(runId, {
+            status: "succeeded",
+            inserted_count: sourceImported,
+            snapshot_count: sourceImported,
+          });
+        } catch (error) {
+          await finishAdminIngestionRun(runId, {
+            status: "failed",
+            error_code: "CSV_IMPORT_FAILED",
+            error_message: "A importação CSV falhou antes de concluir todos os itens.",
+          });
+          throw error;
+        }
       }
 
       return imported;
@@ -432,3 +502,54 @@ export function useImportAdminProducts() {
     onSuccess: () => invalidateAdminQueries(queryClient),
   });
 }
+
+async function startAdminIngestionRun({
+  source,
+  acceptedCount,
+  collectedAt,
+  userId,
+}: {
+  source: string;
+  acceptedCount: number;
+  collectedAt: string;
+  userId: string;
+}) {
+  const { data, error } = await supabase
+    .from("ingestion_runs")
+    .insert({
+      source,
+      channel: "csv",
+      accepted_count: acceptedCount,
+      collected_at: collectedAt,
+      created_by: userId,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.warn("[RadarShop AI] histórico de importação indisponível", error.message);
+    return null;
+  }
+
+  return data.id;
+}
+
+async function finishAdminIngestionRun(
+  id: string | null,
+  values: Tables<"ingestion_runs">["Update"] extends never ? never : Partial<AdminIngestionRun>,
+) {
+  if (!id) return;
+
+  const { error } = await supabase
+    .from("ingestion_runs")
+    .update({
+      ...values,
+      finished_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.warn("[RadarShop AI] histórico de importação não pôde ser atualizado", error.message);
+  }
+}
+
