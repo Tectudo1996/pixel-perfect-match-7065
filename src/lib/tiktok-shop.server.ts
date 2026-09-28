@@ -200,7 +200,7 @@ export async function requestTikTokShopApi<T>({
       "Content-Type": "application/json",
       "x-tts-access-token": accessToken,
     },
-    body: bodyText ?? undefined,
+    body: bodyText,
   });
 
   const payload = (await response.json().catch(() => null)) as TikTokShopEnvelope<T> | null;
