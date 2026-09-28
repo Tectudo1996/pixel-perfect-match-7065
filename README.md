@@ -199,3 +199,23 @@ Para ativar os limites em um ambiente real, aplique primeiro a migration
 - nenhuma decisão de preço ou gateway foi embutida nesta etapa
 
 Essa administração manual permite validar o fluxo Free/Pro antes de conectar um checkout real.
+
+### Etapa 10D — concluída no código
+
+- integração de checkout recorrente com Mercado Pago
+- preço mensal do Pro obrigatório via variável de ambiente, sem valor hardcoded
+- checkout criado no servidor com referência interna do usuário
+- retorno do navegador não concede acesso ao Pro
+- ativação do Pro somente após reconciliação server-to-server
+- webhook validado por HMAC SHA-256 usando `x-signature`, `x-request-id` e `data.id`
+- consulta da assinatura diretamente na API do Mercado Pago antes de alterar o plano
+- eventos de webhook persistidos para auditoria e reprocessamento idempotente
+- assinaturas autorizadas ativam Pro; pausadas/canceladas retornam ao Free
+- página Plano e uso mostra preço configurado, status e botão de checkout quando habilitado
+- migration `drizzle/migrations/0003_billing_mercado_pago.sql`
+
+Para habilitar cobrança real, aplique primeiro as migrations 0002 e 0003, mantenha
+`AI_USAGE_LIMITS_ENABLED=true`, configure as credenciais do Mercado Pago, defina
+`MERCADO_PAGO_PRO_MONTHLY_BRL`, configure `APP_PUBLIC_URL` e então altere
+`MERCADO_PAGO_BILLING_ENABLED=true`. O endpoint de webhook é
+`POST /api/webhooks/mercado-pago`.
