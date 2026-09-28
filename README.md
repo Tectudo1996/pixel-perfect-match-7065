@@ -310,3 +310,14 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - PayPal e Pepper só aparecem como prontos quando o schema aceita os três gateways
 - o indicador de lançamento pago exige o conjunto atual de migrations
 - runbook de produção atualizado para Lovable AI, Mercado Pago, PayPal e Pepper
+
+
+### Etapa 12A — observabilidade das fontes
+
+- registra execuções da ingestão externa e da importação CSV
+- guarda fonte, canal, status, quantidades recebidas/inseridas/atualizadas e snapshots
+- falhas de observabilidade não bloqueiam a ingestão de produtos
+- nova aba Admin → Fontes mostra saúde do catálogo e histórico recente
+- cada fonte exibe quantidade de produtos, dado mais recente e última execução registrada
+- migration `0006_ingestion_observability.sql` protege o histórico com RLS de administrador
+- prepara a operação para conectar TikTok Shop oficial ou outros provedores sem perder rastreabilidade
