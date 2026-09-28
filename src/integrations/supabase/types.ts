@@ -319,6 +319,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          ai_generations_used: number
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_generations_used?: number
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_generations_used?: number
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -351,6 +384,26 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      refund_ai_generation: {
+        Args: {
+          _user_id: string
+        }
+        Returns: number
+      }
+      reserve_ai_generation: {
+        Args: {
+          _limit: number
+          _user_id: string
+        }
+        Returns: {
+          allowed: boolean
+          period_end: string
+          period_start: string
+          plan: string
+          status: string
+          used: number
+        }[]
       }
     }
     Enums: {

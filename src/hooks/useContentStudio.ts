@@ -145,6 +145,8 @@ export function useDeleteContentProject() {
 }
 
 export function useGenerateStudioContent() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (input: AiContentRequest) => {
       const { data, error } = await supabase.auth.getSession();
@@ -178,5 +180,6 @@ export function useGenerateStudioContent() {
 
       return aiContentResponseSchema.parse(payload);
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plan-usage"] }),
   });
 }

@@ -8,6 +8,7 @@ const PRIVATE_PATH_PREFIXES = [
   "/inteligencia",
   "/favoritos",
   "/estudio",
+  "/plano",
   "/perfil",
   "/configuracoes",
   "/admin",
