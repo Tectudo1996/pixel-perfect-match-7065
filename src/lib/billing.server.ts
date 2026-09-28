@@ -497,8 +497,7 @@ export async function createPepperCheckout(request: Request) {
   assertGatewaySwitchAllowed(existing, "pepper");
 
   const reused =
-    existing?.billing_provider === "pepper" &&
-    existing.billing_status?.toLowerCase() === "pending";
+    existing?.billing_provider === "pepper" && existing.billing_status?.toLowerCase() === "pending";
 
   if (!reused) {
     const { error: saveError } = await supabaseAdmin.from("user_subscriptions").upsert(
