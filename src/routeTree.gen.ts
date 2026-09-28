@@ -37,6 +37,7 @@ import { Route as ApiBillingStatusRouteImport } from './routes/api/billing/statu
 import { Route as ApiBillingSyncRouteImport } from './routes/api/billing/sync'
 import { Route as ApiIntegrationsProductsRouteImport } from './routes/api/integrations/products'
 import { Route as ApiWebhooksMercadoPagoRouteImport } from './routes/api/webhooks/mercado-pago'
+import { Route as ApiWebhooksPaypalRouteImport } from './routes/api/webhooks/paypal'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -179,6 +180,11 @@ const ApiWebhooksMercadoPagoRoute = ApiWebhooksMercadoPagoRouteImport.update({
   path: '/api/webhooks/mercado-pago',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksPaypalRoute = ApiWebhooksPaypalRouteImport.update({
+  id: '/api/webhooks/paypal',
+  path: '/api/webhooks/paypal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/api/billing/sync': typeof ApiBillingSyncRoute
   '/api/integrations/products': typeof ApiIntegrationsProductsRoute
   '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
+  '/api/webhooks/paypal': typeof ApiWebhooksPaypalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/api/billing/sync': typeof ApiBillingSyncRoute
   '/api/integrations/products': typeof ApiIntegrationsProductsRoute
   '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
+  '/api/webhooks/paypal': typeof ApiWebhooksPaypalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/api/billing/sync': typeof ApiBillingSyncRoute
   '/api/integrations/products': typeof ApiIntegrationsProductsRoute
   '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
+  '/api/webhooks/paypal': typeof ApiWebhooksPaypalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/api/billing/sync'
     | '/api/integrations/products'
     | '/api/webhooks/mercado-pago'
+    | '/api/webhooks/paypal'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/api/billing/sync'
     | '/api/integrations/products'
     | '/api/webhooks/mercado-pago'
+    | '/api/webhooks/paypal'
   id:
     | '__root__'
     | '/'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/api/billing/sync'
     | '/api/integrations/products'
     | '/api/webhooks/mercado-pago'
+    | '/api/webhooks/paypal'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -377,6 +389,7 @@ export interface RootRouteChildren {
   ApiBillingSyncRoute: typeof ApiBillingSyncRoute
   ApiIntegrationsProductsRoute: typeof ApiIntegrationsProductsRoute
   ApiWebhooksMercadoPagoRoute: typeof ApiWebhooksMercadoPagoRoute
+  ApiWebhooksPaypalRoute: typeof ApiWebhooksPaypalRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -577,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksMercadoPagoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/paypal': {
+      id: '/api/webhooks/paypal'
+      path: '/api/webhooks/paypal'
+      fullPath: '/api/webhooks/paypal'
+      preLoaderRoute: typeof ApiWebhooksPaypalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -630,6 +650,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBillingSyncRoute: ApiBillingSyncRoute,
   ApiIntegrationsProductsRoute: ApiIntegrationsProductsRoute,
   ApiWebhooksMercadoPagoRoute: ApiWebhooksMercadoPagoRoute,
+  ApiWebhooksPaypalRoute: ApiWebhooksPaypalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
