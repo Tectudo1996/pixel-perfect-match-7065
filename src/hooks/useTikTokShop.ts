@@ -66,6 +66,58 @@ export function useSyncTikTokShowcase() {
   });
 }
 
+export type TikTokCreatorOpportunity = {
+  id: string;
+  title: string;
+  detailLink: string | null;
+  imageUrl: string | null;
+  shopName: string | null;
+  saleRegion: string | null;
+  hasInventory: boolean | null;
+  unitsSold: number | null;
+  currency: string | null;
+  minimumPrice: number | null;
+  maximumPrice: number | null;
+  commissionAmount: number | null;
+  commissionCurrency: string | null;
+  commissionPercent: number | null;
+};
+
+export type TikTokDiscoveryResult = {
+  products: TikTokCreatorOpportunity[];
+  nextPageToken: string | null;
+  total: number;
+};
+
+export function useSearchTikTokOpportunities() {
+  return useMutation({
+    mutationFn: async ({
+      search,
+      sort,
+      pageToken,
+    }: {
+      search?: string;
+      sort: "commission" | "sales";
+      pageToken?: string;
+    }) => {
+      const token = await requireAccessToken();
+      return requestJson<TikTokDiscoveryResult>(
+        "/api/integrations/tiktok-shop/discovery",
+        token,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(search?.trim() ? { search: search.trim() } : {}),
+            sort,
+            ...(pageToken ? { pageToken } : {}),
+          }),
+        },
+      );
+    },
+  });
+}
+
 export function useDisconnectTikTokShop() {
   const queryClient = useQueryClient();
 
