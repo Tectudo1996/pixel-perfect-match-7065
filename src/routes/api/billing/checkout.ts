@@ -4,9 +4,8 @@ export const Route = createFileRoute("/api/billing/checkout")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { createMercadoPagoCheckout, normalizeBillingError } = await import(
-          "@/lib/billing.server"
-        );
+        const { createMercadoPagoCheckout, normalizeBillingError } =
+          await import("@/lib/billing.server");
 
         try {
           return Response.json(await createMercadoPagoCheckout(request));
