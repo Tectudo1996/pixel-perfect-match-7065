@@ -189,10 +189,7 @@ export async function cancelMercadoPagoSubscription(request: Request) {
   const config = requireBillingConfig();
   const current = await getOwnedMercadoPagoSubscription(user.id, config.accessToken);
 
-  if (
-    current.status === "canceled" ||
-    current.status === "cancelled"
-  ) {
+  if (current.status === "canceled" || current.status === "cancelled") {
     await reconcileMercadoPagoSubscription(current);
     return { ok: true, status: current.status };
   }
