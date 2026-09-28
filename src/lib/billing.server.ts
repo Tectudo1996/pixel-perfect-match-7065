@@ -551,10 +551,7 @@ function getBillingConfig() {
     process.env["MERCADO_PAGO_BILLING_ENABLED"]?.trim().toLowerCase() === "true";
   const managementReady = isUsageLimitsEnabled() && Boolean(accessToken);
   const webhookReady = Boolean(accessToken && webhookSecret);
-  const checkoutEnabled =
-    salesFlagEnabled &&
-    managementReady &&
-    Boolean(monthlyPrice && publicAppUrl);
+  const checkoutEnabled = salesFlagEnabled && managementReady && Boolean(monthlyPrice && publicAppUrl);
 
   return {
     checkoutEnabled,
