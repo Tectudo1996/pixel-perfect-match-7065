@@ -163,10 +163,7 @@ function ContentStudioPage() {
 
     const duration = form.durationSeconds.trim() ? Number(form.durationSeconds) : null;
 
-    if (
-      duration !== null &&
-      (!Number.isInteger(duration) || duration <= 0 || duration > 180)
-    ) {
+    if (duration !== null && (!Number.isInteger(duration) || duration <= 0 || duration > 180)) {
       toast.error("A duração precisa ser um número inteiro entre 1 e 180 segundos.");
       return;
     }

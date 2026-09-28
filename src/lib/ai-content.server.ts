@@ -68,7 +68,10 @@ export async function handleAiContentRequest(request: Request) {
     );
   } catch (error) {
     const response = normalizeError(error);
-    return Response.json({ error: response.message, code: response.code }, { status: response.status });
+    return Response.json(
+      { error: response.message, code: response.code },
+      { status: response.status },
+    );
   }
 }
 
@@ -202,7 +205,10 @@ async function buildGenerationContext(userId: string, body: AiContentRequest) {
 async function generateWithOpenAI(prompt: string) {
   const apiKey = process.env["OPENAI_API_KEY"];
   const model = process.env["OPENAI_MODEL"];
-  const baseUrl = (process.env["OPENAI_BASE_URL"] || "https://api.openai.com/v1").replace(/\/$/, "");
+  const baseUrl = (process.env["OPENAI_BASE_URL"] || "https://api.openai.com/v1").replace(
+    /\/$/,
+    "",
+  );
 
   if (!apiKey || !model) {
     throw new ApiError(
@@ -271,7 +277,11 @@ async function generateWithOpenAI(prompt: string) {
   try {
     parsed = JSON.parse(outputText);
   } catch {
-    throw new ApiError(502, "AI_INVALID_RESPONSE", "A resposta da IA não veio no formato esperado.");
+    throw new ApiError(
+      502,
+      "AI_INVALID_RESPONSE",
+      "A resposta da IA não veio no formato esperado.",
+    );
   }
 
   return {

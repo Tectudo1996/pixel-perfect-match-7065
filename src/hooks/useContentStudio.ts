@@ -144,7 +144,6 @@ export function useDeleteContentProject() {
   });
 }
 
-
 export function useGenerateStudioContent() {
   return useMutation({
     mutationFn: async (input: AiContentRequest) => {
