@@ -400,6 +400,16 @@ function TikTokShopConnectionCard({
   }
 
   const connected = data?.connected === true;
+  const enabled = data?.enabled === true;
+  const configured = data?.configured === true;
+  const canConnect = enabled && configured && !connected;
+  const statusLabel = connected
+    ? "conectado"
+    : !enabled
+      ? "em preparação"
+      : configured
+        ? "não conectado"
+        : "configuração pendente";
 
   return (
     <section className="surface-card p-5 md:p-6">
@@ -410,13 +420,26 @@ function TikTokShopConnectionCard({
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-semibold">TikTok Shop</h2>
               <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase">
-                {connected ? "conectado" : "não conectado"}
+                {statusLabel}
               </span>
             </div>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Conecte sua conta Creator para permitir que o RadarShop use integrações oficiais do
-              TikTok Shop quando o Affiliate API estiver habilitado para o aplicativo.
-            </p>
+
+            {!enabled ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                A integração oficial está preparada no RadarShop, mas permanece desligada até o
+                aplicativo receber acesso no TikTok Shop Partner Center.
+              </p>
+            ) : !configured ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                A integração foi habilitada, mas a configuração segura do servidor ainda não está
+                completa.
+              </p>
+            ) : (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Conecte sua conta Creator para permitir que o RadarShop use as integrações oficiais
+                do TikTok Shop autorizadas para o aplicativo.
+              </p>
+            )}
 
             {connected && (
               <div className="mt-3 space-y-1 text-xs text-muted-foreground">
@@ -454,7 +477,7 @@ function TikTokShopConnectionCard({
               )}
               Desconectar
             </Button>
-          ) : (
+          ) : canConnect ? (
             <Button type="button" variant="gold" disabled={connecting} onClick={onConnect}>
               {connecting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -463,7 +486,7 @@ function TikTokShopConnectionCard({
               )}
               Conectar TikTok Shop
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
     </section>
