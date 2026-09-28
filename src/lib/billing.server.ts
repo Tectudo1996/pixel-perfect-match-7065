@@ -171,6 +171,65 @@ export async function createMercadoPagoCheckout(request: Request) {
   };
 }
 
+export async function syncMercadoPagoBilling(request: Request) {
+  const user = await requireApiUser(request);
+  const config = requireBillingConfig();
+  const subscription = await getOwnedMercadoPagoSubscription(user.id, config.accessToken);
+
+  await reconcileMercadoPagoSubscription(subscription);
+
+  return {
+    ok: true,
+    status: subscription.status ?? "unknown",
+  };
+}
+
+export async function cancelMercadoPagoSubscription(request: Request) {
+  const user = await requireApiUser(request);
+  const config = requireBillingConfig();
+  const current = await getOwnedMercadoPagoSubscription(user.id, config.accessToken);
+
+  if (
+    current.status === "canceled" ||
+    current.status === "cancelled"
+  ) {
+    await reconcileMercadoPagoSubscription(current);
+    return { ok: true, status: current.status };
+  }
+
+  const response = await fetch(
+    `${MERCADO_PAGO_API}/preapproval/${encodeURIComponent(current.id)}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${config.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "canceled" }),
+      signal: AbortSignal.timeout(20_000),
+    },
+  );
+
+  const payload = (await response.json().catch(() => null)) as MercadoPagoSubscription | null;
+
+  if (!response.ok || !payload?.id) {
+    console.error("[RadarShop AI] Mercado Pago cancellation error", response.status, payload);
+    throw new BillingError(
+      502,
+      "BILLING_PROVIDER_ERROR",
+      "A assinatura não pôde ser cancelada agora.",
+    );
+  }
+
+  assertOwnedSubscription(payload, user.id);
+  await reconcileMercadoPagoSubscription(payload);
+
+  return {
+    ok: true,
+    status: payload.status ?? "canceled",
+  };
+}
+
 export async function handleMercadoPagoWebhook(request: Request) {
   const config = requireBillingConfig();
   const url = new URL(request.url);
@@ -313,6 +372,42 @@ async function reconcileMercadoPagoSubscription(subscription: MercadoPagoSubscri
   });
 
   if (error) throw error;
+}
+
+async function getOwnedMercadoPagoSubscription(userId: string, accessToken: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("billing_external_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data?.billing_external_id) {
+    throw new BillingError(
+      404,
+      "BILLING_SUBSCRIPTION_NOT_FOUND",
+      "Nenhuma assinatura vinculada foi encontrada.",
+    );
+  }
+
+  const subscription = await fetchMercadoPagoSubscription(data.billing_external_id, accessToken);
+  assertOwnedSubscription(subscription, userId);
+  return subscription;
+}
+
+function assertOwnedSubscription(subscription: MercadoPagoSubscription, userId: string) {
+  const reference =
+    subscription.external_reference === null || subscription.external_reference === undefined
+      ? ""
+      : String(subscription.external_reference);
+
+  if (reference !== userId) {
+    throw new BillingError(
+      403,
+      "BILLING_SUBSCRIPTION_MISMATCH",
+      "A assinatura retornada não pertence a esta conta.",
+    );
+  }
 }
 
 async function fetchMercadoPagoSubscription(id: string, accessToken: string) {
