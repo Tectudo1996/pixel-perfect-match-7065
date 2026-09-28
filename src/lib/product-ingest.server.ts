@@ -19,16 +19,41 @@ type ProductSnapshot = {
 };
 
 export async function handleProductIngestRequest(request: Request) {
+  let ingestionRunId: string | null = null;
+
   try {
     authorizeIngestion(request);
 
     const body = productIngestRequestSchema.parse(await readJsonBody(request, 1_048_576));
     assertUniqueUrls(body);
+
+    ingestionRunId = await startIngestionRun({
+      source: body.source,
+      channel: "api",
+      accepted_count: body.products.length,
+      collected_at: body.collected_at ?? null,
+    });
+
     const result = await ingestProducts(body);
+
+    await finishIngestionRun(ingestionRunId, {
+      status: "succeeded",
+      accepted_count: result.accepted,
+      inserted_count: result.inserted,
+      updated_count: result.updated,
+      snapshot_count: result.metric_snapshots,
+      collected_at: result.collected_at,
+    });
 
     return Response.json(result, { status: 200 });
   } catch (error) {
     const normalized = normalizeError(error);
+
+    await finishIngestionRun(ingestionRunId, {
+      status: "failed",
+      error_code: normalized.code,
+      error_message: normalized.message,
+    });
 
     return Response.json(
       { error: normalized.message, code: normalized.code },
@@ -198,6 +223,51 @@ async function ingestProducts(body: ProductIngestRequest) {
     updated: updates.length,
     metric_snapshots: snapshots.length,
   };
+}
+
+async function startIngestionRun(
+  values: Pick<
+    TablesInsert<"ingestion_runs">,
+    "source" | "channel" | "accepted_count" | "collected_at"
+  >,
+) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("ingestion_runs")
+      .insert(values)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.warn("[RadarShop AI] ingestion history unavailable", error.message);
+      return null;
+    }
+
+    return data.id;
+  } catch (error) {
+    console.warn("[RadarShop AI] ingestion history unavailable", error);
+    return null;
+  }
+}
+
+async function finishIngestionRun(id: string | null, values: TablesUpdate<"ingestion_runs">) {
+  if (!id) return;
+
+  try {
+    const { error } = await supabaseAdmin
+      .from("ingestion_runs")
+      .update({
+        ...values,
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.warn("[RadarShop AI] ingestion history update failed", error.message);
+    }
+  } catch (error) {
+    console.warn("[RadarShop AI] ingestion history update failed", error);
+  }
 }
 
 function buildInsert(
