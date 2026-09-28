@@ -6,6 +6,8 @@ import {
   useCancelBilling,
   useStartProCheckout,
   useSyncBilling,
+  type BillingProvider,
+  type BillingProviderOption,
 } from "@/hooks/useBilling";
 import { usePlanUsage } from "@/hooks/usePlanUsage";
 import { Button } from "@/components/ui/button";
@@ -40,9 +42,18 @@ function PlanPage() {
   const syncBilling = useSyncBilling();
   const cancelBilling = useCancelBilling();
 
-  async function handleStartCheckout() {
+  async function handleStartCheckout(provider: BillingProvider) {
+    const option = billing?.providers.find((item) => item.id === provider);
+
+    if (option && !option.automaticEntitlement) {
+      const confirmed = window.confirm(
+        "Na Pepper, a ativação automática do Pro ainda depende da configuração da API/Webhook da sua conta. Deseja abrir o checkout mesmo assim?",
+      );
+      if (!confirmed) return;
+    }
+
     try {
-      const response = await startCheckout.mutateAsync();
+      const response = await startCheckout.mutateAsync(provider);
       window.location.assign(response.checkoutUrl);
     } catch (checkoutError) {
       toast.error(
@@ -67,7 +78,7 @@ function PlanPage() {
   async function handleCancelBilling() {
     if (
       !window.confirm(
-        "Cancelar a assinatura Pro agora? Após a confirmação do Mercado Pago, sua conta volta ao plano Grátis.",
+        "Cancelar a assinatura Pro agora? Após a confirmação do gateway, sua conta volta ao plano Grátis.",
       )
     ) {
       return;
@@ -141,8 +152,9 @@ function PlanPage() {
         <section className="rounded-lg border border-gold/30 bg-gold-soft/50 p-4">
           <p className="text-sm font-medium">Retorno do checkout recebido</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            O plano não é liberado pelo redirecionamento do navegador. A ativação acontece somente
-            depois que o servidor recebe e valida a confirmação do Mercado Pago.
+            O plano não é liberado apenas pelo redirecionamento do navegador. Nos gateways com
+            integração automática, a ativação acontece somente depois da confirmação validada no
+            servidor.
           </p>
         </section>
       )}
@@ -221,36 +233,30 @@ function PlanPage() {
       </section>
 
       <section className="surface-card p-5 md:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <WalletCards className="mt-0.5 h-4 w-4" />
           <div>
-            <div className="flex items-center gap-2">
-              <WalletCards className="h-4 w-4" />
-              <h2 className="text-base font-semibold">Cobrança do Pro</h2>
-            </div>
+            <h2 className="text-base font-semibold">Pagamento do Pro</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Checkout recorrente processado pelo Mercado Pago. A aplicação não recebe dados do seu
-              cartão e só libera o Pro depois da confirmação validada no servidor.
+              Escolha o gateway que preferir. O RadarShop não recebe dados do seu cartão e nunca
+              ativa o Pro apenas pelo retorno visual do checkout.
             </p>
           </div>
-
-          {billing?.configured && billing.monthlyPrice !== null && (
-            <p className="text-lg font-bold">
-              {formatMoney(billing.monthlyPrice)}
-              <span className="text-xs font-normal text-muted-foreground"> / mês</span>
-            </p>
-          )}
         </div>
 
         <div className="mt-5 border-t border-border pt-4">
           {billingLoading ? (
             <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Verificando checkout
+              Verificando gateways
             </span>
           ) : data.plan === "pro" ? (
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="space-y-1 text-sm">
                 <p className="font-medium">Seu Pro está ativo.</p>
+                <p className="text-xs text-muted-foreground">
+                  Gateway: {providerLabel(billing?.provider)}
+                </p>
                 {billing?.billingStatus && (
                   <p className="text-xs text-muted-foreground">
                     Status da cobrança: {translateBillingStatus(billing.billingStatus)}
@@ -294,79 +300,116 @@ function PlanPage() {
                 </div>
               )}
             </div>
-          ) : billing?.configured ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">
-                  {billing.billingStatus === "pending"
-                    ? "Seu checkout está pendente."
-                    : "Assine quando quiser aumentar sua capacidade de IA."}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  O valor vem da configuração segura do servidor e não fica fixado no frontend.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {billing.managementAvailable && billing.externalSubscriptionId && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={syncBilling.isPending || startCheckout.isPending}
-                    onClick={() => void handleSyncBilling()}
-                  >
-                    {syncBilling.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    Atualizar status
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="gold"
-                  disabled={startCheckout.isPending || syncBilling.isPending}
-                  onClick={() => void handleStartCheckout()}
-                >
-                  {startCheckout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {billing.billingStatus === "pending" ? "Continuar pagamento" : "Assinar Pro"}
-                </Button>
-              </div>
-            </div>
-          ) : billing?.managementAvailable && billing.externalSubscriptionId ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">Novas assinaturas estão pausadas.</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Sua assinatura já vinculada continua podendo ser sincronizada com o Mercado Pago.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={syncBilling.isPending}
-                onClick={() => void handleSyncBilling()}
-              >
-                {syncBilling.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                Atualizar status
-              </Button>
-            </div>
           ) : (
-            <div>
-              <p className="text-sm font-medium">Checkout ainda não ativado neste ambiente.</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                O código está preparado, mas credenciais, URL pública e valor mensal precisam estar
-                configurados no servidor antes da cobrança real.
-              </p>
-            </div>
+            <>
+              {billing?.provider && billing.externalSubscriptionId && (
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-4">
+                  <div>
+                    <p className="text-sm font-medium">
+                      Checkout em andamento via {providerLabel(billing.provider)}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Status atual: {translateBillingStatus(billing.billingStatus ?? "pending")}
+                    </p>
+                  </div>
+                  {billing.managementAvailable && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={syncBilling.isPending}
+                      onClick={() => void handleSyncBilling()}
+                    >
+                      {syncBilling.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      Atualizar status
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              <div className="grid gap-3 md:grid-cols-3">
+                {(billing?.providers ?? []).map((provider) => (
+                  <GatewayCard
+                    key={provider.id}
+                    provider={provider}
+                    pending={startCheckout.isPending}
+                    onCheckout={() => void handleStartCheckout(provider.id)}
+                  />
+                ))}
+              </div>
+
+              {!billing?.providers.some((provider) => provider.configured) && (
+                <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                  Nenhum gateway está habilitado para novas assinaturas neste ambiente. As
+                  integrações ficam invisíveis para cobrança real até as credenciais e configurações
+                  de servidor estarem completas.
+                </p>
+              )}
+            </>
           )}
         </div>
       </section>
     </div>
+  );
+}
+
+function GatewayCard({
+  provider,
+  pending,
+  onCheckout,
+}: {
+  provider: BillingProviderOption;
+  pending: boolean;
+  onCheckout: () => void;
+}) {
+  return (
+    <article className="rounded-lg border border-border p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">{provider.label}</h3>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {provider.description}
+          </p>
+        </div>
+        <span className="rounded-full border border-border px-2 py-0.5 text-[10px]">
+          {provider.automaticEntitlement ? "Automático" : "Assistido"}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm font-semibold">
+        {provider.monthlyPrice !== null ? (
+          <>
+            {formatMoney(provider.monthlyPrice)}
+            <span className="text-xs font-normal text-muted-foreground"> / mês</span>
+          </>
+        ) : (
+          <span className="text-xs font-normal text-muted-foreground">Preço não configurado</span>
+        )}
+      </p>
+
+      <Button
+        type="button"
+        variant={provider.configured ? "gold" : "outline"}
+        size="sm"
+        className="mt-4 w-full"
+        disabled={!provider.configured || pending}
+        onClick={onCheckout}
+      >
+        {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+        {provider.configured ? `Pagar com ${provider.label}` : "Aguardando configuração"}
+      </Button>
+
+      {!provider.automaticEntitlement && (
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          A Pepper está preparada como checkout alternativo; a ativação automática será ligada
+          somente após validarmos a API/Webhook da conta.
+        </p>
+      )}
+    </article>
   );
 }
 
@@ -410,6 +453,13 @@ function formatDate(value: string) {
     month: "2-digit",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function providerLabel(provider: BillingProvider | null | undefined) {
+  if (provider === "mercado_pago") return "Mercado Pago";
+  if (provider === "paypal") return "PayPal";
+  if (provider === "pepper") return "Pepper";
+  return "não informado";
 }
 
 function translateBillingStatus(status: string) {
