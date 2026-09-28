@@ -1,4 +1,11 @@
-import { createHmac } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  randomBytes,
+} from "node:crypto";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const TIKTOK_SHOP_API_BASE_URL = "https://open-api.tiktokglobalshop.com";
 const TIKTOK_SHOP_AUTH_BASE_URL = "https://auth.tiktok-shops.com";
@@ -18,7 +25,7 @@ export type TikTokShopTokenData = {
   refresh_token: string;
   open_id: string;
   user_type: number;
-  granted_scopes?: string[] | string;
+  granted_scopes?: Array<string | { scope: string }> | string;
   access_token_expire_in?: number;
   refresh_token_expire_in?: number;
   [key: string]: unknown;
@@ -291,6 +298,262 @@ function requireTikTokShopCredentials() {
   }
 
   return { appKey, appSecret };
+}
+
+export async function createTikTokCreatorAuthorization(userId: string) {
+  requireTikTokTokenEncryptionKey();
+
+  const state = randomBytes(32).toString("base64url");
+  const stateHash = hashOAuthState(state);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  const { error } = await supabaseAdmin.from("tiktok_shop_oauth_states").insert({
+    state_hash: stateHash,
+    user_id: userId,
+    expires_at: expiresAt,
+  });
+
+  if (error) throw error;
+
+  void supabaseAdmin
+    .from("tiktok_shop_oauth_states")
+    .delete()
+    .lt("expires_at", new Date().toISOString());
+
+  return {
+    authorizationUrl: buildTikTokCreatorAuthorizationUrl(state),
+    expiresAt,
+  };
+}
+
+export async function completeTikTokCreatorAuthorization(state: string, authCode: string) {
+  const userId = await consumeTikTokOAuthState(state);
+  const tokenData = await exchangeTikTokCreatorAuthorizationCode(authCode);
+
+  await saveTikTokShopConnection(userId, tokenData);
+
+  return userId;
+}
+
+export async function getTikTokShopConnectionStatus(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .select(
+      "open_id,user_type,granted_scopes,access_token_expires_at,refresh_token_expires_at,connected_at,updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    connected: Boolean(data),
+    openId: data?.open_id ?? null,
+    userType: data?.user_type ?? null,
+    grantedScopes: data?.granted_scopes ?? [],
+    accessTokenExpiresAt: data?.access_token_expires_at ?? null,
+    refreshTokenExpiresAt: data?.refresh_token_expires_at ?? null,
+    connectedAt: data?.connected_at ?? null,
+    updatedAt: data?.updated_at ?? null,
+  };
+}
+
+export async function loadTikTokCreatorTokens(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .select("token_ciphertext")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_NOT_CONNECTED",
+      "Nenhuma conta Creator do TikTok Shop está conectada.",
+      404,
+    );
+  }
+
+  return decryptTikTokTokens(data.token_ciphertext);
+}
+
+export async function disconnectTikTokShop(userId: string) {
+  const { error } = await supabaseAdmin
+    .from("tiktok_shop_connections")
+    .delete()
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  await supabaseAdmin.from("tiktok_shop_oauth_states").delete().eq("user_id", userId);
+}
+
+export function matchesTikTokShopAppKey(value: string | null) {
+  if (!value) return true;
+  const configured = process.env["TIKTOK_SHOP_APP_KEY"]?.trim() ?? "";
+  return Boolean(configured) && value === configured;
+}
+
+async function consumeTikTokOAuthState(state: string) {
+  if (!state.trim()) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_STATE",
+      "O state da autorização do TikTok Shop é inválido ou expirou.",
+      400,
+    );
+  }
+
+  const stateHash = hashOAuthState(state);
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabaseAdmin
+    .from("tiktok_shop_oauth_states")
+    .update({ consumed_at: now })
+    .eq("state_hash", stateHash)
+    .is("consumed_at", null)
+    .gt("expires_at", now)
+    .select("user_id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_STATE",
+      "O state da autorização do TikTok Shop é inválido ou expirou.",
+      400,
+    );
+  }
+
+  return data.user_id;
+}
+
+async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTokenData) {
+  const grantedScopes = normalizeGrantedScopes(tokenData.granted_scopes);
+  const tokenCiphertext = encryptTikTokTokens({
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+  });
+
+  const { error } = await supabaseAdmin.from("tiktok_shop_connections").upsert(
+    {
+      user_id: userId,
+      open_id: tokenData.open_id,
+      user_type: tokenData.user_type,
+      granted_scopes: grantedScopes,
+      token_ciphertext: tokenCiphertext,
+      access_token_expires_at: expirationFromSeconds(tokenData.access_token_expire_in),
+      refresh_token_expires_at: expirationFromSeconds(tokenData.refresh_token_expire_in),
+      connected_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (error) throw error;
+}
+
+function normalizeGrantedScopes(scopes: TikTokShopTokenData["granted_scopes"]) {
+  if (!scopes) return [];
+  if (typeof scopes === "string") {
+    return scopes
+      .split(",")
+      .map((scope) => scope.trim())
+      .filter(Boolean);
+  }
+
+  return scopes
+    .map((scope) => (typeof scope === "string" ? scope : scope.scope))
+    .map((scope) => scope.trim())
+    .filter(Boolean);
+}
+
+function expirationFromSeconds(seconds: number | undefined) {
+  if (!seconds || !Number.isFinite(seconds) || seconds <= 0) return null;
+  return new Date(Date.now() + seconds * 1000).toISOString();
+}
+
+function hashOAuthState(state: string) {
+  return createHash("sha256").update(state).digest("hex");
+}
+
+function encryptTikTokTokens(tokens: { access_token: string; refresh_token: string }) {
+  const key = requireTikTokTokenEncryptionKey();
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([
+    cipher.update(JSON.stringify(tokens), "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  return ["v1", iv.toString("base64url"), authTag.toString("base64url"), ciphertext.toString("base64url")].join(".");
+}
+
+function decryptTikTokTokens(ciphertext: string) {
+  const [version, ivEncoded, tagEncoded, dataEncoded] = ciphertext.split(".");
+
+  if (version !== "v1" || !ivEncoded || !tagEncoded || !dataEncoded) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_TOKEN_STORAGE_INVALID",
+      "O armazenamento seguro do TikTok Shop está inválido.",
+      500,
+    );
+  }
+
+  try {
+    const key = requireTikTokTokenEncryptionKey();
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(ivEncoded, "base64url"));
+    decipher.setAuthTag(Buffer.from(tagEncoded, "base64url"));
+
+    const plaintext = Buffer.concat([
+      decipher.update(Buffer.from(dataEncoded, "base64url")),
+      decipher.final(),
+    ]).toString("utf8");
+
+    const parsed = JSON.parse(plaintext) as {
+      access_token?: unknown;
+      refresh_token?: unknown;
+    };
+
+    if (typeof parsed.access_token !== "string" || typeof parsed.refresh_token !== "string") {
+      throw new Error("invalid token payload");
+    }
+
+    return {
+      accessToken: parsed.access_token,
+      refreshToken: parsed.refresh_token,
+    };
+  } catch (error) {
+    if (error instanceof TikTokShopError) throw error;
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_TOKEN_DECRYPT_FAILED",
+      "Não foi possível abrir as credenciais armazenadas do TikTok Shop.",
+      500,
+    );
+  }
+}
+
+function requireTikTokTokenEncryptionKey() {
+  const raw = process.env["TIKTOK_SHOP_TOKEN_ENCRYPTION_KEY"]?.trim() ?? "";
+
+  if (!raw) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_ENCRYPTION_NOT_CONFIGURED",
+      "A chave de criptografia dos tokens do TikTok Shop não está configurada.",
+      503,
+    );
+  }
+
+  const key = Buffer.from(raw, "base64");
+
+  if (key.length !== 32) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_ENCRYPTION_KEY_INVALID",
+      "A chave de criptografia do TikTok Shop precisa conter exatamente 32 bytes em base64.",
+      503,
+    );
+  }
+
+  return key;
 }
 
 function hasEnv(name: string) {
