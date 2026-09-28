@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ApiAdminError, ApiAuthError, requireApiAdmin } from "@/lib/api-auth.server";
+import { getTikTokShopConnectorStatus } from "@/lib/tiktok-shop.server";
 
 type CheckState = "ready" | "disabled" | "missing" | "error";
 
@@ -173,6 +174,23 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
     detail: ingestionReady
       ? "Segredo de ingestão está configurado."
       : "Defina PRODUCT_INGEST_SECRET com um valor longo antes de integrar fontes externas.",
+  });
+
+  const tiktokShop = getTikTokShopConnectorStatus();
+
+  checks.push({
+    id: "tiktok-shop-affiliate",
+    label: "TikTok Shop Affiliate",
+    state: tiktokShop.enabled
+      ? tiktokShop.credentialsReady
+        ? "ready"
+        : "error"
+      : "disabled",
+    detail: tiktokShop.enabled
+      ? tiktokShop.credentialsReady
+        ? "Base server-side configurada. O acesso efetivo ainda depende da aprovação do Affiliate API e da autorização do Creator no Partner Center."
+        : "A integração está ativa, mas faltam TIKTOK_SHOP_APP_KEY e/ou TIKTOK_SHOP_APP_SECRET."
+      : "Integração desligada. Mantenha TIKTOK_SHOP_AFFILIATE_ENABLED=false até o app receber acesso no Partner Center.",
   });
 
   const usageEnabled = envFlag("AI_USAGE_LIMITS_ENABLED");
