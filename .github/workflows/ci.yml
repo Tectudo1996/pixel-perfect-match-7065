@@ -45,6 +45,7 @@ jobs:
           src/hooks/useProductRadar.ts
           src/hooks/useReadiness.ts
           src/hooks/usePlanUsage.ts
+          src/hooks/useTikTokShop.ts
           src/lib/admin-csv.ts
           src/lib/api-auth.server.ts
           src/lib/ai-content-schema.ts
