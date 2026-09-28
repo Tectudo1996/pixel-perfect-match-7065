@@ -5,6 +5,7 @@ import {
   ExternalLink,
   Heart,
   ImageOff,
+  LineChart,
   Loader2,
   PackageSearch,
   RefreshCw,
@@ -14,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useFavorites, useToggleFavorite } from "@/hooks/useFavorites";
 import { useProductDetail } from "@/hooks/useProductDetail";
+import { summarizeMetricHistory } from "@/lib/market-intelligence";
 import { brl, dateBR, num, percent, NA } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +81,7 @@ function ProductDetailPage() {
 
   const { product, metrics } = data;
   const originalUrl = safeHttpUrl(product.original_url);
+  const growth = summarizeMetricHistory(metrics);
 
   return (
     <div className="space-y-6">
@@ -181,6 +184,45 @@ function ProductDetailPage() {
         </div>
       </section>
 
+      <section className="surface-card p-5">
+        <div className="flex items-center gap-2">
+          <LineChart className="h-4 w-4" />
+          <h2 className="text-base font-semibold">Leitura de crescimento</h2>
+        </div>
+        {growth.salesDelta !== null ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <InfoCard
+              label="Vendas no período"
+              value={formatSigned(growth.salesDelta)}
+            />
+            <InfoCard
+              label="Ritmo equivalente"
+              value={
+                growth.weeklySalesIncrease === null
+                  ? NA
+                  : `${formatSigned(growth.weeklySalesIncrease)} / 7d`
+              }
+            />
+            <InfoCard
+              label="Criadores no período"
+              value={growth.creatorsDelta === null ? NA : formatSigned(growth.creatorsDelta)}
+            />
+            <InfoCard
+              label="Aceleração recente"
+              value={growth.accelerating ? "Detectada" : "Não detectada"}
+            />
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Ainda não há duas coletas separadas por tempo suficiente para medir crescimento.
+          </p>
+        )}
+        <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+          Esta leitura compara apenas registros históricos existentes. Ela descreve evolução
+          observada e não representa previsão ou probabilidade de venda.
+        </p>
+      </section>
+
       <div className="grid gap-5 xl:grid-cols-[0.75fr_1.25fr]">
         <section className="surface-card p-5">
           <h2 className="text-base font-semibold">Origem dos dados</h2>
@@ -271,6 +313,11 @@ function MetadataRow({ label, value }: { label: string; value: string }) {
       <span className="max-w-[65%] text-right font-medium">{value}</span>
     </div>
   );
+}
+
+function formatSigned(value: number) {
+  const rounded = Math.round(value * 10) / 10;
+  return rounded > 0 ? `+${rounded.toLocaleString("pt-BR")}` : rounded.toLocaleString("pt-BR");
 }
 
 function safeHttpUrl(value: string | null | undefined) {

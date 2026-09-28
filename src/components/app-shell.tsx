@@ -12,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   Target,
+  TrendingUp,
   UserRound,
   X,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const primaryNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/radar", label: "Radar de Produtos", icon: Search },
   { to: "/meu-radar", label: "Meu Radar", icon: Target },
+  { to: "/inteligencia", label: "Inteligência", icon: TrendingUp },
   { to: "/favoritos", label: "Favoritos", icon: Bookmark },
   { to: "/estudio", label: "Estúdio", icon: Clapperboard },
 ] as const;
@@ -135,6 +137,7 @@ type NavItem = {
     | "/dashboard"
     | "/radar"
     | "/meu-radar"
+    | "/inteligencia"
     | "/favoritos"
     | "/estudio"
     | "/perfil"
