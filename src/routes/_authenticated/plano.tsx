@@ -1,7 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertCircle, Crown, Gauge, Loader2, Sparkles, WalletCards } from "lucide-react";
+import {
+  AlertCircle,
+  Crown,
+  Gauge,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  WalletCards,
+} from "lucide-react";
 import { toast } from "sonner";
-import { useBillingSummary, useStartProCheckout } from "@/hooks/useBilling";
+import {
+  useBillingSummary,
+  useCancelBilling,
+  useStartProCheckout,
+  useSyncBilling,
+} from "@/hooks/useBilling";
 import { usePlanUsage } from "@/hooks/usePlanUsage";
 import { Button } from "@/components/ui/button";
 
@@ -31,6 +44,8 @@ function PlanPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = usePlanUsage();
   const { data: billing, isLoading: billingLoading } = useBillingSummary();
   const startCheckout = useStartProCheckout();
+  const syncBilling = useSyncBilling();
+  const cancelBilling = useCancelBilling();
 
   async function handleStartCheckout() {
     try {
@@ -41,6 +56,38 @@ function PlanPage() {
         checkoutError instanceof Error
           ? checkoutError.message
           : "Não foi possível abrir o checkout.",
+      );
+    }
+  }
+
+  async function handleSyncBilling() {
+    try {
+      const response = await syncBilling.mutateAsync();
+      toast.success("Cobrança sincronizada: " + translateBillingStatus(response.status) + ".");
+    } catch (syncError) {
+      toast.error(
+        syncError instanceof Error ? syncError.message : "Não foi possível atualizar a cobrança.",
+      );
+    }
+  }
+
+  async function handleCancelBilling() {
+    if (
+      !window.confirm(
+        "Cancelar a assinatura Pro agora? Após a confirmação do Mercado Pago, sua conta volta ao plano Grátis.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await cancelBilling.mutateAsync();
+      toast.success("Assinatura cancelada. Sua conta voltou ao plano Grátis.");
+    } catch (cancelError) {
+      toast.error(
+        cancelError instanceof Error
+          ? cancelError.message
+          : "Não foi possível cancelar a assinatura.",
       );
     }
   }
@@ -208,17 +255,50 @@ function PlanPage() {
               Verificando checkout
             </span>
           ) : data.plan === "pro" ? (
-            <div className="space-y-1 text-sm">
-              <p className="font-medium">Seu Pro está ativo.</p>
-              {billing?.billingStatus && (
-                <p className="text-xs text-muted-foreground">
-                  Status da cobrança: {translateBillingStatus(billing.billingStatus)}
-                </p>
-              )}
-              {billing?.nextPaymentAt && (
-                <p className="text-xs text-muted-foreground">
-                  Próxima cobrança informada: {formatDate(billing.nextPaymentAt)}
-                </p>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="space-y-1 text-sm">
+                <p className="font-medium">Seu Pro está ativo.</p>
+                {billing?.billingStatus && (
+                  <p className="text-xs text-muted-foreground">
+                    Status da cobrança: {translateBillingStatus(billing.billingStatus)}
+                  </p>
+                )}
+                {billing?.nextPaymentAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Próxima cobrança informada: {formatDate(billing.nextPaymentAt)}
+                  </p>
+                )}
+              </div>
+
+              {billing?.configured && billing.externalSubscriptionId && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={syncBilling.isPending || cancelBilling.isPending}
+                    onClick={() => void handleSyncBilling()}
+                  >
+                    {syncBilling.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    Atualizar status
+                  </Button>
+                  {billing.billingStatus === "authorized" && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      disabled={cancelBilling.isPending || syncBilling.isPending}
+                      onClick={() => void handleCancelBilling()}
+                    >
+                      {cancelBilling.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Cancelar assinatura
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           ) : billing?.configured ? (
@@ -233,15 +313,32 @@ function PlanPage() {
                   O valor vem da configuração segura do servidor e não fica fixado no frontend.
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="gold"
-                disabled={startCheckout.isPending}
-                onClick={() => void handleStartCheckout()}
-              >
-                {startCheckout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                {billing.billingStatus === "pending" ? "Continuar pagamento" : "Assinar Pro"}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {billing.externalSubscriptionId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={syncBilling.isPending || startCheckout.isPending}
+                    onClick={() => void handleSyncBilling()}
+                  >
+                    {syncBilling.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    Atualizar status
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="gold"
+                  disabled={startCheckout.isPending || syncBilling.isPending}
+                  onClick={() => void handleStartCheckout()}
+                >
+                  {startCheckout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {billing.billingStatus === "pending" ? "Continuar pagamento" : "Assinar Pro"}
+                </Button>
+              </div>
             </div>
           ) : (
             <div>
