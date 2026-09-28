@@ -114,15 +114,16 @@ function SettingsPage() {
   async function handleSyncTikTokShowcase() {
     try {
       const result = await syncTikTokShowcase.mutateAsync();
-      const totalChanged = result.inserted + result.updated;
-      const foreignNotice = result.foreign_currency
-        ? " · " + result.foreign_currency + " com moeda diferente de BRL sem valor em R$"
+      const skippedNotice = result.skipped
+        ? ` · ${result.skipped} ignorados por dados incompletos`
         : "";
 
-      toast.success("Radar atualizado: " + totalChanged + " produtos processados" + foreignNotice + ".");
+      toast.success(`Vitrine sincronizada: ${result.saved} produtos salvos${skippedNotice}.`);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Não foi possível atualizar o Radar pelo TikTok.",
+        error instanceof Error
+          ? error.message
+          : "Não foi possível sincronizar sua vitrine do TikTok Shop.",
       );
     }
   }
@@ -479,6 +480,13 @@ function TikTokShopConnectionCard({
               </div>
             )}
 
+            {connected && (
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                Sua vitrine sincronizada fica isolada na sua conta e não é adicionada ao catálogo
+                global do RadarShop.
+              </p>
+            )}
+
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
               Tokens e App Secret permanecem no servidor e não são exibidos nesta página.
             </p>
@@ -499,7 +507,7 @@ function TikTokShopConnectionCard({
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                Atualizar Radar
+                Sincronizar vitrine
               </Button>
               <Button
                 type="button"
