@@ -18,7 +18,7 @@ export class ApiAdminError extends Error {
   }
 }
 
-export async function requireApiUserId(request: Request) {
+export async function requireApiUser(request: Request) {
   const authorization = request.headers.get("authorization");
 
   if (!authorization?.startsWith("Bearer ")) {
@@ -37,7 +37,11 @@ export async function requireApiUserId(request: Request) {
     throw new ApiAuthError();
   }
 
-  return data.user.id;
+  return data.user;
+}
+
+export async function requireApiUserId(request: Request) {
+  return (await requireApiUser(request)).id;
 }
 
 export async function requireApiAdmin(request: Request) {

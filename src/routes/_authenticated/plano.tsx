@@ -1,16 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertCircle, Crown, Gauge, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Crown, Gauge, Loader2, Sparkles, WalletCards } from "lucide-react";
+import { toast } from "sonner";
+import { useBillingSummary, useStartProCheckout } from "@/hooks/useBilling";
 import { usePlanUsage } from "@/hooks/usePlanUsage";
 import { Button } from "@/components/ui/button";
 
+type PlanSearch = {
+  checkout?: string;
+};
+
 export const Route = createFileRoute("/_authenticated/plano")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>): PlanSearch => ({
+    checkout: typeof search["checkout"] === "string" ? search["checkout"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Plano e uso — RadarShop AI" },
       {
         name: "description",
-        content: "Consulte seu plano e o uso mensal dos recursos de IA.",
+        content: "Consulte seu plano, uso mensal e cobrança do RadarShop AI.",
       },
     ],
   }),
@@ -18,7 +27,23 @@ export const Route = createFileRoute("/_authenticated/plano")({
 });
 
 function PlanPage() {
+  const { checkout } = Route.useSearch();
   const { data, isLoading, isError, error, refetch, isFetching } = usePlanUsage();
+  const { data: billing, isLoading: billingLoading } = useBillingSummary();
+  const startCheckout = useStartProCheckout();
+
+  async function handleStartCheckout() {
+    try {
+      const response = await startCheckout.mutateAsync();
+      window.location.assign(response.checkoutUrl);
+    } catch (checkoutError) {
+      toast.error(
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : "Não foi possível abrir o checkout.",
+      );
+    }
+  }
 
   if (isLoading) {
     return (
@@ -68,9 +93,19 @@ function PlanPage() {
         </span>
         <h1 className="mt-3 text-2xl font-bold md:text-3xl">Plano e uso</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Acompanhe sua capacidade mensal de geração por IA e a estrutura de planos do RadarShop AI.
+          Acompanhe sua capacidade mensal de geração por IA e a cobrança do plano Pro.
         </p>
       </section>
+
+      {checkout === "retorno" && (
+        <section className="rounded-lg border border-gold/30 bg-gold-soft/50 p-4">
+          <p className="text-sm font-medium">Retorno do checkout recebido</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            O plano não é liberado pelo redirecionamento do navegador. A ativação acontece somente
+            depois que o servidor recebe e valida a confirmação do Mercado Pago.
+          </p>
+        </section>
+      )}
 
       {!data.enforcementEnabled && (
         <section className="rounded-lg border border-gold/30 bg-gold-soft/50 p-4">
@@ -144,6 +179,81 @@ function PlanPage() {
           />
         </div>
       </section>
+
+      <section className="surface-card p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <WalletCards className="h-4 w-4" />
+              <h2 className="text-base font-semibold">Cobrança do Pro</h2>
+            </div>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Checkout recorrente processado pelo Mercado Pago. A aplicação não recebe dados do seu
+              cartão e só libera o Pro depois da confirmação validada no servidor.
+            </p>
+          </div>
+
+          {billing?.configured && billing.monthlyPrice !== null && (
+            <p className="text-lg font-bold">
+              {formatMoney(billing.monthlyPrice)}
+              <span className="text-xs font-normal text-muted-foreground"> / mês</span>
+            </p>
+          )}
+        </div>
+
+        <div className="mt-5 border-t border-border pt-4">
+          {billingLoading ? (
+            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Verificando checkout
+            </span>
+          ) : data.plan === "pro" ? (
+            <div className="space-y-1 text-sm">
+              <p className="font-medium">Seu Pro está ativo.</p>
+              {billing?.billingStatus && (
+                <p className="text-xs text-muted-foreground">
+                  Status da cobrança: {translateBillingStatus(billing.billingStatus)}
+                </p>
+              )}
+              {billing?.nextPaymentAt && (
+                <p className="text-xs text-muted-foreground">
+                  Próxima cobrança informada: {formatDate(billing.nextPaymentAt)}
+                </p>
+              )}
+            </div>
+          ) : billing?.configured ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">
+                  {billing.billingStatus === "pending"
+                    ? "Seu checkout está pendente."
+                    : "Assine quando quiser aumentar sua capacidade de IA."}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  O valor vem da configuração segura do servidor e não fica fixado no frontend.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="gold"
+                disabled={startCheckout.isPending}
+                onClick={() => void handleStartCheckout()}
+              >
+                {startCheckout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {billing.billingStatus === "pending" ? "Continuar pagamento" : "Assinar Pro"}
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm font-medium">Checkout ainda não ativado neste ambiente.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                O código está preparado, mas credenciais, URL pública e valor mensal precisam estar
+                configurados no servidor antes da cobrança real.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -171,14 +281,15 @@ function PlanCard({
       <p className="mt-5 text-sm font-medium">
         {generations.toLocaleString("pt-BR")} gerações por IA / mês
       </p>
-      {!current && (
-        <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-          A ativação paga será conectada em uma etapa separada, depois da definição de preço e
-          provedor de cobrança.
-        </p>
-      )}
     </article>
   );
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
 }
 
 function formatDate(value: string) {
@@ -187,4 +298,12 @@ function formatDate(value: string) {
     month: "2-digit",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function translateBillingStatus(status: string) {
+  if (status === "authorized") return "autorizada";
+  if (status === "pending") return "pendente";
+  if (status === "paused") return "pausada";
+  if (status === "canceled" || status === "cancelled") return "cancelada";
+  return status;
 }
