@@ -101,19 +101,15 @@ export function useSearchTikTokOpportunities() {
       pageToken?: string;
     }) => {
       const token = await requireAccessToken();
-      return requestJson<TikTokDiscoveryResult>(
-        "/api/integrations/tiktok-shop/discovery",
-        token,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...(search?.trim() ? { search: search.trim() } : {}),
-            sort,
-            ...(pageToken ? { pageToken } : {}),
-          }),
-        },
-      );
+      return requestJson<TikTokDiscoveryResult>("/api/integrations/tiktok-shop/discovery", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(search?.trim() ? { search: search.trim() } : {}),
+          sort,
+          ...(pageToken ? { pageToken } : {}),
+        }),
+      });
     },
   });
 }
