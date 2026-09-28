@@ -375,3 +375,18 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - usa o endpoint oficial `GET /affiliate_creator/202405/showcases/products`
 - limita `page_size` ao intervalo oficial de 1 a 20
 - endpoint interno: `GET /api/integrations/tiktok-shop/showcase`
+
+
+### Etapa 12F — sincronização TikTok → Radar
+
+- lê até 5 páginas da vitrine Creator por execução
+- extrai os IDs da Showcase oficial
+- enriquece cada lote com `POST /affiliate_creator/202509/open_collaborations/products`
+- exige `creator.affiliate_collaboration.read` para dados de colaboração
+- normaliza título, link, imagem, loja, vendas, preço e comissão para o formato interno do RadarShop
+- converte commission rate da API (basis points) para percentual
+- valores monetários só são persistidos como reais quando a moeda retornada é BRL
+- produtos em outra moeda continuam importáveis, mas sem preço/comissão em R$ para evitar dados enganosos
+- reutiliza o pipeline de ingestão com histórico e snapshots
+- adiciona botão **Atualizar Radar** em Configurações quando a conta TikTok estiver conectada
+- endpoint interno: `POST /api/integrations/tiktok-shop/showcase/sync`
