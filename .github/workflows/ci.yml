@@ -44,7 +44,10 @@ jobs:
           src/lib/ai-content-schema.ts
           src/lib/ai-content.server.ts
           src/lib/market-intelligence.ts
+          src/lib/product-ingest-schema.ts
+          src/lib/product-ingest.server.ts
           src/routes/api/ai-content.ts
+          src/routes/api/integrations/products.ts
           src/routes/auth.tsx
           src/routes/_authenticated/admin.tsx
           src/routes/_authenticated/configuracoes.tsx
