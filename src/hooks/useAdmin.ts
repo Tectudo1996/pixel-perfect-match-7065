@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Json, Tables } from "@/integrations/supabase/types";
+import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 
 export type AdminCategory = Tables<"categories">;
@@ -536,7 +536,7 @@ async function startAdminIngestionRun({
 
 async function finishAdminIngestionRun(
   id: string | null,
-  values: Tables<"ingestion_runs">["Update"] extends never ? never : Partial<AdminIngestionRun>,
+  values: TablesUpdate<"ingestion_runs">,
 ) {
   if (!id) return;
 
