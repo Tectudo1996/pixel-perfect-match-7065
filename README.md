@@ -247,3 +247,20 @@ e aplicar explicitamente o término do entitlement.
 
 A tela de Prontidão é a referência operacional para ativação do ambiente. Ela não mostra
 valores de chaves; apenas informa se cada dependência está configurada e acessível.
+
+### Etapa 10G — concluída no código
+
+- separação entre novas vendas e reconciliação de assinaturas existentes
+- `MERCADO_PAGO_BILLING_ENABLED=false` passa a bloquear novos checkouts sem desativar Webhooks
+- sincronização e cancelamento continuam disponíveis para assinaturas já vinculadas
+- Admin → Prontidão separa estado do Webhook do estado de novas assinaturas
+- documentação operacional completa em `docs/PRODUCTION_RUNBOOK.md`
+- runbook inclui migrations, variáveis, ordem segura de ativação, checklist e resposta a incidentes
+
+Isso permite pausar vendas em uma emergência sem deixar o estado local das assinaturas
+desatualizado enquanto o Mercado Pago continua processando eventos.
+
+## Runbook de produção
+
+Consulte `docs/PRODUCTION_RUNBOOK.md` antes de ativar limites, billing ou liberar o checkout
+para usuários externos.
