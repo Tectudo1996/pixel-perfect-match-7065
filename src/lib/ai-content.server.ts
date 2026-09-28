@@ -308,11 +308,7 @@ function getAiProviderConfig() {
     };
   }
 
-  throw new ApiError(
-    503,
-    "AI_NOT_CONFIGURED",
-    "A IA ainda não está configurada neste ambiente.",
-  );
+  throw new ApiError(503, "AI_NOT_CONFIGURED", "A IA ainda não está configurada neste ambiente.");
 }
 
 function extractOutputText(payload: OpenAIResponse) {
