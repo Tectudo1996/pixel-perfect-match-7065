@@ -32,6 +32,7 @@ jobs:
           npx eslint
           src/components/app-shell.tsx
           src/components/product-card.tsx
+          src/hooks/useContentStudio.ts
           src/hooks/useDashboard.ts
           src/hooks/useFavorites.ts
           src/hooks/usePersonalRadar.ts
@@ -40,6 +41,7 @@ jobs:
           src/routes/auth.tsx
           src/routes/_authenticated/configuracoes.tsx
           src/routes/_authenticated/dashboard.tsx
+          src/routes/_authenticated/estudio.tsx
           src/routes/_authenticated/favoritos.tsx
           src/routes/_authenticated/meu-radar.tsx
           src/routes/_authenticated/onboarding.tsx

@@ -55,9 +55,22 @@ A migration `drizzle/migrations/0001_foundation_security.sql` deve ser aplicada 
 - favoritos persistidos por usuário
 - página real de favoritos
 
-### Etapa 5 — Meu Radar
+### Etapa 5 — concluída
 
-Em desenvolvimento. Personaliza a seleção com categorias, faixa de comissão e objetivo do onboarding, mantendo critérios explicáveis e sem score artificial.
+- seleção personalizada pelas preferências do onboarding
+- categorias e faixa de comissão aplicadas como filtros reais
+- ordenação explicável pelo objetivo do usuário
+- preferências editáveis em Configurações
+- nenhum score artificial de chance de venda
+
+### Etapa 6 — concluída no código
+
+- Estúdio vinculado a um produto do Radar
+- criação, edição e exclusão de projetos
+- público-alvo, tipo de vídeo, duração e tom
+- roteiro, legenda, hashtags e prompt audiovisual
+- status de rascunho ou pronto
+- IA automática ainda não ativada: primeiro o CRUD real, depois os provedores de IA
 
 ## Fluxo base
 
@@ -75,6 +88,8 @@ Radar de Produtos
 Produto / Favoritos
   ↓
 Meu Radar personalizado
+  ↓
+Estúdio de Conteúdo
 ```
 
 Usuários autenticados que ainda não concluíram o onboarding são direcionados para `/onboarding`. Após salvar as preferências, o acesso segue para `/dashboard`.
