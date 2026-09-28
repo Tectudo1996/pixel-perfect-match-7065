@@ -426,7 +426,10 @@ export function useImportAdminProducts() {
 
       for (const [source, sourceRows] of rowsBySource) {
         const collectedAt =
-          sourceRows.map((row) => row.collected_at).sort().at(-1) ?? new Date().toISOString();
+          sourceRows
+            .map((row) => row.collected_at)
+            .sort()
+            .at(-1) ?? new Date().toISOString();
         const runId = await startAdminIngestionRun({
           source,
           acceptedCount: sourceRows.length,
@@ -534,10 +537,7 @@ async function startAdminIngestionRun({
   return data.id;
 }
 
-async function finishAdminIngestionRun(
-  id: string | null,
-  values: TablesUpdate<"ingestion_runs">,
-) {
+async function finishAdminIngestionRun(id: string | null, values: TablesUpdate<"ingestion_runs">) {
   if (!id) return;
 
   const { error } = await supabase
@@ -552,4 +552,3 @@ async function finishAdminIngestionRun(
     console.warn("[RadarShop AI] histórico de importação não pôde ser atualizado", error.message);
   }
 }
-
