@@ -151,12 +151,7 @@ export async function cancelBilling(request: Request) {
 
   if (provider === "mercado_pago") return cancelMercadoPagoSubscription(request);
   if (provider === "paypal") return cancelPayPalSubscription(request);
-
-  throw new BillingError(
-    409,
-    "BILLING_MANAGEMENT_UNAVAILABLE",
-    "O cancelamento automático ainda não está disponível para este gateway.",
-  );
+  return cancelPepperCheckout(request);
 }
 
 export async function createMercadoPagoCheckout(request: Request) {
@@ -484,14 +479,94 @@ export async function cancelPayPalSubscription(request: Request) {
 }
 
 export async function createPepperCheckout(request: Request) {
-  await requireApiUser(request);
+  const user = await requireApiUser(request);
   const config = requirePepperCheckoutConfig();
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("plan,billing_provider,billing_external_id,billing_status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+
+  if (existing?.plan === "pro" && existing.billing_status === "authorized") {
+    throw new BillingError(409, "ALREADY_PRO", "Seu plano Pro já está ativo.");
+  }
+
+  assertGatewaySwitchAllowed(existing, "pepper");
+
+  const reused =
+    existing?.billing_provider === "pepper" && existing.billing_status?.toLowerCase() === "pending";
+
+  if (!reused) {
+    const { error: saveError } = await supabaseAdmin.from("user_subscriptions").upsert(
+      {
+        user_id: user.id,
+        billing_provider: "pepper",
+        billing_external_id: null,
+        billing_status: "pending",
+        billing_payer_id: null,
+        billing_next_payment_at: null,
+        billing_updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (saveError) throw saveError;
+  }
 
   return {
     checkoutUrl: config.checkoutUrl,
     provider: "pepper" as const,
-    reused: true,
+    reused,
     requiresManualActivation: true,
+  };
+}
+
+async function cancelPepperCheckout(request: Request) {
+  const user = await requireApiUser(request);
+  const { data: existing, error: readError } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("plan,billing_provider,billing_status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (readError) throw readError;
+
+  if (!existing || existing.billing_provider !== "pepper") {
+    throw new BillingError(
+      404,
+      "BILLING_SUBSCRIPTION_NOT_FOUND",
+      "Nenhum checkout Pepper vinculado foi encontrado.",
+    );
+  }
+
+  if (existing.plan === "pro" && existing.billing_status === "authorized") {
+    throw new BillingError(
+      409,
+      "BILLING_MANAGEMENT_UNAVAILABLE",
+      "O cancelamento automático do Pro via Pepper ainda depende da API/Webhook da conta.",
+    );
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from("user_subscriptions")
+    .update({
+      billing_provider: null,
+      billing_external_id: null,
+      billing_status: "canceled",
+      billing_payer_id: null,
+      billing_next_payment_at: null,
+      billing_updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id);
+
+  if (updateError) throw updateError;
+
+  return {
+    ok: true,
+    status: "canceled",
   };
 }
 
@@ -1079,11 +1154,7 @@ function assertGatewaySwitchAllowed(
   } | null,
   requestedProvider: BillingProvider,
 ) {
-  if (
-    !existing?.billing_provider ||
-    !existing.billing_external_id ||
-    existing.billing_provider === requestedProvider
-  ) {
+  if (!existing?.billing_provider || existing.billing_provider === requestedProvider) {
     return;
   }
 

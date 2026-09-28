@@ -76,22 +76,31 @@ function PlanPage() {
   }
 
   async function handleCancelBilling() {
-    if (
-      !window.confirm(
-        "Cancelar a assinatura Pro agora? Após a confirmação do gateway, sua conta volta ao plano Grátis.",
-      )
-    ) {
-      return;
-    }
+    const cancelingPepperCheckout =
+      data?.plan !== "pro" && billing?.provider === "pepper" && billing.billingStatus === "pending";
+
+    const confirmed = window.confirm(
+      cancelingPepperCheckout
+        ? "Cancelar este checkout Pepper? Você poderá escolher outro gateway depois."
+        : "Cancelar a assinatura Pro agora? Após a confirmação do gateway, sua conta volta ao plano Grátis.",
+    );
+
+    if (!confirmed) return;
 
     try {
       await cancelBilling.mutateAsync();
-      toast.success("Assinatura cancelada. Sua conta voltou ao plano Grátis.");
+      toast.success(
+        cancelingPepperCheckout
+          ? "Checkout Pepper cancelado. Você já pode escolher outro gateway."
+          : "Assinatura cancelada. Sua conta voltou ao plano Grátis.",
+      );
     } catch (cancelError) {
       toast.error(
         cancelError instanceof Error
           ? cancelError.message
-          : "Não foi possível cancelar a assinatura.",
+          : cancelingPepperCheckout
+            ? "Não foi possível cancelar o checkout."
+            : "Não foi possível cancelar a assinatura.",
       );
     }
   }
@@ -302,32 +311,46 @@ function PlanPage() {
             </div>
           ) : (
             <>
-              {billing?.provider && billing.externalSubscriptionId && (
+              {billing?.provider && billing.billingStatus === "pending" && (
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-4">
                   <div>
                     <p className="text-sm font-medium">
                       Checkout em andamento via {providerLabel(billing.provider)}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Status atual: {translateBillingStatus(billing.billingStatus ?? "pending")}
+                      Status atual: {translateBillingStatus(billing.billingStatus)}
                     </p>
                   </div>
-                  {billing.managementAvailable && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={syncBilling.isPending}
-                      onClick={() => void handleSyncBilling()}
-                    >
-                      {syncBilling.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      Atualizar status
-                    </Button>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {billing.managementAvailable && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={syncBilling.isPending || cancelBilling.isPending}
+                        onClick={() => void handleSyncBilling()}
+                      >
+                        {syncBilling.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        Atualizar status
+                      </Button>
+                    )}
+                    {billing.provider === "pepper" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={cancelBilling.isPending || syncBilling.isPending}
+                        onClick={() => void handleCancelBilling()}
+                      >
+                        {cancelBilling.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Cancelar checkout
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
 
