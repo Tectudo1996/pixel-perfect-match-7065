@@ -432,6 +432,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_multi_gateway_billing_schema: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          subscription_constraint_ready: boolean
+          webhook_constraint_ready: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

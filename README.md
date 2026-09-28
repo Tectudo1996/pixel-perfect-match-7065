@@ -300,3 +300,13 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - o cancelamento local não finge cancelar uma assinatura paga na Pepper
 - contas Pro ativadas manualmente pela Pepper continuam exigindo suporte/API real para cancelamento
 - nenhuma ativação automática do Pro foi adicionada sem Webhook/API validado
+
+
+### Etapa 11D — prontidão multi-gateway
+
+- Admin → Prontidão verifica explicitamente a migration 0004
+- nova migration 0005 adiciona uma RPC somente de leitura para diagnosticar os constraints de billing
+- a RPC é acessível apenas pelo service role e não expõe dados de usuário nem secrets
+- PayPal e Pepper só aparecem como prontos quando o schema aceita os três gateways
+- o indicador de lançamento pago exige o conjunto atual de migrations
+- runbook de produção atualizado para Lovable AI, Mercado Pago, PayPal e Pepper

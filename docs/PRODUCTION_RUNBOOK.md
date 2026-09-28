@@ -16,14 +16,19 @@ ser alterado antes do lançamento.
 
 ## 2. Ordem das migrations
 
-Aplique no Supabase de produção, nesta ordem:
+Aplique no Lovable Cloud / Supabase de produção, nesta ordem:
 
 1. `drizzle/migrations/0001_foundation_security.sql`
 2. `drizzle/migrations/0002_plan_usage.sql`
 3. `drizzle/migrations/0003_billing_mercado_pago.sql`
+4. `drizzle/migrations/0004_multi_gateway_billing.sql`
+5. `drizzle/migrations/0005_multi_gateway_readiness.sql`
 
-Depois, acesse **Admin → Prontidão**. Não ative cobrança enquanto as migrations 0002 e 0003 não
-aparecerem como disponíveis.
+Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
+RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
+da migration 0004 aceitam `mercado_pago`, `paypal` e `pepper`.
+
+Não habilite PayPal ou Pepper enquanto a migration 0004 não aparecer como pronta.
 
 ## 3. Variáveis obrigatórias
 
@@ -38,8 +43,15 @@ A service role nunca deve ser exposta como variável `VITE_*`.
 
 ### IA
 
+No Lovable Cloud, o projeto prioriza o Lovable AI Gateway:
+
+- `LOVABLE_API_KEY` é gerenciada pela plataforma
+- `LOVABLE_AI_MODEL` é opcional; o código possui modelo padrão
+
+Fora do Lovable Cloud, o fallback externo usa:
+
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` quando necessário
+- `OPENAI_MODEL`
 - `OPENAI_BASE_URL` somente se for usado um gateway compatível
 
 ### Ingestão
@@ -86,21 +98,20 @@ Referências oficiais:
 
 ## 5. Ordem segura de ativação
 
-1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e `MERCADO_PAGO_BILLING_ENABLED=false`
-2. aplique as migrations 0001, 0002 e 0003
-3. configure Supabase, IA e segredo de ingestão
-4. abra **Admin → Prontidão** e confirme o banco base
+1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
+2. aplique as migrations 0001, 0002, 0003, 0004 e 0005
+3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
+4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. ative `AI_USAGE_LIMITS_ENABLED=true`
 6. teste geração de IA e consumo de cota com uma conta interna
-7. configure Access Token, Webhook Secret, preço e domínio do Mercado Pago
-8. cadastre o Webhook no Mercado Pago
-9. confirme em **Admin → Prontidão** que a reconciliação está pronta
-10. ative `MERCADO_PAGO_BILLING_ENABLED=true`
-11. execute uma assinatura real controlada/teste autorizado
-12. confirme criação do registro de billing e recebimento dos eventos
-13. teste sincronização manual
-14. teste cancelamento
-15. só então libere o checkout para usuários externos
+7. configure primeiro apenas o gateway que será testado
+8. confirme em **Admin → Prontidão** que checkout e reconciliação desse gateway estão prontos
+9. habilite a flag `*_BILLING_ENABLED=true` somente para esse gateway
+10. execute uma assinatura controlada/teste autorizado
+11. confirme criação do registro de billing e recebimento dos eventos
+12. teste sincronização e cancelamento quando o gateway oferecer gerenciamento automático
+13. mantenha os outros gateways desativados até serem testados individualmente
+14. só então libere checkout para usuários externos
 
 ## 6. Checklist após deploy
 
@@ -191,6 +202,10 @@ A Pepper fica disponível como checkout alternativo, mas a ativação automátic
 desabilitada até o contrato de API/Webhook da conta ser validado. Não trate retorno visual do
 checkout como confirmação de pagamento.
 
-### Migration multi-gateway
+### Migrations multi-gateway
 
 Aplique `drizzle/migrations/0004_multi_gateway_billing.sql` antes de habilitar PayPal ou Pepper.
+
+Em seguida, aplique `drizzle/migrations/0005_multi_gateway_readiness.sql`. Ela cria apenas uma
+função de diagnóstico server-side, sem alterar assinaturas ou eventos existentes. **Admin → Prontidão**
+usa essa função para confirmar que os dois constraints aceitam Mercado Pago, PayPal e Pepper.

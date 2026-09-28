@@ -51,18 +51,24 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
   let coreDatabaseReady = false;
   let planMigrationReady = false;
   let billingMigrationReady = false;
+  let readinessMigrationReady = false;
+  let multiGatewayMigrationReady = false;
 
   if (supabaseEnvReady) {
-    const [profiles, products, subscriptions, billingEvents] = await Promise.all([
-      checkTable("profiles"),
-      checkTable("products"),
-      checkTable("user_subscriptions"),
-      checkTable("billing_webhook_events"),
-    ]);
+    const [profiles, products, subscriptions, billingEvents, multiGatewaySchema] =
+      await Promise.all([
+        checkTable("profiles"),
+        checkTable("products"),
+        checkTable("user_subscriptions"),
+        checkTable("billing_webhook_events"),
+        checkMultiGatewayBillingSchema(),
+      ]);
 
     coreDatabaseReady = profiles && products;
     planMigrationReady = subscriptions;
     billingMigrationReady = billingEvents;
+    readinessMigrationReady = multiGatewaySchema.diagnosticsReady;
+    multiGatewayMigrationReady = multiGatewaySchema.multiGatewayReady;
 
     checks.push({
       id: "core-database",
@@ -90,6 +96,26 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
         ? "billing_webhook_events está disponível."
         : "A tabela billing_webhook_events não foi detectada.",
     });
+
+    checks.push({
+      id: "migration-0005",
+      label: "Migration 0005 — diagnóstico do schema",
+      state: readinessMigrationReady ? "ready" : "missing",
+      detail: readinessMigrationReady
+        ? "A verificação server-side do schema multi-gateway está disponível."
+        : "A função de diagnóstico da migration 0005 não foi detectada.",
+    });
+
+    checks.push({
+      id: "migration-0004",
+      label: "Migration 0004 — multi-gateway",
+      state: readinessMigrationReady ? (multiGatewayMigrationReady ? "ready" : "error") : "missing",
+      detail: readinessMigrationReady
+        ? multiGatewayMigrationReady
+          ? "Os constraints aceitam Mercado Pago, PayPal e Pepper."
+          : "Os constraints de billing ainda não aceitam corretamente os três gateways."
+        : "A migration 0004 não pôde ser verificada sem o diagnóstico da migration 0005.",
+    });
   } else {
     checks.push(
       {
@@ -107,6 +133,18 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
       {
         id: "migration-0003",
         label: "Migration 0003 — billing",
+        state: "missing",
+        detail: "Não verificada porque o Supabase do servidor não está configurado.",
+      },
+      {
+        id: "migration-0005",
+        label: "Migration 0005 — diagnóstico do schema",
+        state: "missing",
+        detail: "Não verificada porque o Supabase do servidor não está configurado.",
+      },
+      {
+        id: "migration-0004",
+        label: "Migration 0004 — multi-gateway",
         state: "missing",
         detail: "Não verificada porque o Supabase do servidor não está configurado.",
       },
@@ -198,25 +236,28 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
   checks.push({
     id: "paypal-webhook",
     label: "Reconciliação do PayPal",
-    state: paypalWebhookReady && billingMigrationReady ? "ready" : "missing",
+    state:
+      paypalWebhookReady && billingMigrationReady && multiGatewayMigrationReady
+        ? "ready"
+        : "missing",
     detail:
-      paypalWebhookReady && billingMigrationReady
-        ? "Webhook e credenciais do PayPal estão preparados."
-        : "Faltam Client ID, Client Secret, Webhook ID ou migration 0003.",
+      paypalWebhookReady && billingMigrationReady && multiGatewayMigrationReady
+        ? "Webhook, credenciais e schema multi-gateway do PayPal estão preparados."
+        : "Faltam Client ID, Client Secret, Webhook ID, migration 0003 ou migration 0004.",
   });
 
   checks.push({
     id: "paypal-checkout",
     label: "Checkout PayPal",
     state: paypalEnabled
-      ? paypalCheckoutReady && billingMigrationReady && usageEnabled
+      ? paypalCheckoutReady && billingMigrationReady && multiGatewayMigrationReady && usageEnabled
         ? "ready"
         : "error"
       : "disabled",
     detail: paypalEnabled
-      ? paypalCheckoutReady && billingMigrationReady && usageEnabled
+      ? paypalCheckoutReady && billingMigrationReady && multiGatewayMigrationReady && usageEnabled
         ? "Novas assinaturas via PayPal estão habilitadas."
-        : "PayPal está ativo, mas faltam plano, preço, URL pública, credenciais, migration 0003 ou limites."
+        : "PayPal está ativo, mas faltam plano, preço, URL pública, credenciais, migrations 0003/0004 ou limites."
       : "Novas assinaturas via PayPal estão desativadas.",
   });
 
@@ -227,11 +268,15 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
   checks.push({
     id: "pepper-checkout",
     label: "Checkout Pepper",
-    state: pepperEnabled ? (pepperCheckoutReady ? "ready" : "error") : "disabled",
+    state: pepperEnabled
+      ? pepperCheckoutReady && multiGatewayMigrationReady
+        ? "ready"
+        : "error"
+      : "disabled",
     detail: pepperEnabled
-      ? pepperCheckoutReady
+      ? pepperCheckoutReady && multiGatewayMigrationReady
         ? "Checkout Pepper está disponível em modo assistido; a ativação automática ainda depende da API/Webhook da conta."
-        : "Pepper está ativo, mas faltam URL de checkout ou preço."
+        : "Pepper está ativo, mas faltam URL de checkout, preço ou migration 0004."
       : "Checkout Pepper está desativado.",
   });
 
@@ -243,6 +288,8 @@ async function buildReadinessReport(): Promise<ReadinessReport> {
     coreReady &&
     planMigrationReady &&
     billingMigrationReady &&
+    readinessMigrationReady &&
+    multiGatewayMigrationReady &&
     aiReady &&
     usageEnabled &&
     automaticBillingReady;
@@ -268,6 +315,24 @@ async function checkTable(
 
   const { error } = await supabaseAdmin.from(table).select("id", { head: true }).limit(1);
   return !error;
+}
+
+async function checkMultiGatewayBillingSchema() {
+  const { data, error } = await supabaseAdmin.rpc("check_multi_gateway_billing_schema");
+
+  if (error) {
+    return {
+      diagnosticsReady: false,
+      multiGatewayReady: false,
+    };
+  }
+
+  const row = data?.[0];
+
+  return {
+    diagnosticsReady: true,
+    multiGatewayReady: Boolean(row?.subscription_constraint_ready && row?.webhook_constraint_ready),
+  };
 }
 
 function hasEnv(name: string) {
