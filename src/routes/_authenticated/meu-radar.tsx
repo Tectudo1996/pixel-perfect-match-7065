@@ -398,10 +398,7 @@ function formatOpportunityPrice(product: TikTokCreatorOpportunity) {
   if (product.minimumPrice === null) return "—";
 
   const minimum = formatMoney(product.minimumPrice, product.currency);
-  if (
-    product.maximumPrice === null ||
-    product.maximumPrice === product.minimumPrice
-  )
+  if (product.maximumPrice === null || product.maximumPrice === product.minimumPrice)
     return minimum;
 
   return `${minimum} – ${formatMoney(product.maximumPrice, product.currency)}`;
