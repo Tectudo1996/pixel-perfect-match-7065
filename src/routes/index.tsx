@@ -155,7 +155,10 @@ function Landing() {
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="surface-card p-5 text-center transition-shadow hover:shadow-lift sm:text-left">
+            <div
+              key={f.title}
+              className="surface-card p-5 text-center transition-shadow hover:shadow-lift sm:text-left"
+            >
               <span className="gold-chip mx-auto flex h-9 w-9 items-center justify-center rounded-md sm:mx-0">
                 <f.icon className="h-4.5 w-4.5" />
               </span>
@@ -171,7 +174,10 @@ function Landing() {
           <h2 className="text-2xl font-bold md:text-3xl">Como funciona</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {steps.map((s) => (
-              <div key={s.n} className="rounded-lg border border-border p-5 text-center md:text-left">
+              <div
+                key={s.n}
+                className="rounded-lg border border-border p-5 text-center md:text-left"
+              >
                 <span className="font-mono text-xs font-medium text-gold">{s.n}</span>
                 <h3 className="mt-3 text-sm font-semibold">{s.t}</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">{s.d}</p>
