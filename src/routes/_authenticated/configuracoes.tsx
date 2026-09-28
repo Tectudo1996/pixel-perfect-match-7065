@@ -105,9 +105,7 @@ function SettingsPage() {
       const result = await connectTikTokShop.mutateAsync();
       window.location.assign(result.authorizationUrl);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Não foi possível iniciar a conexão.",
-      );
+      toast.error(error instanceof Error ? error.message : "Não foi possível iniciar a conexão.");
     }
   }
 
@@ -444,7 +442,8 @@ function TikTokShopConnectionCard({
             {connected && (
               <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                 <p>
-                  Conectado em: {data.connectedAt ? dateTimeBR(data.connectedAt) : "data indisponível"}
+                  Conectado em:{" "}
+                  {data.connectedAt ? dateTimeBR(data.connectedAt) : "data indisponível"}
                 </p>
                 <p>
                   Escopos concedidos:{" "}
@@ -464,12 +463,7 @@ function TikTokShopConnectionCard({
 
         <div className="shrink-0">
           {connected ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={disconnecting}
-              onClick={onDisconnect}
-            >
+            <Button type="button" variant="outline" disabled={disconnecting} onClick={onDisconnect}>
               {disconnecting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
