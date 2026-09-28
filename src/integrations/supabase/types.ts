@@ -180,6 +180,57 @@ export type Database = {
           },
         ]
       }
+      ingestion_runs: {
+        Row: {
+          accepted_count: number
+          channel: string
+          collected_at: string | null
+          created_by: string | null
+          error_code: string | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          inserted_count: number
+          snapshot_count: number
+          source: string
+          started_at: string
+          status: string
+          updated_count: number
+        }
+        Insert: {
+          accepted_count?: number
+          channel: string
+          collected_at?: string | null
+          created_by?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          inserted_count?: number
+          snapshot_count?: number
+          source: string
+          started_at?: string
+          status?: string
+          updated_count?: number
+        }
+        Update: {
+          accepted_count?: number
+          channel?: string
+          collected_at?: string | null
+          created_by?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          inserted_count?: number
+          snapshot_count?: number
+          source?: string
+          started_at?: string
+          status?: string
+          updated_count?: number
+        }
+        Relationships: []
+      }
       product_metrics_history: {
         Row: {
           commission_amount: number | null
