@@ -117,11 +117,11 @@ function Landing() {
 
       <section className="relative overflow-hidden border-b border-border">
         <div className="grid-backdrop absolute inset-0 opacity-70" />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 py-16 text-center md:items-start md:py-28 md:text-left">
           <span className="gold-chip inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium">
             <Sparkles className="h-3.5 w-3.5" /> Plataforma para afiliados do TikTok Shop
           </span>
-          <h1 className="mt-6 max-w-3xl text-4xl leading-[1.05] font-extrabold md:text-6xl">
+          <h1 className="mt-6 max-w-3xl text-4xl leading-[1.05] font-extrabold sm:text-5xl md:text-6xl">
             Inteligência de produtos para quem vive de{" "}
             <span className="relative whitespace-nowrap">
               <span className="relative z-10">comissão</span>
@@ -129,17 +129,17 @@ function Landing() {
             </span>
             .
           </h1>
-          <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Encontre produtos, avalie comissões, organize favoritos e prepare seus conteúdos em um
             único painel — sem números inventados, com a origem dos dados sempre registrada.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="gold" size="lg">
+          <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center md:justify-start">
+            <Button asChild variant="gold" size="lg" className="w-full sm:w-auto">
               <Link to="/auth" search={{ modo: "criar" }}>
                 Começar agora <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
               <a href="#como-funciona">Ver como funciona</a>
             </Button>
           </div>
@@ -147,14 +147,16 @@ function Landing() {
       </section>
 
       <section id="recursos" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-        <h2 className="text-2xl font-bold md:text-3xl">O que você faz no RadarShop</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Módulos pensados para o fluxo real de um afiliado: descobrir, analisar e produzir.
-        </p>
+        <div className="text-center md:text-left">
+          <h2 className="text-2xl font-bold md:text-3xl">O que você faz no RadarShop</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground md:mx-0">
+            Módulos pensados para o fluxo real de um afiliado: descobrir, analisar e produzir.
+          </p>
+        </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="surface-card p-5 transition-shadow hover:shadow-lift">
-              <span className="gold-chip flex h-9 w-9 items-center justify-center rounded-md">
+            <div key={f.title} className="surface-card p-5 text-center transition-shadow hover:shadow-lift sm:text-left">
+              <span className="gold-chip mx-auto flex h-9 w-9 items-center justify-center rounded-md sm:mx-0">
                 <f.icon className="h-4.5 w-4.5" />
               </span>
               <h3 className="mt-4 text-sm font-semibold">{f.title}</h3>
@@ -165,11 +167,11 @@ function Landing() {
       </section>
 
       <section id="como-funciona" className="border-y border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-4 py-16 text-center md:py-20 md:text-left">
           <h2 className="text-2xl font-bold md:text-3xl">Como funciona</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {steps.map((s) => (
-              <div key={s.n} className="rounded-lg border border-border p-5">
+              <div key={s.n} className="rounded-lg border border-border p-5 text-center md:text-left">
                 <span className="font-mono text-xs font-medium text-gold">{s.n}</span>
                 <h3 className="mt-3 text-sm font-semibold">{s.t}</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">{s.d}</p>
@@ -180,11 +182,11 @@ function Landing() {
       </section>
 
       <section id="dados" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-        <div className="surface-card flex flex-col gap-6 p-6 md:flex-row md:items-center md:p-8">
+        <div className="surface-card flex flex-col items-center gap-6 p-6 text-center md:flex-row md:items-center md:text-left md:p-8">
           <span className="gold-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-lg">
             <Database className="h-5 w-5" />
           </span>
-          <div>
+          <div className="max-w-3xl">
             <h2 className="text-lg font-bold">Transparência sobre os dados</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               O catálogo é alimentado por cadastro e importação administrativa, com espaço para
@@ -196,9 +198,9 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-8 text-center text-sm text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
           <span className="font-semibold text-foreground">RadarShop AI</span>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end">
             <Link to="/transparencia" className="hover:text-foreground">
               Transparência
             </Link>
