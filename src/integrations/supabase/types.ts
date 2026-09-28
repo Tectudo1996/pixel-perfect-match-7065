@@ -32,42 +32,6 @@ export type Database = {
         }
         Relationships: []
       }
-      billing_webhook_events: {
-        Row: {
-          error_message: string | null
-          event_type: string
-          id: string
-          processed_at: string | null
-          provider: string
-          provider_event_id: string
-          received_at: string
-          resource_id: string | null
-          status: string
-        }
-        Insert: {
-          error_message?: string | null
-          event_type: string
-          id?: string
-          processed_at?: string | null
-          provider: string
-          provider_event_id: string
-          received_at?: string
-          resource_id?: string | null
-          status?: string
-        }
-        Update: {
-          error_message?: string | null
-          event_type?: string
-          id?: string
-          processed_at?: string | null
-          provider?: string
-          provider_event_id?: string
-          received_at?: string
-          resource_id?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
       categories: {
         Row: {
           created_at: string
@@ -355,57 +319,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_subscriptions: {
-        Row: {
-          ai_generations_used: number
-          billing_external_id: string | null
-          billing_next_payment_at: string | null
-          billing_payer_id: string | null
-          billing_provider: string | null
-          billing_status: string | null
-          billing_updated_at: string | null
-          created_at: string
-          current_period_end: string
-          current_period_start: string
-          plan: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          ai_generations_used?: number
-          billing_external_id?: string | null
-          billing_next_payment_at?: string | null
-          billing_payer_id?: string | null
-          billing_provider?: string | null
-          billing_status?: string | null
-          billing_updated_at?: string | null
-          created_at?: string
-          current_period_end?: string
-          current_period_start?: string
-          plan?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          ai_generations_used?: number
-          billing_external_id?: string | null
-          billing_next_payment_at?: string | null
-          billing_payer_id?: string | null
-          billing_provider?: string | null
-          billing_status?: string | null
-          billing_updated_at?: string | null
-          created_at?: string
-          current_period_end?: string
-          current_period_start?: string
-          plan?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -427,6 +340,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          ai_generations_used: number
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_generations_used?: number
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_generations_used?: number
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -439,17 +385,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      refund_ai_generation: {
-        Args: {
-          _user_id: string
-        }
-        Returns: number
-      }
+      refund_ai_generation: { Args: { _user_id: string }; Returns: number }
       reserve_ai_generation: {
-        Args: {
-          _limit: number
-          _user_id: string
-        }
+        Args: { _limit: number; _user_id: string }
         Returns: {
           allowed: boolean
           period_end: string
