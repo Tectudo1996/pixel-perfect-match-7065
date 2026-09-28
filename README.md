@@ -321,3 +321,18 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - cada fonte exibe quantidade de produtos, dado mais recente e última execução registrada
 - migration `0006_ingestion_observability.sql` protege o histórico com RLS de administrador
 - prepara a operação para conectar TikTok Shop oficial ou outros provedores sem perder rastreabilidade
+
+
+### Etapa 12B — base oficial do TikTok Shop
+
+- adiciona cliente server-side para TikTok Shop Open API
+- implementa assinatura HMAC-SHA256 conforme o sample oficial do TikTok Shop
+- usa os hosts oficiais de API e autorização
+- prepara geração de URL de autorização do Creator com state obrigatório
+- prepara troca de auth code por access/refresh token
+- prepara refresh de token
+- valida que a autorização retornada pertence a Creator (user_type = 1)
+- adiciona request genérico assinado para futuras APIs Affiliate
+- credenciais permanecem exclusivamente no servidor
+- integração fica desativada por padrão até aprovação no Partner Center
+- Admin → Prontidão passa a mostrar o estado básico do conector
