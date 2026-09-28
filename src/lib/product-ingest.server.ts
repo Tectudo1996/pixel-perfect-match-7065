@@ -250,10 +250,7 @@ async function startIngestionRun(
   }
 }
 
-async function finishIngestionRun(
-  id: string | null,
-  values: TablesUpdate<"ingestion_runs">,
-) {
+async function finishIngestionRun(id: string | null, values: TablesUpdate<"ingestion_runs">) {
   if (!id) return;
 
   try {
