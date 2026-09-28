@@ -19,21 +19,35 @@ type ProductSnapshot = {
 };
 
 export async function handleProductIngestRequest(request: Request) {
-  let ingestionRunId: string | null = null;
-
   try {
     authorizeIngestion(request);
 
     const body = productIngestRequestSchema.parse(await readJsonBody(request, 1_048_576));
-    assertUniqueUrls(body);
+    const result = await ingestTrustedProductBatch(body);
 
-    ingestionRunId = await startIngestionRun({
-      source: body.source,
-      channel: "api",
-      accepted_count: body.products.length,
-      collected_at: body.collected_at ?? null,
-    });
+    return Response.json(result, { status: 200 });
+  } catch (error) {
+    const normalized = normalizeError(error);
 
+    return Response.json(
+      { error: normalized.message, code: normalized.code },
+      { status: normalized.status },
+    );
+  }
+}
+
+export async function ingestTrustedProductBatch(input: ProductIngestRequest) {
+  const body = productIngestRequestSchema.parse(input);
+  assertUniqueUrls(body);
+
+  const ingestionRunId = await startIngestionRun({
+    source: body.source,
+    channel: "api",
+    accepted_count: body.products.length,
+    collected_at: body.collected_at ?? null,
+  });
+
+  try {
     const result = await ingestProducts(body);
 
     await finishIngestionRun(ingestionRunId, {
@@ -45,7 +59,7 @@ export async function handleProductIngestRequest(request: Request) {
       collected_at: result.collected_at,
     });
 
-    return Response.json(result, { status: 200 });
+    return result;
   } catch (error) {
     const normalized = normalizeError(error);
 
@@ -55,10 +69,7 @@ export async function handleProductIngestRequest(request: Request) {
       error_message: normalized.message,
     });
 
-    return Response.json(
-      { error: normalized.message, code: normalized.code },
-      { status: normalized.status },
-    );
+    throw normalized;
   }
 }
 
