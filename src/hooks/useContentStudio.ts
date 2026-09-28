@@ -2,10 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Tables } from "@/integrations/supabase/types";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 
-export type StudioProduct = Pick<
-  Tables<"products">,
-  "id" | "name" | "image_url" | "store_name"
->;
+export type StudioProduct = Pick<Tables<"products">, "id" | "name" | "image_url" | "store_name">;
 
 export type ContentProject = Tables<"content_projects"> & {
   product: StudioProduct | null;

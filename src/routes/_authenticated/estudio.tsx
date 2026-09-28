@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-  Clapperboard,
-  FilePenLine,
-  Loader2,
-  PackageOpen,
-  Plus,
-  Save,
-  Trash2,
-} from "lucide-react";
+import { Clapperboard, FilePenLine, Loader2, PackageOpen, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,12 +89,7 @@ function ContentStudioPage() {
   const [appliedSearchProduct, setAppliedSearchProduct] = useState<string | null>(null);
 
   useEffect(() => {
-    if (
-      !produto ||
-      productsLoading ||
-      editingId ||
-      appliedSearchProduct === produto
-    ) {
+    if (!produto || productsLoading || editingId || appliedSearchProduct === produto) {
       return;
     }
 
@@ -141,8 +128,7 @@ function ContentStudioPage() {
       title: project.title,
       targetAudience: project.target_audience ?? "",
       videoType: project.video_type ?? "",
-      durationSeconds:
-        project.duration_seconds === null ? "" : String(project.duration_seconds),
+      durationSeconds: project.duration_seconds === null ? "" : String(project.duration_seconds),
       tone: project.tone ?? "",
       script: project.script ?? "",
       caption: project.caption ?? "",
@@ -157,14 +143,9 @@ function ContentStudioPage() {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
-    const duration = form.durationSeconds.trim()
-      ? Number(form.durationSeconds)
-      : null;
+    const duration = form.durationSeconds.trim() ? Number(form.durationSeconds) : null;
 
-    if (
-      duration !== null &&
-      (!Number.isInteger(duration) || duration <= 0)
-    ) {
+    if (duration !== null && (!Number.isInteger(duration) || duration <= 0)) {
       toast.error("A duração precisa ser um número inteiro maior que zero.");
       return;
     }
@@ -204,17 +185,13 @@ function ContentStudioPage() {
 
       startNew();
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível salvar o projeto.",
-      );
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar o projeto.");
     }
   }
 
   async function handleDelete(project: ContentProject) {
     const confirmed = window.confirm(
-      "Excluir o projeto \"" + project.title + "\"? Esta ação não pode ser desfeita.",
+      'Excluir o projeto "' + project.title + '"? Esta ação não pode ser desfeita.',
     );
 
     if (!confirmed) return;
@@ -228,11 +205,7 @@ function ContentStudioPage() {
 
       toast.success("Projeto excluído.");
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível excluir o projeto.",
-      );
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o projeto.");
     }
   }
 
@@ -243,12 +216,10 @@ function ContentStudioPage() {
           <span className="gold-chip inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium">
             <Clapperboard className="h-3.5 w-3.5" /> Etapa 6
           </span>
-          <h1 className="mt-3 text-2xl font-bold md:text-3xl">
-            Estúdio de Conteúdo
-          </h1>
+          <h1 className="mt-3 text-2xl font-bold md:text-3xl">Estúdio de Conteúdo</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Transforme um produto do Radar em um projeto organizado com público,
-            formato, roteiro, legenda, hashtags e prompt audiovisual.
+            Transforme um produto do Radar em um projeto organizado com público, formato, roteiro,
+            legenda, hashtags e prompt audiovisual.
           </p>
         </div>
 
@@ -261,9 +232,9 @@ function ContentStudioPage() {
       <section className="rounded-lg border border-gold/30 bg-gold-soft/50 p-4">
         <p className="text-sm font-medium">Base real primeiro</p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Nesta etapa o Estúdio salva e edita o trabalho de verdade. A IA automática
-          ainda não é acionada: o campo de prompt guarda o material preparado para a
-          próxima fase, sem simular uma geração que não aconteceu.
+          Nesta etapa o Estúdio salva e edita o trabalho de verdade. A IA automática ainda não é
+          acionada: o campo de prompt guarda o material preparado para a próxima fase, sem simular
+          uma geração que não aconteceu.
         </p>
       </section>
 
@@ -303,10 +274,7 @@ function ContentStudioPage() {
                   id="studio-status"
                   value={form.status}
                   onChange={(event) =>
-                    setField(
-                      "status",
-                      event.target.value === "pronto" ? "pronto" : "rascunho",
-                    )
+                    setField("status", event.target.value === "pronto" ? "pronto" : "rascunho")
                   }
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
@@ -433,11 +401,7 @@ function ContentStudioPage() {
               </Button>
             )}
             <Button type="submit" variant="gold" disabled={!canSave}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {editingId ? "Salvar alterações" : "Criar projeto"}
             </Button>
           </div>
@@ -457,8 +421,8 @@ function ContentStudioPage() {
 
           {productsError && (
             <div className="surface-card p-4 text-sm text-muted-foreground">
-              Não foi possível carregar o catálogo. O formulário ficará disponível
-              novamente quando a conexão com os produtos for restabelecida.
+              Não foi possível carregar o catálogo. O formulário ficará disponível novamente quando
+              a conexão com os produtos for restabelecida.
             </div>
           )}
 
