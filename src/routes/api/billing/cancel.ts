@@ -4,11 +4,11 @@ export const Route = createFileRoute("/api/billing/cancel")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { cancelMercadoPagoSubscription, normalizeBillingError } =
+        const { cancelBilling, normalizeBillingError } =
           await import("@/lib/billing.server");
 
         try {
-          return Response.json(await cancelMercadoPagoSubscription(request));
+          return Response.json(await cancelBilling(request));
         } catch (error) {
           const normalized = normalizeBillingError(error);
           return Response.json(
