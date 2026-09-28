@@ -549,6 +549,7 @@ export async function handleMercadoPagoWebhook(request: Request) {
   const providerEventId = body.id ? String(body.id) : (xRequestId ?? randomUUID());
 
   await recordWebhookEvent({
+    provider: "mercado_pago",
     providerEventId,
     eventType,
     resourceId,
@@ -557,14 +558,14 @@ export async function handleMercadoPagoWebhook(request: Request) {
 
   try {
     if (!resourceId) {
-      await markWebhookEvent(providerEventId, "ignored");
+      await markWebhookEvent("mercado_pago", providerEventId, "ignored");
       return { ok: true, ignored: true };
     }
 
     if (eventType === "subscription_preapproval") {
       const subscription = await fetchMercadoPagoSubscription(resourceId, config.accessToken);
       await reconcileMercadoPagoSubscription(subscription);
-      await markWebhookEvent(providerEventId, "processed");
+      await markWebhookEvent("mercado_pago", providerEventId, "processed");
       return { ok: true };
     }
 
@@ -579,14 +580,15 @@ export async function handleMercadoPagoWebhook(request: Request) {
         await reconcileMercadoPagoSubscription(subscription);
       }
 
-      await markWebhookEvent(providerEventId, "processed");
+      await markWebhookEvent("mercado_pago", providerEventId, "processed");
       return { ok: true };
     }
 
-    await markWebhookEvent(providerEventId, "ignored");
+    await markWebhookEvent("mercado_pago", providerEventId, "ignored");
     return { ok: true, ignored: true };
   } catch (error) {
     await markWebhookEvent(
+      "mercado_pago",
       providerEventId,
       "failed",
       error instanceof Error ? error.message.slice(0, 500) : "Erro desconhecido",
@@ -797,11 +799,13 @@ function safeEqualHex(expected: string, received: string) {
 }
 
 async function recordWebhookEvent({
+  provider,
   providerEventId,
   eventType,
   resourceId,
   status,
 }: {
+  provider: BillingProvider;
   providerEventId: string;
   eventType: string;
   resourceId: string | null;
@@ -809,7 +813,7 @@ async function recordWebhookEvent({
 }) {
   const { error } = await supabaseAdmin.from("billing_webhook_events").upsert(
     {
-      provider: "mercado_pago",
+      provider,
       provider_event_id: providerEventId,
       event_type: eventType,
       resource_id: resourceId,
@@ -825,6 +829,7 @@ async function recordWebhookEvent({
 }
 
 async function markWebhookEvent(
+  provider: BillingProvider,
   providerEventId: string,
   status: "processed" | "ignored" | "failed",
   errorMessage: string | null = null,
@@ -836,10 +841,397 @@ async function markWebhookEvent(
       processed_at: new Date().toISOString(),
       error_message: errorMessage,
     })
-    .eq("provider", "mercado_pago")
+    .eq("provider", provider)
     .eq("provider_event_id", providerEventId);
 
   if (error) throw error;
+}
+
+async function reconcilePayPalSubscription(subscription: PayPalSubscription) {
+  if (!subscription.id || !subscription.custom_id) {
+    throw new Error("Assinatura PayPal sem referência interna válida.");
+  }
+
+  const normalizedStatus = normalizePayPalStatus(subscription.status);
+  const now = new Date().toISOString();
+  const baseValues = {
+    user_id: subscription.custom_id,
+    billing_provider: "paypal",
+    billing_external_id: subscription.id,
+    billing_status: normalizedStatus,
+    billing_payer_id: subscription.subscriber?.payer_id ?? null,
+    billing_next_payment_at: subscription.billing_info?.next_billing_time ?? null,
+    billing_updated_at: now,
+    updated_at: now,
+  } as const;
+
+  if (normalizedStatus === "authorized") {
+    const { error } = await supabaseAdmin.from("user_subscriptions").upsert(
+      {
+        ...baseValues,
+        plan: "pro",
+        status: "active",
+      },
+      { onConflict: "user_id" },
+    );
+    if (error) throw error;
+    return;
+  }
+
+  if (normalizedStatus === "paused" || normalizedStatus === "canceled") {
+    const { error } = await supabaseAdmin.from("user_subscriptions").upsert(
+      {
+        ...baseValues,
+        plan: "free",
+        status: "active",
+      },
+      { onConflict: "user_id" },
+    );
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabaseAdmin.from("user_subscriptions").upsert(baseValues, {
+    onConflict: "user_id",
+  });
+  if (error) throw error;
+}
+
+async function getOwnedPayPalSubscription(userId: string, accessToken: string, apiBase: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("billing_provider,billing_external_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (data?.billing_provider !== "paypal" || !data.billing_external_id) {
+    throw new BillingError(
+      404,
+      "BILLING_SUBSCRIPTION_NOT_FOUND",
+      "Nenhuma assinatura PayPal vinculada foi encontrada.",
+    );
+  }
+
+  const subscription = await fetchPayPalSubscription(data.billing_external_id, accessToken, apiBase);
+  assertOwnedPayPalSubscription(subscription, userId);
+  return subscription;
+}
+
+async function fetchPayPalSubscription(id: string, accessToken: string, apiBase: string) {
+  const response = await fetch(
+    `${apiBase}/v1/billing/subscriptions/${encodeURIComponent(id)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      signal: AbortSignal.timeout(20_000),
+    },
+  );
+
+  const payload = (await response.json().catch(() => null)) as PayPalSubscription | null;
+
+  if (!response.ok || !payload?.id) {
+    throw new BillingError(
+      502,
+      "BILLING_PROVIDER_ERROR",
+      "Não foi possível consultar a assinatura PayPal.",
+    );
+  }
+
+  return payload;
+}
+
+function assertOwnedPayPalSubscription(subscription: PayPalSubscription, userId: string) {
+  if (subscription.custom_id !== userId) {
+    throw new BillingError(
+      403,
+      "BILLING_SUBSCRIPTION_MISMATCH",
+      "A assinatura PayPal retornada não pertence a esta conta.",
+    );
+  }
+}
+
+function findPayPalApprovalUrl(subscription: PayPalSubscription) {
+  return subscription.links?.find((link) => link.rel === "approve")?.href ?? null;
+}
+
+function normalizePayPalStatus(status: string | undefined) {
+  if (status === "ACTIVE") return "authorized";
+  if (status === "SUSPENDED") return "paused";
+  if (status === "CANCELLED" || status === "EXPIRED") return "canceled";
+  if (status === "APPROVED" || status === "APPROVAL_PENDING") return "pending";
+  return status?.toLowerCase() || "unknown";
+}
+
+async function getPayPalAccessToken(config: {
+  clientId: string;
+  clientSecret: string;
+  apiBase: string;
+}) {
+  const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
+  const response = await fetch(`${config.apiBase}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  const payload = (await response.json().catch(() => null)) as { access_token?: string } | null;
+
+  if (!response.ok || !payload?.access_token) {
+    throw new BillingError(
+      502,
+      "BILLING_PROVIDER_ERROR",
+      "Não foi possível autenticar no PayPal.",
+    );
+  }
+
+  return payload.access_token;
+}
+
+async function verifyPayPalWebhook(
+  request: Request,
+  event: PayPalWebhook,
+  accessToken: string,
+  config: ReturnType<typeof requirePayPalWebhookConfig>,
+) {
+  const authAlgo = request.headers.get("paypal-auth-algo");
+  const certUrl = request.headers.get("paypal-cert-url");
+  const transmissionId = request.headers.get("paypal-transmission-id");
+  const transmissionSig = request.headers.get("paypal-transmission-sig");
+  const transmissionTime = request.headers.get("paypal-transmission-time");
+
+  if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
+    throw new BillingError(401, "INVALID_WEBHOOK_SIGNATURE", "Webhook PayPal sem assinatura válida.");
+  }
+
+  const response = await fetch(`${config.apiBase}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      auth_algo: authAlgo,
+      cert_url: certUrl,
+      transmission_id: transmissionId,
+      transmission_sig: transmissionSig,
+      transmission_time: transmissionTime,
+      webhook_id: config.webhookId,
+      webhook_event: event,
+    }),
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  const payload = (await response.json().catch(() => null)) as {
+    verification_status?: string;
+  } | null;
+
+  if (!response.ok || payload?.verification_status !== "SUCCESS") {
+    throw new BillingError(401, "INVALID_WEBHOOK_SIGNATURE", "Webhook PayPal com assinatura inválida.");
+  }
+}
+
+async function getUserBillingProvider(request: Request): Promise<BillingProvider> {
+  const user = await requireApiUser(request);
+  const { data, error } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("billing_provider")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const provider = normalizeBillingProvider(data?.billing_provider);
+  if (!provider) {
+    throw new BillingError(
+      404,
+      "BILLING_SUBSCRIPTION_NOT_FOUND",
+      "Nenhuma assinatura vinculada foi encontrada.",
+    );
+  }
+
+  return provider;
+}
+
+function getRequestedBillingProvider(request: Request): BillingProvider {
+  const raw = new URL(request.url).searchParams.get("provider");
+  const provider = normalizeBillingProvider(raw);
+
+  if (!provider) {
+    throw new BillingError(
+      400,
+      "INVALID_BILLING_PROVIDER",
+      "Selecione um gateway de pagamento válido.",
+    );
+  }
+
+  return provider;
+}
+
+function normalizeBillingProvider(value: string | null | undefined): BillingProvider | null {
+  return value === "mercado_pago" || value === "paypal" || value === "pepper" ? value : null;
+}
+
+function buildProviderOptions({
+  mercadoPago,
+  paypal,
+  pepper,
+}: {
+  mercadoPago: ReturnType<typeof getBillingConfig>;
+  paypal: ReturnType<typeof getPayPalConfig>;
+  pepper: ReturnType<typeof getPepperConfig>;
+}): BillingProviderOption[] {
+  return [
+    {
+      id: "mercado_pago",
+      label: "Mercado Pago",
+      description: "Assinatura recorrente com confirmação automática por Webhook.",
+      configured: mercadoPago.checkoutEnabled,
+      managementAvailable: mercadoPago.managementReady,
+      automaticEntitlement: true,
+      monthlyPrice: mercadoPago.monthlyPrice,
+    },
+    {
+      id: "paypal",
+      label: "PayPal",
+      description: "Assinatura recorrente pela API oficial do PayPal.",
+      configured: paypal.checkoutEnabled,
+      managementAvailable: paypal.managementReady,
+      automaticEntitlement: true,
+      monthlyPrice: paypal.monthlyPrice,
+    },
+    {
+      id: "pepper",
+      label: "Pepper",
+      description: "Checkout brasileiro com Pix, cartão e boleto; ativação automática exige a API da conta.",
+      configured: pepper.checkoutEnabled,
+      managementAvailable: false,
+      automaticEntitlement: false,
+      monthlyPrice: pepper.monthlyPrice,
+    },
+  ];
+}
+
+function getPayPalConfig() {
+  const environment =
+    process.env["PAYPAL_ENVIRONMENT"]?.trim().toLowerCase() === "live" ? "live" : "sandbox";
+  const apiBase =
+    environment === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  const clientId = process.env["PAYPAL_CLIENT_ID"]?.trim() ?? "";
+  const clientSecret = process.env["PAYPAL_CLIENT_SECRET"]?.trim() ?? "";
+  const planId = process.env["PAYPAL_PLAN_ID"]?.trim() ?? "";
+  const webhookId = process.env["PAYPAL_WEBHOOK_ID"]?.trim() ?? "";
+  const monthlyPrice = readPositiveMoney(process.env["PAYPAL_PRO_MONTHLY_BRL"]);
+  const publicAppUrl = normalizePublicUrl(process.env["APP_PUBLIC_URL"]);
+  const salesFlagEnabled = envFlag("PAYPAL_BILLING_ENABLED");
+  const managementReady = isUsageLimitsEnabled() && Boolean(clientId && clientSecret);
+  const webhookReady = Boolean(clientId && clientSecret && webhookId);
+  const checkoutEnabled =
+    salesFlagEnabled &&
+    managementReady &&
+    Boolean(planId && publicAppUrl && monthlyPrice);
+
+  return {
+    environment,
+    apiBase,
+    clientId,
+    clientSecret,
+    planId,
+    webhookId,
+    monthlyPrice,
+    publicAppUrl,
+    managementReady,
+    webhookReady,
+    checkoutEnabled,
+    brandName: process.env["PAYPAL_BRAND_NAME"]?.trim() || "RadarShop AI",
+  };
+}
+
+function requirePayPalCheckoutConfig() {
+  const config = getPayPalConfig();
+  if (!config.checkoutEnabled || !config.planId || !config.publicAppUrl) {
+    throw new BillingError(
+      503,
+      "BILLING_NOT_CONFIGURED",
+      "O checkout PayPal ainda não está configurado neste ambiente.",
+    );
+  }
+
+  return {
+    ...config,
+    planId: config.planId,
+    publicAppUrl: config.publicAppUrl,
+  };
+}
+
+function requirePayPalManagementConfig() {
+  const config = getPayPalConfig();
+  if (!config.managementReady) {
+    throw new BillingError(
+      503,
+      "BILLING_MANAGEMENT_NOT_CONFIGURED",
+      "A gestão de assinaturas PayPal ainda não está configurada.",
+    );
+  }
+  return config;
+}
+
+function requirePayPalWebhookConfig() {
+  const config = getPayPalConfig();
+  if (!config.webhookReady || !config.webhookId) {
+    throw new BillingError(
+      503,
+      "BILLING_WEBHOOK_NOT_CONFIGURED",
+      "O Webhook do PayPal ainda não está configurado.",
+    );
+  }
+  return { ...config, webhookId: config.webhookId };
+}
+
+function getPepperConfig() {
+  const checkoutUrl = normalizeExternalCheckoutUrl(process.env["PEPPER_CHECKOUT_URL"]);
+  const monthlyPrice = readPositiveMoney(process.env["PEPPER_PRO_MONTHLY_BRL"]);
+  const checkoutEnabled =
+    envFlag("PEPPER_BILLING_ENABLED") && Boolean(checkoutUrl && monthlyPrice);
+
+  return {
+    checkoutUrl,
+    monthlyPrice,
+    checkoutEnabled,
+  };
+}
+
+function requirePepperCheckoutConfig() {
+  const config = getPepperConfig();
+  if (!config.checkoutEnabled || !config.checkoutUrl) {
+    throw new BillingError(
+      503,
+      "BILLING_NOT_CONFIGURED",
+      "O checkout Pepper ainda não está configurado neste ambiente.",
+    );
+  }
+  return { ...config, checkoutUrl: config.checkoutUrl };
+}
+
+function normalizeExternalCheckoutUrl(value: string | undefined) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function envFlag(name: string) {
+  return process.env[name]?.trim().toLowerCase() === "true";
 }
 
 function getBillingConfig() {
