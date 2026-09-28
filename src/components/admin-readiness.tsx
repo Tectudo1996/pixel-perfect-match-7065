@@ -117,11 +117,7 @@ function StatusCard({
     <div className="rounded-lg border border-border p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 inline-flex items-center gap-2 text-sm font-semibold">
-        {ready ? (
-          <CheckCircle2 className="h-4 w-4" />
-        ) : (
-          <CircleDashed className="h-4 w-4" />
-        )}
+        {ready ? <CheckCircle2 className="h-4 w-4" /> : <CircleDashed className="h-4 w-4" />}
         {ready ? readyText : pendingText}
       </p>
     </div>
