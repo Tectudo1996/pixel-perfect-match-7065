@@ -367,6 +367,66 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_shop_connections: {
+        Row: {
+          access_token_expires_at: string | null
+          connected_at: string
+          granted_scopes: string[]
+          open_id: string
+          refresh_token_expires_at: string | null
+          token_ciphertext: string
+          updated_at: string
+          user_id: string
+          user_type: number
+        }
+        Insert: {
+          access_token_expires_at?: string | null
+          connected_at?: string
+          granted_scopes?: string[]
+          open_id: string
+          refresh_token_expires_at?: string | null
+          token_ciphertext: string
+          updated_at?: string
+          user_id: string
+          user_type?: number
+        }
+        Update: {
+          access_token_expires_at?: string | null
+          connected_at?: string
+          granted_scopes?: string[]
+          open_id?: string
+          refresh_token_expires_at?: string | null
+          token_ciphertext?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: number
+        }
+        Relationships: []
+      }
+      tiktok_shop_oauth_states: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          state_hash: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          state_hash: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          state_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           categories: string[]
