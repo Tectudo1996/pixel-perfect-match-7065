@@ -19,3 +19,6 @@
 - TikTok Shop API e provedores de dados
 - Geração de roteiro/vídeo por IA
 - Pagamentos e notificações
+
+## Pendente 2026-09-28
+- [ ] Diagnóstico: teste mínimo server-side do Lovable AI Gateway (auth, status, resposta textual) — sem revelar valores
