@@ -42,7 +42,7 @@ export class UsageLimitError extends Error {
 export async function getPlanUsage(userId: string): Promise<PlanUsageSummary> {
   const catalog = getPlanCatalog();
 
-  if (!usageLimitsEnabled()) {
+  if (!isUsageLimitsEnabled()) {
     return {
       enforcementEnabled: false,
       plan: "free",
@@ -78,7 +78,7 @@ export async function getPlanUsage(userId: string): Promise<PlanUsageSummary> {
 }
 
 export async function reserveAiGeneration(userId: string) {
-  if (!usageLimitsEnabled()) {
+  if (!isUsageLimitsEnabled()) {
     return {
       reserved: false,
       summary: await getPlanUsage(userId),
@@ -124,7 +124,7 @@ export async function reserveAiGeneration(userId: string) {
 }
 
 export async function refundAiGeneration(userId: string) {
-  if (!usageLimitsEnabled()) return;
+  if (!isUsageLimitsEnabled()) return;
 
   const { error } = await supabaseAdmin.rpc("refund_ai_generation", {
     _user_id: userId,
@@ -191,7 +191,7 @@ function normalizePlan(value: string): PlanCode {
   return value === "pro" ? "pro" : "free";
 }
 
-function usageLimitsEnabled() {
+export function isUsageLimitsEnabled() {
   return process.env["AI_USAGE_LIMITS_ENABLED"]?.trim().toLowerCase() === "true";
 }
 
