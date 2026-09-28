@@ -23,6 +23,7 @@ Aplique no Lovable Cloud / Supabase de produção, nesta ordem:
 3. `drizzle/migrations/0003_billing_mercado_pago.sql`
 4. `drizzle/migrations/0004_multi_gateway_billing.sql`
 5. `drizzle/migrations/0005_multi_gateway_readiness.sql`
+6. `drizzle/migrations/0006_ingestion_observability.sql`
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
@@ -99,19 +100,20 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. aplique as migrations 0001, 0002, 0003, 0004 e 0005
+2. aplique as migrations 0001, 0002, 0003, 0004, 0005 e 0006
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
-5. ative `AI_USAGE_LIMITS_ENABLED=true`
-6. teste geração de IA e consumo de cota com uma conta interna
-7. configure primeiro apenas o gateway que será testado
-8. confirme em **Admin → Prontidão** que checkout e reconciliação desse gateway estão prontos
-9. habilite a flag `*_BILLING_ENABLED=true` somente para esse gateway
-10. execute uma assinatura controlada/teste autorizado
-11. confirme criação do registro de billing e recebimento dos eventos
-12. teste sincronização e cancelamento quando o gateway oferecer gerenciamento automático
-13. mantenha os outros gateways desativados até serem testados individualmente
-14. só então libere checkout para usuários externos
+5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível
+6. ative `AI_USAGE_LIMITS_ENABLED=true`
+7. teste geração de IA e consumo de cota com uma conta interna
+8. configure primeiro apenas o gateway que será testado
+9. confirme em **Admin → Prontidão** que checkout e reconciliação desse gateway estão prontos
+10. habilite a flag `*_BILLING_ENABLED=true` somente para esse gateway
+11. execute uma assinatura controlada/teste autorizado
+12. confirme criação do registro de billing e recebimento dos eventos
+13. teste sincronização e cancelamento quando o gateway oferecer gerenciamento automático
+14. mantenha os outros gateways desativados até serem testados individualmente
+15. só então libere checkout para usuários externos
 
 ## 6. Checklist após deploy
 
@@ -209,3 +211,26 @@ Aplique `drizzle/migrations/0004_multi_gateway_billing.sql` antes de habilitar P
 Em seguida, aplique `drizzle/migrations/0005_multi_gateway_readiness.sql`. Ela cria apenas uma
 função de diagnóstico server-side, sem alterar assinaturas ou eventos existentes. **Admin → Prontidão**
 usa essa função para confirmar que os dois constraints aceitam Mercado Pago, PayPal e Pepper.
+
+
+## 11. Observabilidade de ingestão
+
+A migration `0006_ingestion_observability.sql` cria `ingestion_runs`.
+
+O histórico registra:
+
+- fonte
+- canal (`api` ou `csv`)
+- status da execução
+- quantidade recebida
+- inseridos
+- atualizados
+- snapshots gravados
+- horário de coleta e execução
+- erro operacional sanitizado quando houver
+
+A tabela usa RLS. Usuários comuns não recebem acesso; somente administradores autenticados podem
+consultar/gravar pelo painel, enquanto integrações server-to-server usam o service role.
+
+A observabilidade é propositalmente best-effort: uma falha ao registrar o histórico não deve
+interromper uma ingestão válida de produtos.
