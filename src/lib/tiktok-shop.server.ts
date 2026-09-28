@@ -594,7 +594,9 @@ function normalizeTikTokProductForPrivateCache(
   const priceRange = product.sales_price ?? product.original_price;
   const commissionRate = normalizeCommissionRate(product.commission?.rate);
   const unitsSold =
-    Number.isInteger(product.units_sold) && (product.units_sold ?? -1) >= 0
+    typeof product.units_sold === "number" &&
+    Number.isInteger(product.units_sold) &&
+    product.units_sold >= 0
       ? product.units_sold
       : null;
 
