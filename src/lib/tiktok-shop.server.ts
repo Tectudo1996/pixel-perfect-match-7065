@@ -467,6 +467,107 @@ type TikTokMoneyRange = {
   maximum_amount?: string;
 };
 
+export type TikTokCreatorOpportunity = {
+  id: string;
+  title: string;
+  detailLink: string | null;
+  imageUrl: string | null;
+  shopName: string | null;
+  saleRegion: string | null;
+  hasInventory: boolean | null;
+  unitsSold: number | null;
+  currency: string | null;
+  minimumPrice: number | null;
+  maximumPrice: number | null;
+  commissionAmount: number | null;
+  commissionCurrency: string | null;
+  commissionPercent: number | null;
+};
+
+export async function searchTikTokCreatorOpportunities(
+  userId: string,
+  {
+    search,
+    sort = "commission",
+    pageToken,
+  }: {
+    search?: string;
+    sort?: "commission" | "sales";
+    pageToken?: string;
+  } = {},
+) {
+  await requireTikTokShopGrantedScope(userId, ["creator.affiliate_collaboration.read"]);
+  const accessToken = await getValidTikTokCreatorAccessToken(userId);
+  const normalizedSearch = search?.trim() ?? "";
+
+  if (normalizedSearch.length > 255) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_SEARCH_TOO_LONG",
+      "A busca do TikTok Shop deve ter no máximo 255 caracteres.",
+      400,
+    );
+  }
+
+  const data = await requestTikTokShopApi<{
+    products?: TikTokOpenCollaborationProduct[];
+    next_page_token?: string;
+    total_count?: number;
+  }>({
+    accessToken,
+    path: "/affiliate_creator/202405/open_collaborations/products/search",
+    method: "POST",
+    query: {
+      page_size: 20,
+      sort_field: sort === "sales" ? "units_sold" : "commission_rate",
+      sort_order: "DESC",
+      page_token: pageToken?.trim() || undefined,
+    },
+    body: normalizedSearch ? { title_keywords: [normalizedSearch] } : {},
+  });
+
+  return {
+    products: (data.products ?? [])
+      .map(normalizeTikTokOpportunity)
+      .filter((product): product is TikTokCreatorOpportunity => product !== null),
+    nextPageToken: data.next_page_token?.trim() || null,
+    total: data.total_count ?? 0,
+  };
+}
+
+function normalizeTikTokOpportunity(
+  product: TikTokOpenCollaborationProduct,
+): TikTokCreatorOpportunity | null {
+  const id = product.id?.trim() ?? "";
+  const title = product.title?.trim() ?? "";
+
+  if (!id || !title) return null;
+
+  const priceRange = product.sales_price ?? product.original_price;
+  const unitsSold =
+    typeof product.units_sold === "number" &&
+    Number.isInteger(product.units_sold) &&
+    product.units_sold >= 0
+      ? product.units_sold
+      : null;
+
+  return {
+    id,
+    title,
+    detailLink: normalizeHttpUrl(product.detail_link),
+    imageUrl: normalizeHttpUrl(product.main_image_url),
+    shopName: product.shop?.name?.trim() || null,
+    saleRegion: product.sale_region?.trim().toUpperCase() || null,
+    hasInventory: typeof product.has_inventory === "boolean" ? product.has_inventory : null,
+    unitsSold,
+    currency: priceRange?.currency?.trim().toUpperCase() || null,
+    minimumPrice: parseNonNegativeMoney(priceRange?.minimum_amount),
+    maximumPrice: parseNonNegativeMoney(priceRange?.maximum_amount),
+    commissionAmount: parseNonNegativeMoney(product.commission?.amount),
+    commissionCurrency: product.commission?.currency?.trim().toUpperCase() || null,
+    commissionPercent: normalizeCommissionRate(product.commission?.rate),
+  };
+}
+
 export async function getTikTokOpenCollaborationProductsByIds(
   userId: string,
   productIds: string[],
