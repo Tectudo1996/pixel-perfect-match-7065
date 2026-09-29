@@ -417,3 +417,17 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - acumula resultados sem duplicar produtos pelo ID
 - não mistura páginas de filtros diferentes quando o usuário altera o formulário
 - continua mantendo os resultados vinculados à sessão Creator, sem gravá-los no catálogo global
+
+
+### Etapa 12I — acompanhamento privado de oportunidades TikTok
+
+- adiciona **Acompanhar** às oportunidades oficiais encontradas no Meu Radar
+- valida o produto novamente na API oficial antes de salvá-lo
+- mantém uma lista privada por usuário com limite de 100 oportunidades
+- registra leituras históricas de vendas, comissão, preço e disponibilidade
+- botão **Atualizar acompanhamento** consulta novamente a API oficial em lotes de até 20 produtos
+- mostra variações observadas entre a leitura atual e a anterior, sem transformar variação em probabilidade de venda
+- histórico e lista ficam em tabelas server-only, com RLS ativo e sem grants para `anon` ou `authenticated`
+- remover um produto apaga também o histórico privado correspondente
+- migration `0009_tiktok_opportunity_tracking.sql`
+- endpoints internos: `GET/POST/DELETE /api/integrations/tiktok-shop/tracked` e `POST /api/integrations/tiktok-shop/tracked/refresh`
