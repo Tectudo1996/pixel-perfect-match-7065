@@ -725,7 +725,9 @@ function TikTokHistoryDialog({
                     </div>
                     <Metric
                       label="Vendas"
-                      value={reading.unitsSold === null ? "—" : reading.unitsSold.toLocaleString("pt-BR")}
+                      value={
+                        reading.unitsSold === null ? "—" : reading.unitsSold.toLocaleString("pt-BR")
+                      }
                     />
                     <Metric label="Comissão" value={formatHistoryCommission(reading)} />
                     <Metric label="Preço" value={formatHistoryPrice(reading)} />
