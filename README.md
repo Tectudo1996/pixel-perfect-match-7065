@@ -407,3 +407,13 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - Meu Radar ganhou seção separada de oportunidades oficiais do TikTok Shop
 - exibe preço, comissão, vendas, loja, região e link oficial quando disponíveis
 - não inventa score, preço, comissão ou métrica ausente
+
+
+### Etapa 12H — paginação da descoberta TikTok
+
+- usa o `next_page_token` oficial retornado pela busca de colaborações
+- adiciona **Carregar mais oportunidades** no Meu Radar
+- mantém a busca e a ordenação originais ao avançar de página
+- acumula resultados sem duplicar produtos pelo ID
+- não mistura páginas de filtros diferentes quando o usuário altera o formulário
+- continua mantendo os resultados vinculados à sessão Creator, sem gravá-los no catálogo global
