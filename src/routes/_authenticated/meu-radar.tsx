@@ -708,9 +708,7 @@ function formatTrackedChanges(product: TikTokTrackedOpportunity) {
 
   if (product.minimumPriceDelta !== null) {
     const sign = product.minimumPriceDelta > 0 ? "+" : "";
-    changes.push(
-      `preço ${sign}${formatMoney(product.minimumPriceDelta, product.currency)}`,
-    );
+    changes.push(`preço ${sign}${formatMoney(product.minimumPriceDelta, product.currency)}`);
   }
 
   return changes.length ? changes.join(" · ") : "aguardando uma segunda leitura para comparar";
