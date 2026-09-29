@@ -53,9 +53,7 @@ export const Route = createFileRoute("/api/integrations/tiktok-shop/tracked")({
         try {
           const userId = await requireApiUserId(request);
           const body = productRequestSchema.parse(await readJsonBody(request, 4_096));
-          return Response.json(
-            await untrackTikTokCreatorOpportunity(userId, body.productId),
-          );
+          return Response.json(await untrackTikTokCreatorOpportunity(userId, body.productId));
         } catch (error) {
           if (error instanceof z.ZodError) {
             return Response.json(
