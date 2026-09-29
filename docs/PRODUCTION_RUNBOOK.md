@@ -26,6 +26,7 @@ Aplique no Lovable Cloud / Supabase de produção, nesta ordem:
 6. `drizzle/migrations/0006_ingestion_observability.sql`
 7. `drizzle/migrations/0007_tiktok_shop_oauth_storage.sql`
 8. `drizzle/migrations/0008_tiktok_showcase_private_cache.sql`
+9. `drizzle/migrations/0009_tiktok_opportunity_tracking.sql`
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
@@ -114,7 +115,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. aplique as migrations 0001, 0002, 0003, 0004, 0005, 0006, 0007 e 0008
+2. aplique as migrations 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008 e 0009
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível

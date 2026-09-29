@@ -484,6 +484,18 @@ export type TikTokCreatorOpportunity = {
   commissionPercent: number | null;
 };
 
+export type TikTokTrackedOpportunity = TikTokCreatorOpportunity & {
+  trackedAt: string;
+  lastCheckedAt: string;
+  previousCheckedAt: string | null;
+  previousUnitsSold: number | null;
+  unitsSoldDelta: number | null;
+  previousCommissionPercent: number | null;
+  commissionPercentDelta: number | null;
+  previousMinimumPrice: number | null;
+  minimumPriceDelta: number | null;
+};
+
 export async function searchTikTokCreatorOpportunities(
   userId: string,
   {
@@ -601,6 +613,306 @@ export async function getTikTokOpenCollaborationProductsByIds(
     },
     body: {},
   });
+}
+
+export async function listTikTokTrackedOpportunities(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .select("*")
+    .eq("user_id", userId)
+    .order("tracked_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map(mapTikTokTrackedOpportunity);
+}
+
+export async function trackTikTokCreatorOpportunity(userId: string, productId: string) {
+  const normalizedId = productId.trim();
+
+  if (!normalizedId || normalizedId.length > 255) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_PRODUCT_ID",
+      "O produto informado pelo TikTok Shop é inválido.",
+      400,
+    );
+  }
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("product_id", normalizedId)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (existing) return mapTikTokTrackedOpportunity(existing);
+
+  const { count, error: countError } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .select("product_id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (countError) throw countError;
+  if ((count ?? 0) >= 100) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_TRACKING_LIMIT",
+      "Você pode acompanhar até 100 oportunidades do TikTok Shop por vez.",
+      409,
+    );
+  }
+
+  const official = await getTikTokOpenCollaborationProductsByIds(userId, [normalizedId]);
+  const product = (official.products ?? []).find((item) => item.id?.trim() === normalizedId);
+  const normalized = product ? normalizeTikTokOpportunity(product) : null;
+
+  if (!normalized) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_PRODUCT_NOT_AVAILABLE",
+      "Esse produto não está mais disponível como colaboração para a sua conta Creator.",
+      404,
+    );
+  }
+
+  const checkedAt = new Date().toISOString();
+  const row = trackedOpportunityRow(userId, normalized, checkedAt);
+
+  const { data, error } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .insert(row)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  await insertTikTokOpportunityHistory(userId, normalized, checkedAt);
+
+  return mapTikTokTrackedOpportunity(data);
+}
+
+export async function untrackTikTokCreatorOpportunity(userId: string, productId: string) {
+  const normalizedId = productId.trim();
+
+  if (!normalizedId) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_PRODUCT_ID",
+      "O produto informado pelo TikTok Shop é inválido.",
+      400,
+    );
+  }
+
+  const { error } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .delete()
+    .eq("user_id", userId)
+    .eq("product_id", normalizedId);
+
+  if (error) throw error;
+
+  return { ok: true as const };
+}
+
+export async function refreshTikTokTrackedOpportunities(userId: string) {
+  const { data: tracked, error } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .select("*")
+    .eq("user_id", userId)
+    .order("tracked_at", { ascending: true });
+
+  if (error) throw error;
+
+  if (!tracked?.length) {
+    return {
+      ok: true as const,
+      checked: 0,
+      updated: 0,
+      skipped: 0,
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
+  const checkedAt = new Date().toISOString();
+  const rows: TablesInsert<"user_tiktok_tracked_opportunities">[] = [];
+  const history: TablesInsert<"user_tiktok_opportunity_history">[] = [];
+  let skipped = 0;
+
+  for (let offset = 0; offset < tracked.length; offset += 20) {
+    const batch = tracked.slice(offset, offset + 20);
+    const official = await getTikTokOpenCollaborationProductsByIds(
+      userId,
+      batch.map((item) => item.product_id),
+    );
+    const normalizedById = new Map(
+      (official.products ?? [])
+        .map(normalizeTikTokOpportunity)
+        .filter((item): item is TikTokCreatorOpportunity => item !== null)
+        .map((item) => [item.id, item]),
+    );
+
+    for (const previous of batch) {
+      const normalized = normalizedById.get(previous.product_id);
+
+      if (!normalized) {
+        skipped += 1;
+        continue;
+      }
+
+      rows.push(
+        trackedOpportunityRow(userId, normalized, checkedAt, {
+          unitsSold: previous.units_sold,
+          commissionPercent: previous.commission_percent,
+          minimumPrice: previous.minimum_price,
+          checkedAt: previous.last_checked_at,
+        }),
+      );
+      history.push(historyRow(userId, normalized, checkedAt));
+    }
+  }
+
+  if (rows.length) {
+    const { error: updateError } = await supabaseAdmin
+      .from("user_tiktok_tracked_opportunities")
+      .upsert(rows, { onConflict: "user_id,product_id" });
+
+    if (updateError) throw updateError;
+  }
+
+  if (history.length) {
+    const { error: historyError } = await supabaseAdmin
+      .from("user_tiktok_opportunity_history")
+      .insert(history);
+
+    if (historyError) throw historyError;
+  }
+
+  return {
+    ok: true as const,
+    checked: tracked.length,
+    updated: rows.length,
+    skipped,
+    checkedAt,
+  };
+}
+
+function trackedOpportunityRow(
+  userId: string,
+  product: TikTokCreatorOpportunity,
+  checkedAt: string,
+  previous?: {
+    unitsSold: number | null;
+    commissionPercent: number | null;
+    minimumPrice: number | null;
+    checkedAt: string | null;
+  },
+): TablesInsert<"user_tiktok_tracked_opportunities"> {
+  return {
+    user_id: userId,
+    product_id: product.id,
+    title: product.title,
+    detail_link: product.detailLink,
+    image_url: product.imageUrl,
+    shop_name: product.shopName,
+    sale_region: product.saleRegion,
+    currency: product.currency,
+    minimum_price: product.minimumPrice,
+    maximum_price: product.maximumPrice,
+    commission_amount: product.commissionAmount,
+    commission_currency: product.commissionCurrency,
+    commission_percent: product.commissionPercent,
+    units_sold: product.unitsSold,
+    has_inventory: product.hasInventory,
+    previous_units_sold: previous?.unitsSold ?? null,
+    previous_commission_percent: previous?.commissionPercent ?? null,
+    previous_minimum_price: previous?.minimumPrice ?? null,
+    previous_checked_at: previous?.checkedAt ?? null,
+    last_checked_at: checkedAt,
+  };
+}
+
+function historyRow(
+  userId: string,
+  product: TikTokCreatorOpportunity,
+  recordedAt: string,
+): TablesInsert<"user_tiktok_opportunity_history"> {
+  return {
+    user_id: userId,
+    product_id: product.id,
+    currency: product.currency,
+    minimum_price: product.minimumPrice,
+    maximum_price: product.maximumPrice,
+    commission_amount: product.commissionAmount,
+    commission_currency: product.commissionCurrency,
+    commission_percent: product.commissionPercent,
+    units_sold: product.unitsSold,
+    has_inventory: product.hasInventory,
+    recorded_at: recordedAt,
+  };
+}
+
+async function insertTikTokOpportunityHistory(
+  userId: string,
+  product: TikTokCreatorOpportunity,
+  recordedAt: string,
+) {
+  const { error } = await supabaseAdmin
+    .from("user_tiktok_opportunity_history")
+    .insert(historyRow(userId, product, recordedAt));
+
+  if (error) throw error;
+}
+
+function mapTikTokTrackedOpportunity(row: {
+  product_id: string;
+  title: string;
+  detail_link: string | null;
+  image_url: string | null;
+  shop_name: string | null;
+  sale_region: string | null;
+  has_inventory: boolean | null;
+  units_sold: number | null;
+  currency: string | null;
+  minimum_price: number | null;
+  maximum_price: number | null;
+  commission_amount: number | null;
+  commission_currency: string | null;
+  commission_percent: number | null;
+  previous_units_sold: number | null;
+  previous_commission_percent: number | null;
+  previous_minimum_price: number | null;
+  previous_checked_at: string | null;
+  tracked_at: string;
+  last_checked_at: string;
+}): TikTokTrackedOpportunity {
+  return {
+    id: row.product_id,
+    title: row.title,
+    detailLink: row.detail_link,
+    imageUrl: row.image_url,
+    shopName: row.shop_name,
+    saleRegion: row.sale_region,
+    hasInventory: row.has_inventory,
+    unitsSold: row.units_sold,
+    currency: row.currency,
+    minimumPrice: row.minimum_price,
+    maximumPrice: row.maximum_price,
+    commissionAmount: row.commission_amount,
+    commissionCurrency: row.commission_currency,
+    commissionPercent: row.commission_percent,
+    trackedAt: row.tracked_at,
+    lastCheckedAt: row.last_checked_at,
+    previousCheckedAt: row.previous_checked_at,
+    previousUnitsSold: row.previous_units_sold,
+    unitsSoldDelta: numericDelta(row.units_sold, row.previous_units_sold),
+    previousCommissionPercent: row.previous_commission_percent,
+    commissionPercentDelta: numericDelta(row.commission_percent, row.previous_commission_percent),
+    previousMinimumPrice: row.previous_minimum_price,
+    minimumPriceDelta: numericDelta(row.minimum_price, row.previous_minimum_price),
+  };
+}
+
+function numericDelta(current: number | null, previous: number | null) {
+  if (current === null || previous === null) return null;
+  return current - previous;
 }
 
 export async function syncTikTokShowcasePrivateCache(

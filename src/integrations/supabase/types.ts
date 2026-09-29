@@ -487,6 +487,126 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tiktok_opportunity_history: {
+        Row: {
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_percent: number | null
+          currency: string | null
+          has_inventory: boolean | null
+          id: string
+          maximum_price: number | null
+          minimum_price: number | null
+          product_id: string
+          recorded_at: string
+          units_sold: number | null
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          has_inventory?: boolean | null
+          id?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id: string
+          recorded_at?: string
+          units_sold?: number | null
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          has_inventory?: boolean | null
+          id?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id?: string
+          recorded_at?: string
+          units_sold?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_tiktok_tracked_opportunities: {
+        Row: {
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_percent: number | null
+          currency: string | null
+          detail_link: string | null
+          has_inventory: boolean | null
+          image_url: string | null
+          last_checked_at: string
+          maximum_price: number | null
+          minimum_price: number | null
+          previous_checked_at: string | null
+          previous_commission_percent: number | null
+          previous_minimum_price: number | null
+          previous_units_sold: number | null
+          product_id: string
+          sale_region: string | null
+          shop_name: string | null
+          title: string
+          tracked_at: string
+          units_sold: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          last_checked_at?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          previous_checked_at?: string | null
+          previous_commission_percent?: number | null
+          previous_minimum_price?: number | null
+          previous_units_sold?: number | null
+          product_id: string
+          sale_region?: string | null
+          shop_name?: string | null
+          title: string
+          tracked_at?: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          last_checked_at?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          previous_checked_at?: string | null
+          previous_commission_percent?: number | null
+          previous_minimum_price?: number | null
+          previous_units_sold?: number | null
+          product_id?: string
+          sale_region?: string | null
+          shop_name?: string | null
+          title?: string
+          tracked_at?: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           categories: string[]

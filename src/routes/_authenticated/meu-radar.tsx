@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 import {
+  BookmarkCheck,
+  BookmarkPlus,
   ExternalLink,
   Loader2,
   RefreshCw,
@@ -8,6 +11,7 @@ import {
   Settings2,
   Sparkles,
   Target,
+  Trash2,
   WandSparkles,
 } from "lucide-react";
 import { EmptyState, ProductCard } from "@/components/product-card";
@@ -17,8 +21,13 @@ import { usePersonalRadar } from "@/hooks/usePersonalRadar";
 import {
   type TikTokCreatorOpportunity,
   type TikTokDiscoveryResult,
+  type TikTokTrackedOpportunity,
+  useRefreshTikTokTrackedOpportunities,
   useSearchTikTokOpportunities,
   useTikTokShopConnection,
+  useTikTokTrackedOpportunities,
+  useTrackTikTokOpportunity,
+  useUntrackTikTokOpportunity,
 } from "@/hooks/useTikTokShop";
 import { Input } from "@/components/ui/input";
 
@@ -55,6 +64,10 @@ function PersonalRadarPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = usePersonalRadar();
   const { data: tiktokShop, isLoading: loadingTikTokShop } = useTikTokShopConnection();
   const tiktokDiscovery = useSearchTikTokOpportunities();
+  const trackedTikTok = useTikTokTrackedOpportunities();
+  const trackTikTok = useTrackTikTokOpportunity();
+  const untrackTikTok = useUntrackTikTokOpportunity();
+  const refreshTrackedTikTok = useRefreshTikTokTrackedOpportunities();
   const [tiktokSearch, setTikTokSearch] = useState("");
   const [tiktokSort, setTikTokSort] = useState<"commission" | "sales">("commission");
   const [tiktokResult, setTikTokResult] = useState<TikTokDiscoveryResult | null>(null);
@@ -76,6 +89,40 @@ function PersonalRadarPage() {
       setTikTokResult(result);
     } catch {
       // The mutation already exposes the normalized error to the UI.
+    }
+  }
+
+  async function handleTrackTikTokOpportunity(productId: string) {
+    try {
+      await trackTikTok.mutateAsync(productId);
+      toast.success("Oportunidade adicionada ao acompanhamento.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível acompanhar essa oportunidade.",
+      );
+    }
+  }
+
+  async function handleUntrackTikTokOpportunity(productId: string) {
+    try {
+      await untrackTikTok.mutateAsync(productId);
+      toast.success("Oportunidade removida do acompanhamento.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível remover essa oportunidade.",
+      );
+    }
+  }
+
+  async function handleRefreshTrackedTikTok() {
+    try {
+      const result = await refreshTrackedTikTok.mutateAsync();
+      const skipped = result.skipped ? ` · ${result.skipped} indisponíveis` : "";
+      toast.success(`Acompanhamento atualizado: ${result.updated} produtos${skipped}.`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível atualizar o acompanhamento.",
+      );
     }
   }
 
@@ -204,10 +251,19 @@ function PersonalRadarPage() {
             searching={tiktokDiscovery.isPending && !loadingMoreTikTok}
             loadingMore={loadingMoreTikTok}
             error={tiktokDiscovery.isError ? tiktokDiscovery.error : null}
+            trackedProducts={trackedTikTok.data?.products ?? []}
+            trackedLoading={trackedTikTok.isLoading}
+            trackedError={trackedTikTok.isError ? trackedTikTok.error : null}
+            trackingProductId={trackTikTok.isPending ? (trackTikTok.variables ?? null) : null}
+            untrackingProductId={untrackTikTok.isPending ? (untrackTikTok.variables ?? null) : null}
+            refreshingTracked={refreshTrackedTikTok.isPending}
             onSearchChange={setTikTokSearch}
             onSortChange={setTikTokSort}
             onSearch={() => void searchTikTokOpportunities()}
             onLoadMore={() => void loadMoreTikTokOpportunities()}
+            onTrack={(productId) => void handleTrackTikTokOpportunity(productId)}
+            onUntrack={(productId) => void handleUntrackTikTokOpportunity(productId)}
+            onRefreshTracked={() => void handleRefreshTrackedTikTok()}
           />
 
           <section>
@@ -270,10 +326,19 @@ function TikTokOpportunitiesSection({
   searching,
   loadingMore,
   error,
+  trackedProducts,
+  trackedLoading,
+  trackedError,
+  trackingProductId,
+  untrackingProductId,
+  refreshingTracked,
   onSearchChange,
   onSortChange,
   onSearch,
   onLoadMore,
+  onTrack,
+  onUntrack,
+  onRefreshTracked,
 }: {
   connection: ReturnType<typeof useTikTokShopConnection>["data"];
   loadingConnection: boolean;
@@ -283,10 +348,19 @@ function TikTokOpportunitiesSection({
   searching: boolean;
   loadingMore: boolean;
   error: unknown;
+  trackedProducts: TikTokTrackedOpportunity[];
+  trackedLoading: boolean;
+  trackedError: unknown;
+  trackingProductId: string | null;
+  untrackingProductId: string | null;
+  refreshingTracked: boolean;
   onSearchChange: (value: string) => void;
   onSortChange: (value: "commission" | "sales") => void;
   onSearch: () => void;
   onLoadMore: () => void;
+  onTrack: (productId: string) => void;
+  onUntrack: (productId: string) => void;
+  onRefreshTracked: () => void;
 }) {
   const connected = connection?.connected === true;
 
@@ -319,7 +393,23 @@ function TikTokOpportunitiesSection({
         </div>
       ) : connected ? (
         <>
-          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]">
+          <TikTokTrackedSection
+            products={trackedProducts}
+            loading={trackedLoading}
+            error={trackedError}
+            refreshing={refreshingTracked}
+            untrackingProductId={untrackingProductId}
+            onRefresh={onRefreshTracked}
+            onUntrack={onUntrack}
+          />
+
+          <div className="mt-5 border-t border-border pt-5">
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Buscar novas oportunidades
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-[1fr_180px_auto]">
             <Input
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
@@ -365,9 +455,21 @@ function TikTokOpportunitiesSection({
               {result.products.length ? (
                 <>
                   <div className="grid gap-3 md:grid-cols-2">
-                    {result.products.map((product) => (
-                      <TikTokOpportunityCard key={product.id} product={product} />
-                    ))}
+                    {result.products.map((product) => {
+                      const tracked = trackedProducts.some((item) => item.id === product.id);
+
+                      return (
+                        <TikTokOpportunityCard
+                          key={product.id}
+                          product={product}
+                          tracked={tracked}
+                          tracking={trackingProductId === product.id}
+                          untracking={untrackingProductId === product.id}
+                          onTrack={() => onTrack(product.id)}
+                          onUntrack={() => onUntrack(product.id)}
+                        />
+                      );
+                    })}
                   </div>
 
                   {result.nextPageToken && (
@@ -401,7 +503,101 @@ function TikTokOpportunitiesSection({
   );
 }
 
-function TikTokOpportunityCard({ product }: { product: TikTokCreatorOpportunity }) {
+function TikTokTrackedSection({
+  products,
+  loading,
+  error,
+  refreshing,
+  untrackingProductId,
+  onRefresh,
+  onUntrack,
+}: {
+  products: TikTokTrackedOpportunity[];
+  loading: boolean;
+  error: unknown;
+  refreshing: boolean;
+  untrackingProductId: string | null;
+  onRefresh: () => void;
+  onUntrack: (productId: string) => void;
+}) {
+  return (
+    <div className="mt-5 rounded-lg border border-border bg-secondary/10 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <BookmarkCheck className="h-4 w-4" />
+            <h3 className="text-sm font-semibold">Oportunidades acompanhadas</h3>
+          </div>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+            O RadarShop guarda leituras privadas da sua conta para comparar vendas, comissão e preço
+            entre atualizações. Não é uma previsão de venda.
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={refreshing || loading || products.length === 0}
+          onClick={onRefresh}
+        >
+          {refreshing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          Atualizar acompanhamento
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="mt-4 text-sm text-muted-foreground">Carregando acompanhamento...</p>
+      ) : error ? (
+        <p className="mt-4 rounded-md border border-border bg-background p-3 text-sm text-muted-foreground">
+          {error instanceof Error ? error.message : "Não foi possível carregar o acompanhamento."}
+        </p>
+      ) : products.length ? (
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {products.map((product) => (
+            <div key={product.id}>
+              <TikTokOpportunityCard
+                product={product}
+                tracked
+                untracking={untrackingProductId === product.id}
+                onUntrack={() => onUntrack(product.id)}
+              />
+              <div className="rounded-b-lg border border-t-0 border-border bg-background px-3 py-2 text-[11px] text-muted-foreground">
+                {formatTrackedChanges(product)} · última leitura{" "}
+                {formatTrackedDate(product.lastCheckedAt)}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Você ainda não acompanha nenhuma oportunidade. Faça uma busca abaixo e toque em
+          <strong> Acompanhar</strong>.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function TikTokOpportunityCard({
+  product,
+  tracked = false,
+  tracking = false,
+  untracking = false,
+  onTrack,
+  onUntrack,
+}: {
+  product: TikTokCreatorOpportunity;
+  tracked?: boolean;
+  tracking?: boolean;
+  untracking?: boolean;
+  onTrack?: () => void;
+  onUntrack?: () => void;
+}) {
   const price = formatOpportunityPrice(product);
   const commission =
     product.commissionAmount !== null
@@ -443,16 +639,46 @@ function TikTokOpportunityCard({ product }: { product: TikTokCreatorOpportunity 
         </div>
       </div>
 
-      {product.detailLink && (
-        <a
-          href={product.detailLink}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 border-t border-border px-3 py-2 text-xs font-medium hover:bg-secondary/50"
-        >
-          Abrir no TikTok Shop
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
+      {(product.detailLink || onTrack || onUntrack) && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
+          {product.detailLink && (
+            <a
+              href={product.detailLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mr-auto inline-flex items-center gap-1.5 text-xs font-medium hover:text-foreground"
+            >
+              Abrir no TikTok Shop
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          )}
+
+          {tracked && onUntrack ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={untracking}
+              onClick={onUntrack}
+            >
+              {untracking ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Parar
+            </Button>
+          ) : onTrack ? (
+            <Button type="button" variant="outline" size="sm" disabled={tracking} onClick={onTrack}>
+              {tracking ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <BookmarkPlus className="h-4 w-4" />
+              )}
+              Acompanhar
+            </Button>
+          ) : null}
+        </div>
       )}
     </article>
   );
@@ -465,6 +691,39 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-0.5 truncate font-medium">{value}</p>
     </div>
   );
+}
+
+function formatTrackedChanges(product: TikTokTrackedOpportunity) {
+  const changes: string[] = [];
+
+  if (product.unitsSoldDelta !== null) {
+    const sign = product.unitsSoldDelta > 0 ? "+" : "";
+    changes.push(`vendas ${sign}${product.unitsSoldDelta.toLocaleString("pt-BR")}`);
+  }
+
+  if (product.commissionPercentDelta !== null) {
+    const sign = product.commissionPercentDelta > 0 ? "+" : "";
+    changes.push(`comissão ${sign}${product.commissionPercentDelta.toFixed(2)} p.p.`);
+  }
+
+  if (product.minimumPriceDelta !== null) {
+    const sign = product.minimumPriceDelta > 0 ? "+" : "";
+    changes.push(`preço ${sign}${formatMoney(product.minimumPriceDelta, product.currency)}`);
+  }
+
+  return changes.length ? changes.join(" · ") : "aguardando uma segunda leitura para comparar";
+}
+
+function formatTrackedDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "agora";
+
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function formatOpportunityPrice(product: TikTokCreatorOpportunity) {
