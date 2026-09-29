@@ -89,6 +89,93 @@ export type TikTokDiscoveryResult = {
   total: number;
 };
 
+export type TikTokTrackedOpportunity = TikTokCreatorOpportunity & {
+  trackedAt: string;
+  lastCheckedAt: string;
+  previousCheckedAt: string | null;
+  previousUnitsSold: number | null;
+  unitsSoldDelta: number | null;
+  previousCommissionPercent: number | null;
+  commissionPercentDelta: number | null;
+  previousMinimumPrice: number | null;
+  minimumPriceDelta: number | null;
+};
+
+export function useTikTokTrackedOpportunities() {
+  return useQuery({
+    queryKey: ["tiktok-shop-tracked-opportunities"],
+    queryFn: async () => {
+      const token = await requireAccessToken();
+      return requestJson<{ products: TikTokTrackedOpportunity[] }>(
+        "/api/integrations/tiktok-shop/tracked",
+        token,
+      );
+    },
+    retry: false,
+    staleTime: 30_000,
+  });
+}
+
+export function useTrackTikTokOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      const token = await requireAccessToken();
+      return requestJson<{ product: TikTokTrackedOpportunity }>(
+        "/api/integrations/tiktok-shop/tracked",
+        token,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        },
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["tiktok-shop-tracked-opportunities"] });
+    },
+  });
+}
+
+export function useUntrackTikTokOpportunity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      const token = await requireAccessToken();
+      return requestJson<{ ok: true }>("/api/integrations/tiktok-shop/tracked", token, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId }),
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["tiktok-shop-tracked-opportunities"] });
+    },
+  });
+}
+
+export function useRefreshTikTokTrackedOpportunities() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const token = await requireAccessToken();
+      return requestJson<{
+        ok: true;
+        checked: number;
+        updated: number;
+        skipped: number;
+        checkedAt: string;
+      }>("/api/integrations/tiktok-shop/tracked/refresh", token, { method: "POST" });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["tiktok-shop-tracked-opportunities"] });
+    },
+  });
+}
+
 export function useSearchTikTokOpportunities() {
   return useMutation({
     mutationFn: async ({
