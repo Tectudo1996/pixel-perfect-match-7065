@@ -670,7 +670,10 @@ function TikTokHistoryDialog({
               />
               <HistorySummary
                 label="Vendas na janela"
-                value={formatHistoryNumberDelta(first?.unitsSold ?? null, latest?.unitsSold ?? null)}
+                value={formatHistoryNumberDelta(
+                  first?.unitsSold ?? null,
+                  latest?.unitsSold ?? null,
+                )}
               />
               <HistorySummary
                 label="Comissão na janela"
@@ -722,20 +725,10 @@ function TikTokHistoryDialog({
                     </div>
                     <Metric
                       label="Vendas"
-                      value={
-                        reading.unitsSold === null
-                          ? "—"
-                          : reading.unitsSold.toLocaleString("pt-BR")
-                      }
+                      value={reading.unitsSold === null ? "—" : reading.unitsSold.toLocaleString("pt-BR")}
                     />
-                    <Metric
-                      label="Comissão"
-                      value={formatHistoryCommission(reading)}
-                    />
-                    <Metric
-                      label="Preço"
-                      value={formatHistoryPrice(reading)}
-                    />
+                    <Metric label="Comissão" value={formatHistoryCommission(reading)} />
+                    <Metric label="Preço" value={formatHistoryPrice(reading)} />
                   </div>
                 ))}
               </div>
@@ -902,9 +895,7 @@ function formatHistoryMoneyDelta(
   return `${sign}${formatMoney(delta, currency)}`;
 }
 
-function formatHistoryCommission(
-  reading: TikTokOpportunityHistory["readings"][number],
-) {
+function formatHistoryCommission(reading: TikTokOpportunityHistory["readings"][number]) {
   if (reading.commissionAmount !== null) {
     return formatMoney(reading.commissionAmount, reading.commissionCurrency);
   }
