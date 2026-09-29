@@ -76,6 +76,7 @@ jobs:
           src/routes/api/integrations/tiktok-shop/discovery.ts
           src/routes/api/integrations/tiktok-shop/status.ts
           src/routes/api/integrations/tiktok-shop/tracked.ts
+          src/routes/api/integrations/tiktok-shop/tracked/history.ts
           src/routes/api/integrations/tiktok-shop/tracked/refresh.ts
           src/routes/api/integrations/tiktok-shop/showcase.ts
           src/routes/api/integrations/tiktok-shop/showcase/sync.ts
