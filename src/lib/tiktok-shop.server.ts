@@ -861,30 +861,28 @@ async function insertTikTokOpportunityHistory(
   if (error) throw error;
 }
 
-function mapTikTokTrackedOpportunity(
-  row: {
-    product_id: string;
-    title: string;
-    detail_link: string | null;
-    image_url: string | null;
-    shop_name: string | null;
-    sale_region: string | null;
-    has_inventory: boolean | null;
-    units_sold: number | null;
-    currency: string | null;
-    minimum_price: number | null;
-    maximum_price: number | null;
-    commission_amount: number | null;
-    commission_currency: string | null;
-    commission_percent: number | null;
-    previous_units_sold: number | null;
-    previous_commission_percent: number | null;
-    previous_minimum_price: number | null;
-    previous_checked_at: string | null;
-    tracked_at: string;
-    last_checked_at: string;
-  },
-): TikTokTrackedOpportunity {
+function mapTikTokTrackedOpportunity(row: {
+  product_id: string;
+  title: string;
+  detail_link: string | null;
+  image_url: string | null;
+  shop_name: string | null;
+  sale_region: string | null;
+  has_inventory: boolean | null;
+  units_sold: number | null;
+  currency: string | null;
+  minimum_price: number | null;
+  maximum_price: number | null;
+  commission_amount: number | null;
+  commission_currency: string | null;
+  commission_percent: number | null;
+  previous_units_sold: number | null;
+  previous_commission_percent: number | null;
+  previous_minimum_price: number | null;
+  previous_checked_at: string | null;
+  tracked_at: string;
+  last_checked_at: string;
+}): TikTokTrackedOpportunity {
   return {
     id: row.product_id,
     title: row.title,
@@ -906,10 +904,7 @@ function mapTikTokTrackedOpportunity(
     previousUnitsSold: row.previous_units_sold,
     unitsSoldDelta: numericDelta(row.units_sold, row.previous_units_sold),
     previousCommissionPercent: row.previous_commission_percent,
-    commissionPercentDelta: numericDelta(
-      row.commission_percent,
-      row.previous_commission_percent,
-    ),
+    commissionPercentDelta: numericDelta(row.commission_percent, row.previous_commission_percent),
     previousMinimumPrice: row.previous_minimum_price,
     minimumPriceDelta: numericDelta(row.minimum_price, row.previous_minimum_price),
   };
