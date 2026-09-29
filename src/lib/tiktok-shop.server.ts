@@ -496,6 +496,25 @@ export type TikTokTrackedOpportunity = TikTokCreatorOpportunity & {
   minimumPriceDelta: number | null;
 };
 
+export type TikTokOpportunityHistoryPoint = {
+  recordedAt: string;
+  unitsSold: number | null;
+  commissionPercent: number | null;
+  commissionAmount: number | null;
+  commissionCurrency: string | null;
+  minimumPrice: number | null;
+  maximumPrice: number | null;
+  currency: string | null;
+  hasInventory: boolean | null;
+};
+
+export type TikTokOpportunityHistory = {
+  productId: string;
+  title: string;
+  totalReadings: number;
+  readings: TikTokOpportunityHistoryPoint[];
+};
+
 export async function searchTikTokCreatorOpportunities(
   userId: string,
   {
@@ -688,6 +707,73 @@ export async function trackTikTokCreatorOpportunity(userId: string, productId: s
   await insertTikTokOpportunityHistory(userId, normalized, checkedAt);
 
   return mapTikTokTrackedOpportunity(data);
+}
+
+export async function getTikTokOpportunityHistory(
+  userId: string,
+  productId: string,
+  limit = 30,
+): Promise<TikTokOpportunityHistory> {
+  const normalizedId = productId.trim();
+
+  if (!normalizedId || normalizedId.length > 255) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_INVALID_PRODUCT_ID",
+      "O produto informado pelo TikTok Shop é inválido.",
+      400,
+    );
+  }
+
+  const normalizedLimit = Math.min(Math.max(Math.trunc(limit), 2), 30);
+  const { data: tracked, error: trackedError } = await supabaseAdmin
+    .from("user_tiktok_tracked_opportunities")
+    .select("product_id,title")
+    .eq("user_id", userId)
+    .eq("product_id", normalizedId)
+    .maybeSingle();
+
+  if (trackedError) throw trackedError;
+  if (!tracked) {
+    throw new TikTokShopError(
+      "TIKTOK_SHOP_TRACKED_NOT_FOUND",
+      "Essa oportunidade não está na sua lista de acompanhamento.",
+      404,
+    );
+  }
+
+  const { data, error, count } = await supabaseAdmin
+    .from("user_tiktok_opportunity_history")
+    .select(
+      "recorded_at,units_sold,commission_percent,commission_amount,commission_currency,minimum_price,maximum_price,currency,has_inventory",
+      { count: "exact" },
+    )
+    .eq("user_id", userId)
+    .eq("product_id", normalizedId)
+    .order("recorded_at", { ascending: false })
+    .limit(normalizedLimit);
+
+  if (error) throw error;
+
+  const readings = (data ?? [])
+    .map((row) => ({
+      recordedAt: row.recorded_at,
+      unitsSold: row.units_sold,
+      commissionPercent: row.commission_percent,
+      commissionAmount: row.commission_amount,
+      commissionCurrency: row.commission_currency,
+      minimumPrice: row.minimum_price,
+      maximumPrice: row.maximum_price,
+      currency: row.currency,
+      hasInventory: row.has_inventory,
+    }))
+    .reverse();
+
+  return {
+    productId: tracked.product_id,
+    title: tracked.title,
+    totalReadings: count ?? readings.length,
+    readings,
+  };
 }
 
 export async function untrackTikTokCreatorOpportunity(userId: string, productId: string) {

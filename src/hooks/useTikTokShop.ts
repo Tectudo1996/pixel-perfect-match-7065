@@ -101,6 +101,44 @@ export type TikTokTrackedOpportunity = TikTokCreatorOpportunity & {
   minimumPriceDelta: number | null;
 };
 
+export type TikTokOpportunityHistoryPoint = {
+  recordedAt: string;
+  unitsSold: number | null;
+  commissionPercent: number | null;
+  commissionAmount: number | null;
+  commissionCurrency: string | null;
+  minimumPrice: number | null;
+  maximumPrice: number | null;
+  currency: string | null;
+  hasInventory: boolean | null;
+};
+
+export type TikTokOpportunityHistory = {
+  productId: string;
+  title: string;
+  totalReadings: number;
+  readings: TikTokOpportunityHistoryPoint[];
+};
+
+export function useTikTokOpportunityHistory(productId: string | null) {
+  return useQuery({
+    queryKey: ["tiktok-shop-opportunity-history", productId],
+    queryFn: async () => {
+      if (!productId) throw new Error("Selecione uma oportunidade para ver o histórico.");
+      const token = await requireAccessToken();
+      const params = new URLSearchParams({ productId, limit: "30" });
+
+      return requestJson<TikTokOpportunityHistory>(
+        `/api/integrations/tiktok-shop/tracked/history?${params.toString()}`,
+        token,
+      );
+    },
+    enabled: Boolean(productId),
+    retry: false,
+    staleTime: 30_000,
+  });
+}
+
 export function useTikTokTrackedOpportunities() {
   return useQuery({
     queryKey: ["tiktok-shop-tracked-opportunities"],
@@ -171,7 +209,10 @@ export function useRefreshTikTokTrackedOpportunities() {
       }>("/api/integrations/tiktok-shop/tracked/refresh", token, { method: "POST" });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["tiktok-shop-tracked-opportunities"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["tiktok-shop-tracked-opportunities"] }),
+        queryClient.invalidateQueries({ queryKey: ["tiktok-shop-opportunity-history"] }),
+      ]);
     },
   });
 }

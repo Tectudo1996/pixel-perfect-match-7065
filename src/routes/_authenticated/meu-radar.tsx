@@ -5,6 +5,7 @@ import {
   BookmarkCheck,
   BookmarkPlus,
   ExternalLink,
+  History,
   Loader2,
   RefreshCw,
   Search,
@@ -16,13 +17,22 @@ import {
 } from "lucide-react";
 import { EmptyState, ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import { usePersonalRadar } from "@/hooks/usePersonalRadar";
 import {
   type TikTokCreatorOpportunity,
   type TikTokDiscoveryResult,
+  type TikTokOpportunityHistory,
   type TikTokTrackedOpportunity,
   useRefreshTikTokTrackedOpportunities,
+  useTikTokOpportunityHistory,
   useSearchTikTokOpportunities,
   useTikTokShopConnection,
   useTikTokTrackedOpportunities,
@@ -68,6 +78,9 @@ function PersonalRadarPage() {
   const trackTikTok = useTrackTikTokOpportunity();
   const untrackTikTok = useUntrackTikTokOpportunity();
   const refreshTrackedTikTok = useRefreshTikTokTrackedOpportunities();
+  const [selectedHistoryProduct, setSelectedHistoryProduct] =
+    useState<TikTokTrackedOpportunity | null>(null);
+  const tiktokHistory = useTikTokOpportunityHistory(selectedHistoryProduct?.id ?? null);
   const [tiktokSearch, setTikTokSearch] = useState("");
   const [tiktokSort, setTikTokSort] = useState<"commission" | "sales">("commission");
   const [tiktokResult, setTikTokResult] = useState<TikTokDiscoveryResult | null>(null);
@@ -264,6 +277,17 @@ function PersonalRadarPage() {
             onTrack={(productId) => void handleTrackTikTokOpportunity(productId)}
             onUntrack={(productId) => void handleUntrackTikTokOpportunity(productId)}
             onRefreshTracked={() => void handleRefreshTrackedTikTok()}
+            onOpenHistory={setSelectedHistoryProduct}
+          />
+
+          <TikTokHistoryDialog
+            product={selectedHistoryProduct}
+            history={tiktokHistory.data ?? null}
+            loading={tiktokHistory.isLoading || tiktokHistory.isFetching}
+            error={tiktokHistory.isError ? tiktokHistory.error : null}
+            onOpenChange={(open) => {
+              if (!open) setSelectedHistoryProduct(null);
+            }}
           />
 
           <section>
@@ -339,6 +363,7 @@ function TikTokOpportunitiesSection({
   onTrack,
   onUntrack,
   onRefreshTracked,
+  onOpenHistory,
 }: {
   connection: ReturnType<typeof useTikTokShopConnection>["data"];
   loadingConnection: boolean;
@@ -361,6 +386,7 @@ function TikTokOpportunitiesSection({
   onTrack: (productId: string) => void;
   onUntrack: (productId: string) => void;
   onRefreshTracked: () => void;
+  onOpenHistory: (product: TikTokTrackedOpportunity) => void;
 }) {
   const connected = connection?.connected === true;
 
@@ -401,6 +427,7 @@ function TikTokOpportunitiesSection({
             untrackingProductId={untrackingProductId}
             onRefresh={onRefreshTracked}
             onUntrack={onUntrack}
+            onOpenHistory={onOpenHistory}
           />
 
           <div className="mt-5 border-t border-border pt-5">
@@ -511,6 +538,7 @@ function TikTokTrackedSection({
   untrackingProductId,
   onRefresh,
   onUntrack,
+  onOpenHistory,
 }: {
   products: TikTokTrackedOpportunity[];
   loading: boolean;
@@ -519,6 +547,7 @@ function TikTokTrackedSection({
   untrackingProductId: string | null;
   onRefresh: () => void;
   onUntrack: (productId: string) => void;
+  onOpenHistory: (product: TikTokTrackedOpportunity) => void;
 }) {
   return (
     <div className="mt-5 rounded-lg border border-border bg-secondary/10 p-4">
@@ -566,9 +595,21 @@ function TikTokTrackedSection({
                 untracking={untrackingProductId === product.id}
                 onUntrack={() => onUntrack(product.id)}
               />
-              <div className="rounded-b-lg border border-t-0 border-border bg-background px-3 py-2 text-[11px] text-muted-foreground">
-                {formatTrackedChanges(product)} · última leitura{" "}
-                {formatTrackedDate(product.lastCheckedAt)}
+              <div className="flex flex-wrap items-center gap-2 rounded-b-lg border border-t-0 border-border bg-background px-3 py-2 text-[11px] text-muted-foreground">
+                <span className="min-w-0 flex-1">
+                  {formatTrackedChanges(product)} · última leitura{" "}
+                  {formatTrackedDate(product.lastCheckedAt)}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => onOpenHistory(product)}
+                >
+                  <History className="h-3.5 w-3.5" />
+                  Ver trajetória
+                </Button>
               </div>
             </div>
           ))}
@@ -579,6 +620,144 @@ function TikTokTrackedSection({
           <strong> Acompanhar</strong>.
         </p>
       )}
+    </div>
+  );
+}
+
+function TikTokHistoryDialog({
+  product,
+  history,
+  loading,
+  error,
+  onOpenChange,
+}: {
+  product: TikTokTrackedOpportunity | null;
+  history: TikTokOpportunityHistory | null;
+  loading: boolean;
+  error: unknown;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const readings = history?.readings ?? [];
+  const first = readings[0] ?? null;
+  const latest = readings[readings.length - 1] ?? null;
+
+  return (
+    <Dialog open={Boolean(product)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Trajetória da oportunidade</DialogTitle>
+          <DialogDescription>
+            {product?.title ??
+              "Histórico privado das leituras feitas pelo RadarShop na sua conta Creator."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Carregando leituras...
+          </div>
+        ) : error ? (
+          <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            {error instanceof Error ? error.message : "Não foi possível carregar o histórico."}
+          </p>
+        ) : history && readings.length ? (
+          <div className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <HistorySummary
+                label="Leituras registradas"
+                value={history.totalReadings.toLocaleString("pt-BR")}
+              />
+              <HistorySummary
+                label="Vendas na janela"
+                value={formatHistoryNumberDelta(
+                  first?.unitsSold ?? null,
+                  latest?.unitsSold ?? null,
+                )}
+              />
+              <HistorySummary
+                label="Comissão na janela"
+                value={formatHistoryPercentDelta(
+                  first?.commissionPercent ?? null,
+                  latest?.commissionPercent ?? null,
+                )}
+              />
+              <HistorySummary
+                label="Preço mínimo na janela"
+                value={formatHistoryMoneyDelta(
+                  first?.minimumPrice ?? null,
+                  latest?.minimumPrice ?? null,
+                  latest?.currency ?? first?.currency ?? null,
+                )}
+              />
+            </div>
+
+            <div>
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-semibold">Leituras observadas</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Comparações são feitas apenas com dados realmente retornados pela API oficial.
+                  </p>
+                </div>
+                {history.totalReadings > readings.length && (
+                  <span className="text-xs text-muted-foreground">
+                    Exibindo as {readings.length} leituras mais recentes
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-3 overflow-hidden rounded-lg border border-border">
+                {[...readings].reverse().map((reading) => (
+                  <div
+                    key={reading.recordedAt}
+                    className="grid gap-2 border-b border-border px-3 py-3 text-xs last:border-b-0 sm:grid-cols-[150px_1fr_1fr_1fr]"
+                  >
+                    <div>
+                      <p className="font-medium">{formatTrackedDate(reading.recordedAt)}</p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        {reading.hasInventory === null
+                          ? "estoque não informado"
+                          : reading.hasInventory
+                            ? "com estoque"
+                            : "sem estoque"}
+                      </p>
+                    </div>
+                    <Metric
+                      label="Vendas"
+                      value={
+                        reading.unitsSold === null ? "—" : reading.unitsSold.toLocaleString("pt-BR")
+                      }
+                    />
+                    <Metric label="Comissão" value={formatHistoryCommission(reading)} />
+                    <Metric label="Preço" value={formatHistoryPrice(reading)} />
+                  </div>
+                ))}
+              </div>
+
+              {readings.length === 1 && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Há apenas uma leitura. Atualize o acompanhamento em outro momento para começar a
+                  formar a trajetória.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            Ainda não há leituras históricas para esta oportunidade.
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HistorySummary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-secondary/10 p-3">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
     </div>
   );
 }
@@ -691,6 +870,54 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-0.5 truncate font-medium">{value}</p>
     </div>
   );
+}
+
+function formatHistoryNumberDelta(first: number | null, latest: number | null) {
+  if (first === null || latest === null) return "—";
+  const delta = latest - first;
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toLocaleString("pt-BR")}`;
+}
+
+function formatHistoryPercentDelta(first: number | null, latest: number | null) {
+  if (first === null || latest === null) return "—";
+  const delta = latest - first;
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toFixed(2)} p.p.`;
+}
+
+function formatHistoryMoneyDelta(
+  first: number | null,
+  latest: number | null,
+  currency: string | null,
+) {
+  if (first === null || latest === null) return "—";
+  const delta = latest - first;
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${formatMoney(delta, currency)}`;
+}
+
+function formatHistoryCommission(reading: TikTokOpportunityHistory["readings"][number]) {
+  if (reading.commissionAmount !== null) {
+    return formatMoney(reading.commissionAmount, reading.commissionCurrency);
+  }
+
+  if (reading.commissionPercent !== null) {
+    return `${reading.commissionPercent.toFixed(2)}%`;
+  }
+
+  return "—";
+}
+
+function formatHistoryPrice(reading: TikTokOpportunityHistory["readings"][number]) {
+  if (reading.minimumPrice === null) return "—";
+  const minimum = formatMoney(reading.minimumPrice, reading.currency);
+
+  if (reading.maximumPrice === null || reading.maximumPrice === reading.minimumPrice) {
+    return minimum;
+  }
+
+  return `${minimum} – ${formatMoney(reading.maximumPrice, reading.currency)}`;
 }
 
 function formatTrackedChanges(product: TikTokTrackedOpportunity) {
