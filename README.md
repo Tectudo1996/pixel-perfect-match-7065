@@ -431,3 +431,16 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - remover um produto apaga também o histórico privado correspondente
 - migration `0009_tiktok_opportunity_tracking.sql`
 - endpoints internos: `GET/POST/DELETE /api/integrations/tiktok-shop/tracked` e `POST /api/integrations/tiktok-shop/tracked/refresh`
+
+
+### Etapa 12J — trajetória histórica das oportunidades TikTok
+
+- adiciona **Ver trajetória** em cada oportunidade acompanhada
+- consulta o histórico exclusivamente pelo usuário autenticado e pelo produto acompanhado
+- retorna até 30 leituras recentes, com contagem total disponível
+- mostra evolução observada de vendas, comissão e preço mínimo dentro da janela exibida
+- exibe cada leitura com data, estoque, vendas, comissão e preço retornados pela API
+- nenhuma variação histórica é tratada como previsão ou probabilidade de venda
+- o histórico é invalidado automaticamente depois de **Atualizar acompanhamento**
+- endpoint interno: `GET /api/integrations/tiktok-shop/tracked/history?productId=...`
+- não exige nova migration: reutiliza a tabela privada criada na Etapa 12I
