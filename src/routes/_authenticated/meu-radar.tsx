@@ -16,6 +16,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { usePersonalRadar } from "@/hooks/usePersonalRadar";
 import {
   type TikTokCreatorOpportunity,
+  type TikTokDiscoveryResult,
   useSearchTikTokOpportunities,
   useTikTokShopConnection,
 } from "@/hooks/useTikTokShop";
@@ -56,12 +57,58 @@ function PersonalRadarPage() {
   const tiktokDiscovery = useSearchTikTokOpportunities();
   const [tiktokSearch, setTikTokSearch] = useState("");
   const [tiktokSort, setTikTokSort] = useState<"commission" | "sales">("commission");
+  const [tiktokResult, setTikTokResult] = useState<TikTokDiscoveryResult | null>(null);
+  const [tiktokActiveSearch, setTikTokActiveSearch] = useState("");
+  const [tiktokActiveSort, setTikTokActiveSort] = useState<"commission" | "sales">("commission");
+  const [loadingMoreTikTok, setLoadingMoreTikTok] = useState(false);
 
-  function searchTikTokOpportunities() {
-    tiktokDiscovery.mutate({
-      ...(tiktokSearch.trim() ? { search: tiktokSearch.trim() } : {}),
-      sort: tiktokSort,
-    });
+  async function searchTikTokOpportunities() {
+    const search = tiktokSearch.trim();
+
+    try {
+      const result = await tiktokDiscovery.mutateAsync({
+        ...(search ? { search } : {}),
+        sort: tiktokSort,
+      });
+
+      setTikTokActiveSearch(search);
+      setTikTokActiveSort(tiktokSort);
+      setTikTokResult(result);
+    } catch {
+      // The mutation already exposes the normalized error to the UI.
+    }
+  }
+
+  async function loadMoreTikTokOpportunities() {
+    const pageToken = tiktokResult?.nextPageToken;
+    if (!pageToken || loadingMoreTikTok || tiktokDiscovery.isPending) return;
+
+    setLoadingMoreTikTok(true);
+
+    try {
+      const next = await tiktokDiscovery.mutateAsync({
+        ...(tiktokActiveSearch ? { search: tiktokActiveSearch } : {}),
+        sort: tiktokActiveSort,
+        pageToken,
+      });
+
+      setTikTokResult((current) => {
+        if (!current) return next;
+
+        const products = new Map(current.products.map((product) => [product.id, product]));
+        for (const product of next.products) products.set(product.id, product);
+
+        return {
+          products: Array.from(products.values()),
+          nextPageToken: next.nextPageToken,
+          total: next.total || current.total,
+        };
+      });
+    } catch {
+      // The mutation already exposes the normalized error to the UI.
+    } finally {
+      setLoadingMoreTikTok(false);
+    }
   }
 
   return (
@@ -153,12 +200,14 @@ function PersonalRadarPage() {
             loadingConnection={loadingTikTokShop}
             search={tiktokSearch}
             sort={tiktokSort}
-            result={tiktokDiscovery.data}
-            searching={tiktokDiscovery.isPending}
+            result={tiktokResult}
+            searching={tiktokDiscovery.isPending && !loadingMoreTikTok}
+            loadingMore={loadingMoreTikTok}
             error={tiktokDiscovery.isError ? tiktokDiscovery.error : null}
             onSearchChange={setTikTokSearch}
             onSortChange={setTikTokSort}
-            onSearch={searchTikTokOpportunities}
+            onSearch={() => void searchTikTokOpportunities()}
+            onLoadMore={() => void loadMoreTikTokOpportunities()}
           />
 
           <section>
@@ -219,21 +268,25 @@ function TikTokOpportunitiesSection({
   sort,
   result,
   searching,
+  loadingMore,
   error,
   onSearchChange,
   onSortChange,
   onSearch,
+  onLoadMore,
 }: {
   connection: ReturnType<typeof useTikTokShopConnection>["data"];
   loadingConnection: boolean;
   search: string;
   sort: "commission" | "sales";
-  result: ReturnType<typeof useSearchTikTokOpportunities>["data"];
+  result: TikTokDiscoveryResult | null;
   searching: boolean;
+  loadingMore: boolean;
   error: unknown;
   onSearchChange: (value: string) => void;
   onSortChange: (value: "commission" | "sales") => void;
   onSearch: () => void;
+  onLoadMore: () => void;
 }) {
   const connected = connection?.connected === true;
 
@@ -310,11 +363,31 @@ function TikTokOpportunitiesSection({
               </p>
 
               {result.products.length ? (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {result.products.map((product) => (
-                    <TikTokOpportunityCard key={product.id} product={product} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {result.products.map((product) => (
+                      <TikTokOpportunityCard key={product.id} product={product} />
+                    ))}
+                  </div>
+
+                  {result.nextPageToken && (
+                    <div className="mt-4 flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={loadingMore || searching}
+                        onClick={onLoadMore}
+                      >
+                        {loadingMore ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        Carregar mais oportunidades
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
                   Nenhuma oportunidade encontrada com esses critérios.
