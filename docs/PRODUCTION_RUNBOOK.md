@@ -8,7 +8,7 @@ Este documento é o roteiro operacional para colocar o RadarShop AI em produçã
 - preço mensal do Pro em `MERCADO_PAGO_PRO_MONTHLY_BRL`
 - política comercial de cancelamento
 - canal de suporte ao cliente
-- revisão final dos textos legais e de privacidade antes do lançamento público
+- revisão jurídica final dos textos de Termos e Privacidade antes do lançamento público
 
 A implementação atual cancela o Pro imediatamente depois que o Mercado Pago confirma o cancelamento.
 Se a política comercial mudar para manter acesso até o fim do período já pago, o entitlement deverá
@@ -181,6 +181,8 @@ Se houver comportamento inesperado:
 Antes de merge na `main`, o projeto deve passar por:
 
 - ESLint
+- validação da integridade das migrations
+- smoke tests automatizados
 - build de produção
 - `tsc --noEmit`
 
