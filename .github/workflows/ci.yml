@@ -35,6 +35,7 @@ jobs:
           src/components/admin-readiness.tsx
           src/components/app-shell.tsx
           src/components/product-card.tsx
+          src/components/tiktok-opportunity-card.tsx
           src/hooks/useAdmin.ts
           src/hooks/useBilling.ts
           src/hooks/useContentStudio.ts
