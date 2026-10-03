@@ -34,7 +34,7 @@ export async function handleProductIngestRequest(request: Request) {
       collected_at: body.collected_at ?? null,
     });
 
-    const result = await ingestProducts(body);
+    const result = await ingestProductBatch(body);
 
     await finishIngestionRun(ingestionRunId, {
       status: "succeeded",
@@ -108,7 +108,7 @@ function assertUniqueUrls(body: ProductIngestRequest) {
   }
 }
 
-async function ingestProducts(body: ProductIngestRequest) {
+export async function ingestProductBatch(body: ProductIngestRequest) {
   const collectedAt = body.collected_at ?? new Date().toISOString();
   const categorySlugs = Array.from(
     new Set(
