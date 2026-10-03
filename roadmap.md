@@ -74,6 +74,7 @@ Este arquivo reflete o estado real da `main`. Ele não substitui o runbook de pr
 - [x] Validar automaticamente o contrato de configuração de produção
 - [x] Proteger contratos de autorização administrativa contra regressões
 - [x] Aplicar e verificar no banco a migration 0010 de hardening SECURITY DEFINER
+- [x] Adicionar raspagem administrativa segura de páginas públicas
 - [ ] Revisão jurídica final dos textos públicos
 - [ ] Teste completo em desktop e mobile
 - [ ] Teste E2E do primeiro cadastro até geração de conteúdo e plano Pro
