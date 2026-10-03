@@ -346,8 +346,8 @@ function OfficialTikTokRadar() {
                   tracked={tracked}
                   tracking={trackTikTok.isPending && trackTikTok.variables === product.id}
                   untracking={untrackTikTok.isPending && untrackTikTok.variables === product.id}
-                  onTrack={tracked ? undefined : () => void handleTrack(product.id)}
-                  onUntrack={tracked ? () => void handleUntrack(product.id) : undefined}
+                  {...(!tracked ? { onTrack: () => void handleTrack(product.id) } : {})}
+                  {...(tracked ? { onUntrack: () => void handleUntrack(product.id) } : {})}
                 />
               );
             })}
