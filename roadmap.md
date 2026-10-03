@@ -67,7 +67,7 @@ Este arquivo reflete o estado real da `main`. Ele não substitui o runbook de pr
 
 - [x] CI com ESLint, migrations, smoke tests, build e TypeScript
 - [x] Ordem canônica das migrations documentada e validada
-- [ ] Confirmar o histórico efetivamente aplicado no banco e decidir o destino dos aliases legados
+- [x] Confirmar o histórico efetivamente aplicado no banco e decidir o destino dos aliases legados
 - [x] Ampliar testes automatizados para fluxos críticos de billing e TikTok
 - [ ] Revisão jurídica final dos textos públicos
 - [ ] Teste completo em desktop e mobile
