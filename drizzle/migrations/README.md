@@ -48,7 +48,7 @@ registros. Os valores de `created_at` coincidem exatamente com as três entradas
 
 As migrations canônicas posteriores estão refletidas no schema atual — incluindo planos e limites,
 billing, diagnóstico multi-gateway, observabilidade de ingestão e as tabelas privadas do TikTok Shop
-até a `0009` — mas não aparecem como novas linhas na tabela histórica do Drizzle. A migration `0010` é um hardening novo e deve ser aplicada e verificada explicitamente antes do lançamento.
+até a `0009` — mas não aparecem como novas linhas na tabela histórica do Drizzle. A migration `0010` foi aplicada e verificada explicitamente no banco atual em 2026-10-03; ela permanece fora do journal antigo do Drizzle, conforme a estratégia aditiva documentada.
 
 Consequências operacionais:
 
