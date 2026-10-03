@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "node --experimental-transform-types --test tests/*.test.ts",
+    "check:migrations": "node scripts/validate-migrations.mjs",
+    "check": "npm run check:migrations && npm run test && npm run build && npm run typecheck"
   },
   "overrides": {
     "rolldown": "1.2.1"

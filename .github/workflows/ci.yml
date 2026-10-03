@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches:
+      - main
       - "feat/**"
   pull_request:
     branches:
@@ -82,6 +83,7 @@ jobs:
           src/routes/api/integrations/tiktok-shop/showcase/sync.ts
           src/routes/auth.tsx
           src/routes/index.tsx
+          src/routes/reset-password.tsx
           src/routes/transparencia.tsx
           src/routes/_authenticated/admin.tsx
           src/routes/_authenticated/configuracoes.tsx
@@ -91,12 +93,19 @@ jobs:
           src/routes/_authenticated/inteligencia.tsx
           src/routes/_authenticated/meu-radar.tsx
           src/routes/_authenticated/onboarding.tsx
+          src/routes/_authenticated/perfil.tsx
           src/routes/_authenticated/plano.tsx
           'src/routes/_authenticated/produto.$id.tsx'
           src/routes/_authenticated/radar.tsx
           src/types/product.ts
           src/server.ts
           --max-warnings=0
+
+      - name: Validate migration integrity
+        run: npm run check:migrations
+
+      - name: Run smoke tests
+        run: npm test
 
       - name: Production build
         run: npm run build
