@@ -461,3 +461,11 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - landing page e páginas públicas continuam acessíveis aos buscadores
 - teste automatizado mantém a lista de rotas privadas protegida contra regressões
 
+### Etapa 14H — contrato de configuração de produção
+
+- `.env.example` passa a ter cobertura automatizada para as variáveis operacionais críticas
+- segredos server-only são protegidos contra a criação acidental de variantes `VITE_*`
+- limites, gateways e TikTok Shop permanecem desligados por padrão no exemplo de produção
+- preços comerciais continuam vazios até existir uma decisão real de lançamento
+- o Lovable AI continua tratando `LOVABLE_API_KEY` como segredo gerenciado pela plataforma
+
