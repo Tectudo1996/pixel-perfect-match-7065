@@ -454,3 +454,10 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - links de recuperação inválidos ou expirados exibem estado próprio e permitem solicitar um novo link
 - testes automatizados protegem esses contratos públicos contra regressões
 
+### Etapa 14G — proteção de crawling das áreas privadas
+
+- `robots.txt` bloqueia todas as rotas autenticadas, incluindo `/plano`
+- endpoints em `/api/`, autenticação e redefinição de senha permanecem fora do crawling
+- landing page e páginas públicas continuam acessíveis aos buscadores
+- teste automatizado mantém a lista de rotas privadas protegida contra regressões
+
