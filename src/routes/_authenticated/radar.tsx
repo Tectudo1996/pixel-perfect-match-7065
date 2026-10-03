@@ -258,8 +258,8 @@ function OfficialTikTokRadar() {
             <h2 className="text-base font-semibold">Oportunidades oficiais do TikTok Shop</h2>
           </div>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            A busca usa a autorização da sua própria conta Creator. Os resultados são privados e
-            não são copiados para o catálogo global.
+            A busca usa a autorização da sua própria conta Creator. Os resultados são privados e não
+            são copiados para o catálogo global.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
