@@ -113,11 +113,15 @@ export function AdminScraper({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="admin-scraper-source">Nome da fonte</Label>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Será salva com o prefixo <span className="font-mono">scraper:</span> para não ser
+                confundida com API oficial.
+              </p>
               <Input
                 id="admin-scraper-source"
                 value={source}
                 onChange={(event) => setSource(event.target.value)}
-                placeholder="Deixe vazio para usar scraper:dominio.com"
+                placeholder="Ex.: TikTok Shop público"
                 maxLength={120}
               />
             </div>
