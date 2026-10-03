@@ -72,6 +72,7 @@ Este arquivo reflete o estado real da `main`. Ele não substitui o runbook de pr
 - [x] Endurecer cadastro e recuperação de senha para pré-lançamento
 - [x] Proteger crawling das rotas privadas e sensíveis
 - [x] Validar automaticamente o contrato de configuração de produção
+- [x] Proteger contratos de autorização administrativa contra regressões
 - [ ] Revisão jurídica final dos textos públicos
 - [ ] Teste completo em desktop e mobile
 - [ ] Teste E2E do primeiro cadastro até geração de conteúdo e plano Pro
