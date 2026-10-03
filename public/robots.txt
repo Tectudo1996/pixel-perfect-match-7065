@@ -9,6 +9,7 @@ Disallow: /meu-radar
 Disallow: /inteligencia
 Disallow: /favoritos
 Disallow: /estudio
+Disallow: /plano
 Disallow: /perfil
 Disallow: /configuracoes
 Disallow: /admin
