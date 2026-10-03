@@ -58,6 +58,11 @@ test("preço só entra no catálogo quando a moeda detectada é BRL", () => {
   assert.match(serverSource, /const importPrice = currency === "BRL" \? price : null/);
 });
 
+test("origem coletada pelo scraper fica identificada separadamente da API oficial", () => {
+  assert.match(serverSource, /source = raw\.toLowerCase\(\)\.startsWith\("scraper:"\)/);
+  assert.match(serverSource, /`scraper:\$\{raw\}`/);
+});
+
 test("admin mostra prévia antes da importação e explica os limites do scraper", () => {
   assert.match(componentSource, /Prévia da coleta/);
   assert.match(componentSource, /Analisar página/);
