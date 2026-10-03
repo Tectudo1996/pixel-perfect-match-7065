@@ -16,9 +16,7 @@ export function normalizePayPalStatus(status: string | undefined) {
   return status?.toLowerCase() || "unknown";
 }
 
-export function normalizeBillingProvider(
-  value: string | null | undefined,
-): BillingProvider | null {
+export function normalizeBillingProvider(value: string | null | undefined): BillingProvider | null {
   return value === "mercado_pago" || value === "paypal" || value === "pepper" ? value : null;
 }
 
