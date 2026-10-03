@@ -210,6 +210,12 @@ function Landing() {
             <Link to="/transparencia" className="hover:text-foreground">
               Transparência
             </Link>
+            <Link to="/privacidade" className="hover:text-foreground">
+              Privacidade
+            </Link>
+            <Link to="/termos" className="hover:text-foreground">
+              Termos
+            </Link>
             <span>Inteligência para afiliados do TikTok Shop · Brasil</span>
           </div>
         </div>
