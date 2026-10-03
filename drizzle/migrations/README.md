@@ -35,6 +35,28 @@ O arquivo `meta/_journal.json` representa o histórico gerado pelo Drizzle em um
 não é a fonte operacional de verdade para as migrations manuais posteriores. Não o reescreva sem
 antes confirmar o histórico efetivamente aplicado no banco do Lovable Cloud.
 
+## Estado confirmado no Lovable Cloud — 2026-10-03
+
+No banco atual do projeto RadarShop AI, a tabela `drizzle.__drizzle_migrations` contém três
+registros. Os valores de `created_at` coincidem exatamente com as três entradas de
+`meta/_journal.json`:
+
+1. `1790399539395` → `0000_radarshop_core_schema`
+2. `1790620958978` → `0001_billing_mercado_pago` (alias legado)
+3. `1790622627658` → `0002_0004_multi_gateway_billing` (alias legado)
+
+As migrations canônicas posteriores estão refletidas no schema atual — incluindo planos e limites,
+billing, diagnóstico multi-gateway, observabilidade de ingestão e as tabelas privadas do TikTok Shop
+até a `0009` — mas não aparecem como novas linhas na tabela histórica do Drizzle.
+
+Consequências operacionais:
+
+- **não apague, renomeie nem reescreva os dois aliases legados**: eles fazem parte do histórico real;
+- **não edite manualmente `drizzle.__drizzle_migrations`** para tentar alinhar nomes antigos e novos;
+- em uma instalação limpa, aplique somente a ordem canônica acima e não execute os aliases;
+- no banco atual, trate o histórico existente como imutável e faça mudanças futuras de forma aditiva,
+  com verificação de schema antes de executar qualquer nova migration.
+
 ## Verificação automática
 
 Execute:
