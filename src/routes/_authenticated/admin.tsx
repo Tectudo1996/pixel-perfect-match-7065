@@ -76,7 +76,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { title: "Painel admin — RadarShop AI" },
       {
         name: "description",
-        content: "Administração de produtos, categorias, fontes, importações e raspagem autorizada.",
+        content:
+          "Administração de produtos, categorias, fontes, importações e raspagem autorizada.",
       },
     ],
   }),
@@ -209,10 +210,7 @@ function AdminPage() {
       )}
 
       {tab === "scraper" && (
-        <AdminScraper
-          categories={categories}
-          defaultSource={importDefaults?.defaultSource ?? ""}
-        />
+        <AdminScraper categories={categories} defaultSource={importDefaults?.defaultSource ?? ""} />
       )}
 
       {tab === "planos" && <AdminPlanManagement enabled={enabled} />}
@@ -334,9 +332,9 @@ function SourcesTab({
                 </p>
                 {item.latestRun && (
                   <p>
-                    Canal: {ingestionChannelLabel(item.latestRun.channel, item.latestRun.source)} · recebidos{" "}
-                    {item.latestRun.accepted_count} · inseridos {item.latestRun.inserted_count} ·
-                    atualizados {item.latestRun.updated_count}
+                    Canal: {ingestionChannelLabel(item.latestRun.channel, item.latestRun.source)} ·
+                    recebidos {item.latestRun.accepted_count} · inseridos{" "}
+                    {item.latestRun.inserted_count} · atualizados {item.latestRun.updated_count}
                   </p>
                 )}
               </div>
