@@ -486,3 +486,15 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - adiciona testes estáticos para os grants e a lógica de isolamento
 - migration aplicada e verificada no banco real em 2026-10-03: `anon` não executa `has_role`; `anon` e `authenticated` não executam `handle_new_user`; `authenticated` mantém somente o acesso controlado a `has_role`
 
+### Etapa 14K — raspagem administrativa de páginas públicas
+
+- adiciona a aba **Raspagem** ao painel administrativo
+- recebe uma URL pública de produto e sempre mostra uma prévia antes de gravar dados
+- prioriza JSON-LD `Product` e usa metadados públicos apenas como fallback
+- identifica toda origem coletada como `scraper:...` para não confundir com API oficial
+- não inventa comissão, vendas ou quantidade de criadores quando esses dados não estão estruturados
+- só importa preço quando a moeda detectada é BRL, evitando misturar moedas no catálogo atual
+- bloqueia localhost, redes privadas/reservadas, portas personalizadas e redirects inseguros
+- respeita `robots.txt`, 401/403, 429, limites de tamanho, timeout e não usa cookies/login/CAPTCHA
+- cada importação passa pelo mesmo pipeline validado de ingestão e aparece no histórico de fontes
+
