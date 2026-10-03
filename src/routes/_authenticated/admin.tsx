@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPlanManagement } from "@/components/admin-plan-management";
+import { AdminScraper } from "@/components/admin-scraper";
 import { AdminReadiness } from "@/components/admin-readiness";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,14 @@ import { parseAdminProductCsv } from "@/lib/admin-csv";
 import { cn } from "@/lib/utils";
 
 type AdminTab =
-  "visao" | "fontes" | "produtos" | "categorias" | "importacao" | "planos" | "prontidao";
+  | "visao"
+  | "fontes"
+  | "produtos"
+  | "categorias"
+  | "importacao"
+  | "scraper"
+  | "planos"
+  | "prontidao";
 
 type ProductForm = {
   name: string;
@@ -154,6 +162,9 @@ function AdminPage() {
         <TabButton active={tab === "importacao"} onClick={() => setTab("importacao")}>
           Importação CSV
         </TabButton>
+        <TabButton active={tab === "scraper"} onClick={() => setTab("scraper")}>
+          Raspagem
+        </TabButton>
         <TabButton active={tab === "planos"} onClick={() => setTab("planos")}>
           Planos
         </TabButton>
@@ -195,6 +206,13 @@ function AdminPage() {
 
       {tab === "importacao" && (
         <ImportTab categories={categories} defaultSource={importDefaults?.defaultSource ?? ""} />
+      )}
+
+      {tab === "scraper" && (
+        <AdminScraper
+          categories={categories}
+          defaultSource={importDefaults?.defaultSource ?? ""}
+        />
       )}
 
       {tab === "planos" && <AdminPlanManagement enabled={enabled} />}
