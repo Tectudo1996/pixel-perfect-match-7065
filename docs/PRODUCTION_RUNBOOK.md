@@ -38,7 +38,7 @@ foram registradas como novas linhas no journal antigo do Drizzle. **Não reexecu
 para tentar alinhar esse histórico e não edite a tabela de migrations manualmente.** Os aliases devem
 permanecer versionados porque fazem parte do histórico real desse ambiente.
 
-A `0010_security_definer_hardening.sql` é nova e ainda precisa ser aplicada e verificada no banco atual. Ela restringe o helper `has_role` ao próprio usuário autenticado e remove execução pública desnecessária de funções `SECURITY DEFINER`. Não marque esta etapa como concluída apenas porque o arquivo existe no repositório.
+A `0010_security_definer_hardening.sql` foi aplicada e verificada no banco atual em 2026-10-03. O helper `has_role` ficou limitado ao próprio `auth.uid()`: `anon` não possui `EXECUTE`, enquanto `authenticated` mantém somente a chamada controlada usada pelas policies. `handle_new_user` não pode mais ser executada diretamente por `anon` ou `authenticated`; o trigger de `auth.users` permanece configurado e os papéis internos necessários mantêm `EXECUTE`.
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
