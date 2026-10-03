@@ -120,7 +120,10 @@ export function AdminScraper({
               <Input
                 id="admin-scraper-source"
                 value={source}
-                onChange={(event) => setSource(event.target.value)}
+                onChange={(event) => {
+                  setSource(event.target.value);
+                  setPreview(null);
+                }}
                 placeholder="Ex.: TikTok Shop público"
                 maxLength={120}
               />
@@ -131,7 +134,10 @@ export function AdminScraper({
               <select
                 id="admin-scraper-category"
                 value={categorySlug}
-                onChange={(event) => setCategorySlug(event.target.value)}
+                onChange={(event) => {
+                  setCategorySlug(event.target.value);
+                  setPreview(null);
+                }}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <option value="">Sem categoria definida</option>
