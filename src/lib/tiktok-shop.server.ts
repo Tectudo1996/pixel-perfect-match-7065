@@ -1,6 +1,14 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import {
+  createTikTokShopRequestSignature,
+  getTikTokTokenLifetimeSeconds,
+  normalizeTikTokCommissionRate,
+  normalizeTikTokGrantedScopes,
+  normalizeTikTokHttpUrl,
+  parseTikTokNonNegativeMoney,
+} from "@/lib/tiktok-shop-policy";
 
 const TIKTOK_SHOP_API_BASE_URL = "https://open-api.tiktokglobalshop.com";
 const TIKTOK_SHOP_AUTH_BASE_URL = "https://auth.tiktok-shops.com";
@@ -143,20 +151,13 @@ export function generateTikTokShopSignature({
     );
   }
 
-  const paramString = Object.entries(query)
-    .filter(
-      ([key, value]) =>
-        key !== "sign" && key !== "access_token" && value !== undefined && value !== null,
-    )
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}${String(value)}`)
-    .join("");
-
-  const normalizedContentType = contentType.toLowerCase();
-  const bodyString = body && !normalizedContentType.startsWith("multipart/form-data") ? body : "";
-  const signString = `${appSecret}${path}${paramString}${bodyString}${appSecret}`;
-
-  return createHmac("sha256", appSecret).update(signString).digest("hex");
+  return createTikTokShopRequestSignature({
+    path,
+    query,
+    body: body ?? null,
+    contentType,
+    appSecret,
+  });
 }
 
 export async function requestTikTokShopApi<T>({
@@ -584,18 +585,18 @@ function normalizeTikTokOpportunity(
   return {
     id,
     title,
-    detailLink: normalizeHttpUrl(product.detail_link),
-    imageUrl: normalizeHttpUrl(product.main_image_url),
+    detailLink: normalizeTikTokHttpUrl(product.detail_link),
+    imageUrl: normalizeTikTokHttpUrl(product.main_image_url),
     shopName: product.shop?.name?.trim() || null,
     saleRegion: product.sale_region?.trim().toUpperCase() || null,
     hasInventory: typeof product.has_inventory === "boolean" ? product.has_inventory : null,
     unitsSold,
     currency: priceRange?.currency?.trim().toUpperCase() || null,
-    minimumPrice: parseNonNegativeMoney(priceRange?.minimum_amount),
-    maximumPrice: parseNonNegativeMoney(priceRange?.maximum_amount),
-    commissionAmount: parseNonNegativeMoney(product.commission?.amount),
+    minimumPrice: parseTikTokNonNegativeMoney(priceRange?.minimum_amount),
+    maximumPrice: parseTikTokNonNegativeMoney(priceRange?.maximum_amount),
+    commissionAmount: parseTikTokNonNegativeMoney(product.commission?.amount),
     commissionCurrency: product.commission?.currency?.trim().toUpperCase() || null,
-    commissionPercent: normalizeCommissionRate(product.commission?.rate),
+    commissionPercent: normalizeTikTokCommissionRate(product.commission?.rate),
   };
 }
 
@@ -1091,7 +1092,7 @@ function normalizeTikTokProductForPrivateCache(
   if (!productId || !title) return null;
 
   const priceRange = product.sales_price ?? product.original_price;
-  const commissionRate = normalizeCommissionRate(product.commission?.rate);
+  const commissionRate = normalizeTikTokCommissionRate(product.commission?.rate);
   const unitsSold =
     typeof product.units_sold === "number" &&
     Number.isInteger(product.units_sold) &&
@@ -1103,43 +1104,20 @@ function normalizeTikTokProductForPrivateCache(
     user_id: userId,
     product_id: productId,
     title,
-    detail_link: normalizeHttpUrl(product.detail_link),
-    image_url: normalizeHttpUrl(product.main_image_url),
+    detail_link: normalizeTikTokHttpUrl(product.detail_link),
+    image_url: normalizeTikTokHttpUrl(product.main_image_url),
     shop_name: product.shop?.name?.trim() || null,
     sale_region: product.sale_region?.trim().toUpperCase() || null,
     currency: priceRange?.currency?.trim().toUpperCase() || null,
-    minimum_price: parseNonNegativeMoney(priceRange?.minimum_amount),
-    maximum_price: parseNonNegativeMoney(priceRange?.maximum_amount),
-    commission_amount: parseNonNegativeMoney(product.commission?.amount),
+    minimum_price: parseTikTokNonNegativeMoney(priceRange?.minimum_amount),
+    maximum_price: parseTikTokNonNegativeMoney(priceRange?.maximum_amount),
+    commission_amount: parseTikTokNonNegativeMoney(product.commission?.amount),
     commission_currency: product.commission?.currency?.trim().toUpperCase() || null,
     commission_percent: commissionRate,
     units_sold: unitsSold,
     has_inventory: typeof product.has_inventory === "boolean" ? product.has_inventory : null,
     synced_at: syncedAt,
   };
-}
-
-function normalizeCommissionRate(rate: number | undefined) {
-  if (rate === undefined || !Number.isFinite(rate) || rate < 0) return null;
-  const percent = rate / 100;
-  return percent <= 100 ? percent : null;
-}
-
-function parseNonNegativeMoney(value: string | undefined) {
-  if (!value?.trim()) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
-}
-
-function normalizeHttpUrl(value: string | undefined) {
-  if (!value?.trim()) return null;
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
 }
 
 function readString(value: unknown, key: string) {
@@ -1225,7 +1203,7 @@ export async function getValidTikTokCreatorAccessToken(userId: string) {
     );
   }
 
-  const refreshedScopes = normalizeGrantedScopes(refreshed.granted_scopes);
+  const refreshedScopes = normalizeTikTokGrantedScopes(refreshed.granted_scopes);
 
   const { error: updateError } = await supabaseAdmin
     .from("tiktok_shop_connections")
@@ -1236,9 +1214,11 @@ export async function getValidTikTokCreatorAccessToken(userId: string) {
         access_token: refreshed.access_token,
         refresh_token: refreshed.refresh_token,
       }),
-      access_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(refreshed, "access")),
+      access_token_expires_at: expirationFromSeconds(
+        getTikTokTokenLifetimeSeconds(refreshed, "access"),
+      ),
       refresh_token_expires_at: expirationFromSeconds(
-        getTokenLifetimeSeconds(refreshed, "refresh"),
+        getTikTokTokenLifetimeSeconds(refreshed, "refresh"),
       ),
     })
     .eq("user_id", userId);
@@ -1299,7 +1279,7 @@ async function consumeTikTokOAuthState(state: string) {
 }
 
 async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTokenData) {
-  const grantedScopes = normalizeGrantedScopes(tokenData.granted_scopes);
+  const grantedScopes = normalizeTikTokGrantedScopes(tokenData.granted_scopes);
   const tokenCiphertext = encryptTikTokTokens({
     access_token: tokenData.access_token,
     refresh_token: tokenData.refresh_token,
@@ -1312,9 +1292,11 @@ async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTok
       user_type: tokenData.user_type,
       granted_scopes: grantedScopes,
       token_ciphertext: tokenCiphertext,
-      access_token_expires_at: expirationFromSeconds(getTokenLifetimeSeconds(tokenData, "access")),
+      access_token_expires_at: expirationFromSeconds(
+        getTikTokTokenLifetimeSeconds(tokenData, "access"),
+      ),
       refresh_token_expires_at: expirationFromSeconds(
-        getTokenLifetimeSeconds(tokenData, "refresh"),
+        getTikTokTokenLifetimeSeconds(tokenData, "refresh"),
       ),
       connected_at: new Date().toISOString(),
     },
@@ -1322,29 +1304,6 @@ async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTok
   );
 
   if (error) throw error;
-}
-
-function normalizeGrantedScopes(scopes: TikTokShopTokenData["granted_scopes"]) {
-  if (!scopes) return [];
-  if (typeof scopes === "string") {
-    return scopes
-      .split(",")
-      .map((scope) => scope.trim())
-      .filter(Boolean);
-  }
-
-  return scopes
-    .map((scope) => (typeof scope === "string" ? scope : scope.scope))
-    .map((scope) => scope.trim())
-    .filter(Boolean);
-}
-
-function getTokenLifetimeSeconds(tokenData: TikTokShopTokenData, type: "access" | "refresh") {
-  if (type === "access") {
-    return tokenData.access_token_expires_in ?? tokenData.access_token_expire_in;
-  }
-
-  return tokenData.refresh_token_expires_in ?? tokenData.refresh_token_expire_in;
 }
 
 function expirationFromSeconds(seconds: number | undefined) {
