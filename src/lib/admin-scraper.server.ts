@@ -213,8 +213,9 @@ async function scrapeProductPage(payload: ScraperPayload): Promise<ProductPrevie
     readMoney(firstObject(offers?.["priceSpecification"])?.["price"]) ??
     readMoney(meta["product:price:amount"]);
 
-  const currency =
-    normalizeCurrency(readString(offers?.["priceCurrency"]) ?? meta["product:price:currency"]);
+  const currency = normalizeCurrency(
+    readString(offers?.["priceCurrency"]) ?? meta["product:price:currency"],
+  );
 
   const importPrice = currency === "BRL" ? price : null;
 
@@ -289,10 +290,18 @@ async function fetchWithSafeRedirects(initialUrl: URL) {
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get("location");
         if (!location) {
-          throw new ScraperError(502, "SCRAPER_INVALID_REDIRECT", "A página retornou um redirecionamento inválido.");
+          throw new ScraperError(
+            502,
+            "SCRAPER_INVALID_REDIRECT",
+            "A página retornou um redirecionamento inválido.",
+          );
         }
         if (attempt === MAX_REDIRECTS) {
-          throw new ScraperError(508, "SCRAPER_TOO_MANY_REDIRECTS", "A página redirecionou vezes demais.");
+          throw new ScraperError(
+            508,
+            "SCRAPER_TOO_MANY_REDIRECTS",
+            "A página redirecionou vezes demais.",
+          );
         }
 
         current = await validatePublicUrl(new URL(location, current).toString());
@@ -328,11 +337,7 @@ async function fetchWithSafeRedirects(initialUrl: URL) {
     } catch (error) {
       if (error instanceof ScraperError) throw error;
       if (error instanceof Error && error.name === "AbortError") {
-        throw new ScraperError(
-          504,
-          "SCRAPER_TIMEOUT",
-          "A página demorou demais para responder.",
-        );
+        throw new ScraperError(504, "SCRAPER_TIMEOUT", "A página demorou demais para responder.");
       }
       throw new ScraperError(
         502,
@@ -439,7 +444,10 @@ async function validatePublicUrl(value: string) {
     );
   }
 
-  if ((url.protocol === "https:" && url.port && url.port !== "443") || (url.protocol === "http:" && url.port && url.port !== "80")) {
+  if (
+    (url.protocol === "https:" && url.port && url.port !== "443") ||
+    (url.protocol === "http:" && url.port && url.port !== "80")
+  ) {
     throw new ScraperError(
       400,
       "SCRAPER_UNSAFE_PORT",
@@ -468,11 +476,19 @@ async function validatePublicUrl(value: string) {
   try {
     addresses = await lookup(hostname, { all: true, verbatim: true });
   } catch {
-    throw new ScraperError(400, "SCRAPER_HOST_NOT_FOUND", "O domínio informado não pôde ser resolvido.");
+    throw new ScraperError(
+      400,
+      "SCRAPER_HOST_NOT_FOUND",
+      "O domínio informado não pôde ser resolvido.",
+    );
   }
 
   if (!addresses.length || addresses.some((entry) => isPrivateAddress(entry.address))) {
-    throw new ScraperError(400, "SCRAPER_PRIVATE_HOST", "O domínio resolve para uma rede não pública.");
+    throw new ScraperError(
+      400,
+      "SCRAPER_PRIVATE_HOST",
+      "O domínio resolve para uma rede não pública.",
+    );
   }
 
   return url;
@@ -532,7 +548,11 @@ function parsePayload(value: unknown): ScraperPayload {
   }
 
   if (source && source.length > 120) {
-    throw new ScraperError(400, "SCRAPER_INVALID_SOURCE", "A fonte deve ter no máximo 120 caracteres.");
+    throw new ScraperError(
+      400,
+      "SCRAPER_INVALID_SOURCE",
+      "A fonte deve ter no máximo 120 caracteres.",
+    );
   }
 
   if (categorySlug && categorySlug.length > 120) {
@@ -613,10 +633,7 @@ function readMetadata(html: string) {
 }
 
 function extractAttribute(tag: string, name: string) {
-  const pattern = new RegExp(
-    `\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
-    "i",
-  );
+  const pattern = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i");
   const match = tag.match(pattern);
   return match ? decodeHtml(match[1] ?? match[2] ?? match[3] ?? "") : null;
 }
@@ -649,7 +666,7 @@ function readImage(value: unknown): string | null {
     return null;
   }
   const object = firstObject(value);
-  return object ? readString(object["url"]) ?? readString(object["contentUrl"]) : null;
+  return object ? (readString(object["url"]) ?? readString(object["contentUrl"])) : null;
 }
 
 function readPartyName(value: Record<string, unknown> | null) {
@@ -695,7 +712,10 @@ function normalizeSource(value: string | null, hostname: string) {
 }
 
 function cleanText(value: string) {
-  return decodeHtml(value).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return decodeHtml(value)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function decodeHtml(value: string) {
