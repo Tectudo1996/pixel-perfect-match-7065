@@ -53,6 +53,7 @@ jobs:
           src/lib/ai-content-schema.ts
           src/lib/ai-content.server.ts
           src/lib/billing.server.ts
+          src/lib/billing-policy.ts
           src/lib/http-security.ts
           src/lib/market-intelligence.ts
           src/lib/product-ingest-schema.ts
