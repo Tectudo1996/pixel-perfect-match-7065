@@ -477,3 +477,12 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - a migration de segurança garante que novos cadastros entram somente como `user`
 - testes automatizados falham se essas garantias de autorização forem removidas do código/migrations
 
+### Etapa 14J — hardening SECURITY DEFINER (preparada, pendente de aplicação)
+
+- adiciona a migration `0010_security_definer_hardening.sql`
+- mantém a assinatura de `has_role` usada pelas policies, mas limita a consulta ao próprio `auth.uid()`
+- remove execução herdada de `PUBLIC` e `anon` no helper privilegiado
+- remove acesso direto de aplicação ao trigger `handle_new_user`
+- adiciona testes estáticos para os grants e a lógica de isolamento
+- **a etapa só será considerada concluída depois de aplicar a migration no banco real e validar o comportamento**
+
