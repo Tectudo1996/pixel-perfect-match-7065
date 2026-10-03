@@ -83,7 +83,9 @@ jobs:
           src/routes/api/integrations/tiktok-shop/showcase/sync.ts
           src/routes/auth.tsx
           src/routes/index.tsx
+          src/routes/privacidade.tsx
           src/routes/reset-password.tsx
+          src/routes/termos.tsx
           src/routes/transparencia.tsx
           src/routes/_authenticated/admin.tsx
           src/routes/_authenticated/configuracoes.tsx
