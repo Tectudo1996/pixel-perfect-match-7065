@@ -214,7 +214,7 @@ async function scrapeProductPage(payload: ScraperPayload): Promise<ProductPrevie
     readMoney(meta["product:price:amount"]);
 
   const currency = normalizeCurrency(
-    readString(offers?.["priceCurrency"]) ?? meta["product:price:currency"],
+    readString(offers?.["priceCurrency"]) ?? meta["product:price:currency"] ?? null,
   );
 
   const importPrice = currency === "BRL" ? price : null;
@@ -234,7 +234,7 @@ async function scrapeProductPage(payload: ScraperPayload): Promise<ProductPrevie
     null;
 
   const imageUrl =
-    normalizeHttpUrl(readImage(structuredProduct?.["image"]) ?? meta["og:image"]) ?? null;
+    normalizeHttpUrl(readImage(structuredProduct?.["image"]) ?? meta["og:image"] ?? null) ?? null;
 
   const storeName =
     readPartyName(firstObject(offers?.["seller"])) ??
@@ -472,7 +472,7 @@ async function validatePublicUrl(value: string) {
     return url;
   }
 
-  let addresses: Awaited<ReturnType<typeof lookup>>;
+  let addresses: Array<{ address: string; family: number }>;
   try {
     addresses = await lookup(hostname, { all: true, verbatim: true });
   } catch {
@@ -494,7 +494,7 @@ async function validatePublicUrl(value: string) {
   return url;
 }
 
-function isPrivateAddress(address: string) {
+function isPrivateAddress(address: string): boolean {
   if (address.includes(":")) {
     const normalized = address.toLowerCase();
     if (
@@ -508,13 +508,16 @@ function isPrivateAddress(address: string) {
     }
 
     const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    return mapped ? isPrivateAddress(mapped[1]) : false;
+    return mapped?.[1] ? isPrivateAddress(mapped[1]) : false;
   }
 
   const octets = address.split(".").map(Number);
   if (octets.length !== 4 || octets.some((part) => !Number.isInteger(part))) return true;
 
-  const [a, b] = octets;
+  const a = octets[0]!;
+  const b = octets[1]!;
+  const c = octets[2]!;
+
   return (
     a === 0 ||
     a === 10 ||
@@ -524,10 +527,10 @@ function isPrivateAddress(address: string) {
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
-    (a === 192 && b === 0) ||
-    (a === 192 && b === 2) ||
-    (a === 198 && (b === 18 || b === 19 || b === 51)) ||
-    (a === 203 && b === 0)
+    (a === 192 && b === 0 && (c === 0 || c === 2)) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113)
   );
 }
 
