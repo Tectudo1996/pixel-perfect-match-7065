@@ -334,7 +334,7 @@ function SourcesTab({
                 </p>
                 {item.latestRun && (
                   <p>
-                    Canal: {ingestionChannelLabel(item.latestRun.channel)} · recebidos{" "}
+                    Canal: {ingestionChannelLabel(item.latestRun.channel, item.latestRun.source)} · recebidos{" "}
                     {item.latestRun.accepted_count} · inseridos {item.latestRun.inserted_count} ·
                     atualizados {item.latestRun.updated_count}
                   </p>
@@ -373,7 +373,7 @@ function SourcesTab({
                 {runs.slice(0, 30).map((run) => (
                   <tr key={run.id}>
                     <td className="max-w-52 truncate py-2.5 font-medium">{run.source}</td>
-                    <td className="py-2.5">{ingestionChannelLabel(run.channel)}</td>
+                    <td className="py-2.5">{ingestionChannelLabel(run.channel, run.source)}</td>
                     <td className="py-2.5">{ingestionStatusLabel(run.status)}</td>
                     <td className="py-2.5">{run.accepted_count}</td>
                     <td className="py-2.5">{run.inserted_count}</td>
@@ -398,7 +398,8 @@ function ingestionStatusLabel(status: string) {
   return "em andamento";
 }
 
-function ingestionChannelLabel(channel: string) {
+function ingestionChannelLabel(channel: string, source?: string | null) {
+  if (source?.startsWith("scraper:")) return "Scraper";
   return channel === "csv" ? "CSV" : "API";
 }
 
