@@ -477,3 +477,15 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - a migration de segurança garante que novos cadastros entram somente como `user`
 - testes automatizados falham se essas garantias de autorização forem removidas do código/migrations
 
+### Etapa 14K — raspagem administrativa de páginas públicas
+
+- adiciona a aba **Raspagem** ao painel administrativo
+- recebe uma URL pública de produto e sempre mostra uma prévia antes de gravar dados
+- prioriza JSON-LD `Product` e usa metadados públicos apenas como fallback
+- identifica toda origem coletada como `scraper:...` para não confundir com API oficial
+- não inventa comissão, vendas ou quantidade de criadores quando esses dados não estão estruturados
+- só importa preço quando a moeda detectada é BRL, evitando misturar moedas no catálogo atual
+- bloqueia localhost, redes privadas/reservadas, portas personalizadas e redirects inseguros
+- respeita `robots.txt`, 401/403, 429, limites de tamanho, timeout e não usa cookies/login/CAPTCHA
+- cada importação passa pelo mesmo pipeline validado de ingestão e aparece no histórico de fontes
+
