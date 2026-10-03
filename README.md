@@ -444,3 +444,13 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - o histórico é invalidado automaticamente depois de **Atualizar acompanhamento**
 - endpoint interno: `GET /api/integrations/tiktok-shop/tracked/history?productId=...`
 - não exige nova migration: reutiliza a tabela privada criada na Etapa 12I
+
+### Etapa 14F — endurecimento do fluxo público de conta
+
+- páginas de autenticação e redefinição de senha recebem `noindex,nofollow,noarchive`
+- cadastro mostra de forma explícita os links para Termos de Uso e Política de Privacidade
+- campos de nome, e-mail e senha informam `autocomplete` adequado ao navegador e gerenciadores de senha
+- redefinição de senha valida a existência de uma sessão antes de aceitar uma nova credencial
+- links de recuperação inválidos ou expirados exibem estado próprio e permitem solicitar um novo link
+- testes automatizados protegem esses contratos públicos contra regressões
+
