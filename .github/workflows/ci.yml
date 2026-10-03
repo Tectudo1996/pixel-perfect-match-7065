@@ -33,10 +33,12 @@ jobs:
           npx eslint
           src/components/admin-plan-management.tsx
           src/components/admin-readiness.tsx
+          src/components/admin-scraper.tsx
           src/components/app-shell.tsx
           src/components/product-card.tsx
           src/components/tiktok-opportunity-card.tsx
           src/hooks/useAdmin.ts
+          src/hooks/useAdminScraper.ts
           src/hooks/useBilling.ts
           src/hooks/useContentStudio.ts
           src/hooks/useDashboard.ts
@@ -49,6 +51,7 @@ jobs:
           src/hooks/usePlanUsage.ts
           src/hooks/useTikTokShop.ts
           src/lib/admin-csv.ts
+          src/lib/admin-scraper.server.ts
           src/lib/api-auth.server.ts
           src/lib/ai-content-schema.ts
           src/lib/ai-content.server.ts
@@ -64,6 +67,7 @@ jobs:
           src/lib/tiktok-shop.server.ts
           src/lib/usage.server.ts
           src/routes/api/admin/readiness.ts
+          src/routes/api/admin/scraper.ts
           src/routes/api/admin/subscriptions.ts
           src/routes/api/billing/cancel.ts
           src/routes/api/billing/checkout.ts
