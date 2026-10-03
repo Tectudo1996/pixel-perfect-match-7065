@@ -28,6 +28,11 @@ test("scraper protege contra acesso a redes locais e portas personalizadas", () 
   assert.match(serverSource, /lookup\(hostname/);
 });
 
+test("URLs de imagem também passam pela validação de destino público", () => {
+  assert.match(serverSource, /normalizePublicAssetUrl/);
+  assert.match(serverSource, /validatePublicUrl\(resolved\.toString\(\)\)/);
+});
+
 test("scraper não tenta contornar proteção de acesso ou rate limit", () => {
   assert.match(serverSource, /response\.status === 401 \|\| response\.status === 403/);
   assert.match(serverSource, /SCRAPER_ACCESS_RESTRICTED/);
