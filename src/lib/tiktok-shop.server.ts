@@ -154,7 +154,7 @@ export function generateTikTokShopSignature({
   return createTikTokShopRequestSignature({
     path,
     query,
-    body,
+    body: body ?? null,
     contentType,
     appSecret,
   });
