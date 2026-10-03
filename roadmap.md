@@ -70,6 +70,7 @@ Este arquivo reflete o estado real da `main`. Ele não substitui o runbook de pr
 - [x] Confirmar o histórico efetivamente aplicado no banco e decidir o destino dos aliases legados
 - [x] Ampliar testes automatizados para fluxos críticos de billing e TikTok
 - [x] Endurecer cadastro e recuperação de senha para pré-lançamento
+- [x] Proteger crawling das rotas privadas e sensíveis
 - [ ] Revisão jurídica final dos textos públicos
 - [ ] Teste completo em desktop e mobile
 - [ ] Teste E2E do primeiro cadastro até geração de conteúdo e plano Pro
