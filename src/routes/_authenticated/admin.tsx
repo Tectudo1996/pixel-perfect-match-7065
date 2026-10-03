@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPlanManagement } from "@/components/admin-plan-management";
+import { AdminScraper } from "@/components/admin-scraper";
 import { AdminReadiness } from "@/components/admin-readiness";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,14 @@ import { parseAdminProductCsv } from "@/lib/admin-csv";
 import { cn } from "@/lib/utils";
 
 type AdminTab =
-  "visao" | "fontes" | "produtos" | "categorias" | "importacao" | "planos" | "prontidao";
+  | "visao"
+  | "fontes"
+  | "produtos"
+  | "categorias"
+  | "importacao"
+  | "scraper"
+  | "planos"
+  | "prontidao";
 
 type ProductForm = {
   name: string;
@@ -68,7 +76,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { title: "Painel admin — RadarShop AI" },
       {
         name: "description",
-        content: "Administração de produtos, categorias, fontes e importações.",
+        content:
+          "Administração de produtos, categorias, fontes, importações e raspagem autorizada.",
       },
     ],
   }),
@@ -154,6 +163,9 @@ function AdminPage() {
         <TabButton active={tab === "importacao"} onClick={() => setTab("importacao")}>
           Importação CSV
         </TabButton>
+        <TabButton active={tab === "scraper"} onClick={() => setTab("scraper")}>
+          Raspagem
+        </TabButton>
         <TabButton active={tab === "planos"} onClick={() => setTab("planos")}>
           Planos
         </TabButton>
@@ -195,6 +207,10 @@ function AdminPage() {
 
       {tab === "importacao" && (
         <ImportTab categories={categories} defaultSource={importDefaults?.defaultSource ?? ""} />
+      )}
+
+      {tab === "scraper" && (
+        <AdminScraper categories={categories} defaultSource={importDefaults?.defaultSource ?? ""} />
       )}
 
       {tab === "planos" && <AdminPlanManagement enabled={enabled} />}
@@ -316,9 +332,9 @@ function SourcesTab({
                 </p>
                 {item.latestRun && (
                   <p>
-                    Canal: {ingestionChannelLabel(item.latestRun.channel)} · recebidos{" "}
-                    {item.latestRun.accepted_count} · inseridos {item.latestRun.inserted_count} ·
-                    atualizados {item.latestRun.updated_count}
+                    Canal: {ingestionChannelLabel(item.latestRun.channel, item.latestRun.source)} ·
+                    recebidos {item.latestRun.accepted_count} · inseridos{" "}
+                    {item.latestRun.inserted_count} · atualizados {item.latestRun.updated_count}
                   </p>
                 )}
               </div>
@@ -334,7 +350,7 @@ function SourcesTab({
       <section className="surface-card p-5">
         <h2 className="text-base font-semibold">Execuções recentes</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Últimas importações recebidas pela API de ingestão ou pelo CSV administrativo.
+          Últimas coletas recebidas pela API de ingestão, pelo CSV administrativo ou pelo scraper.
         </p>
 
         {runs.length ? (
@@ -355,7 +371,7 @@ function SourcesTab({
                 {runs.slice(0, 30).map((run) => (
                   <tr key={run.id}>
                     <td className="max-w-52 truncate py-2.5 font-medium">{run.source}</td>
-                    <td className="py-2.5">{ingestionChannelLabel(run.channel)}</td>
+                    <td className="py-2.5">{ingestionChannelLabel(run.channel, run.source)}</td>
                     <td className="py-2.5">{ingestionStatusLabel(run.status)}</td>
                     <td className="py-2.5">{run.accepted_count}</td>
                     <td className="py-2.5">{run.inserted_count}</td>
@@ -380,7 +396,8 @@ function ingestionStatusLabel(status: string) {
   return "em andamento";
 }
 
-function ingestionChannelLabel(channel: string) {
+function ingestionChannelLabel(channel: string, source?: string | null) {
+  if (source?.startsWith("scraper:")) return "Scraper";
   return channel === "csv" ? "CSV" : "API";
 }
 
