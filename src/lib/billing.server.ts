@@ -2,11 +2,20 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ApiAuthError, requireApiUser } from "@/lib/api-auth.server";
 import { readJsonBody, RequestBodyError } from "@/lib/request-body.server";
+import {
+  canSwitchBillingGateway,
+  normalizeBillingProvider,
+  normalizeExternalCheckoutUrl,
+  normalizePayPalStatus,
+  normalizePublicUrl,
+  readPositiveMoney,
+  type BillingProvider,
+} from "@/lib/billing-policy";
 import { isUsageLimitsEnabled } from "@/lib/usage.server";
 
-const MERCADO_PAGO_API = "https://api.mercadopago.com";
+export type { BillingProvider } from "@/lib/billing-policy";
 
-export type BillingProvider = "mercado_pago" | "paypal" | "pepper";
+const MERCADO_PAGO_API = "https://api.mercadopago.com";
 
 type BillingProviderOption = {
   id: BillingProvider;
@@ -1040,14 +1049,6 @@ function findPayPalApprovalUrl(subscription: PayPalSubscription) {
   return subscription.links?.find((link) => link.rel === "approve")?.href ?? null;
 }
 
-function normalizePayPalStatus(status: string | undefined) {
-  if (status === "ACTIVE") return "authorized";
-  if (status === "SUSPENDED") return "paused";
-  if (status === "CANCELLED" || status === "EXPIRED") return "canceled";
-  if (status === "APPROVED" || status === "APPROVAL_PENDING") return "pending";
-  return status?.toLowerCase() || "unknown";
-}
-
 async function getPayPalAccessToken(config: {
   clientId: string;
   clientSecret: string;
@@ -1158,8 +1159,7 @@ function assertGatewaySwitchAllowed(
     return;
   }
 
-  const terminalStatuses = new Set(["canceled", "cancelled", "expired", "inactive"]);
-  if (existing.billing_status && terminalStatuses.has(existing.billing_status.toLowerCase())) {
+  if (canSwitchBillingGateway(existing, requestedProvider)) {
     return;
   }
 
@@ -1183,10 +1183,6 @@ function getRequestedBillingProvider(request: Request): BillingProvider {
   }
 
   return provider;
-}
-
-function normalizeBillingProvider(value: string | null | undefined): BillingProvider | null {
-  return value === "mercado_pago" || value === "paypal" || value === "pepper" ? value : null;
 }
 
 function buildProviderOptions({
@@ -1328,17 +1324,6 @@ function requirePepperCheckoutConfig() {
   return { ...config, checkoutUrl: config.checkoutUrl };
 }
 
-function normalizeExternalCheckoutUrl(value: string | undefined) {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
 function envFlag(name: string) {
   return process.env[name]?.trim().toLowerCase() === "true";
 }
@@ -1413,24 +1398,3 @@ function requireWebhookConfig() {
   return config;
 }
 
-function readPositiveMoney(value: string | undefined) {
-  if (!value) return null;
-
-  const amount = Number(value.replace(",", "."));
-  return Number.isFinite(amount) && amount > 0 ? Math.round(amount * 100) / 100 : null;
-}
-
-function normalizePublicUrl(value: string | undefined) {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value);
-    const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
-
-    if (url.protocol !== "https:" && !local) return null;
-
-    return url.origin;
-  } catch {
-    return null;
-  }
-}
