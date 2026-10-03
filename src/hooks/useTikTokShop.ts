@@ -139,7 +139,7 @@ export function useTikTokOpportunityHistory(productId: string | null) {
   });
 }
 
-export function useTikTokTrackedOpportunities() {
+export function useTikTokTrackedOpportunities(enabled = true) {
   return useQuery({
     queryKey: ["tiktok-shop-tracked-opportunities"],
     queryFn: async () => {
@@ -149,6 +149,7 @@ export function useTikTokTrackedOpportunities() {
         token,
       );
     },
+    enabled,
     retry: false,
     staleTime: 30_000,
   });
