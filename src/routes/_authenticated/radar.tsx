@@ -111,7 +111,10 @@ function OfficialTikTokRadar() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const connected = connection?.connected === true;
-  const trackedProducts = trackedTikTok.data?.products ?? [];
+  const trackedProducts = useMemo(
+    () => trackedTikTok.data?.products ?? [],
+    [trackedTikTok.data?.products],
+  );
   const trackedIds = useMemo(
     () => new Set(trackedProducts.map((product) => product.id)),
     [trackedProducts],
