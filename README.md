@@ -469,3 +469,11 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - preços comerciais continuam vazios até existir uma decisão real de lançamento
 - o Lovable AI continua tratando `LOVABLE_API_KEY` como segredo gerenciado pela plataforma
 
+### Etapa 14I — contratos de autorização administrativa
+
+- APIs administrativas continuam exigindo autenticação e role `admin` revalidada no servidor
+- CRUD de produtos, categorias e configurações permanece protegido por RLS com role administrativa
+- usuários autenticados comuns continuam sem permissão direta de escrita em `user_roles`
+- a migration de segurança garante que novos cadastros entram somente como `user`
+- testes automatizados falham se essas garantias de autorização forem removidas do código/migrations
+
