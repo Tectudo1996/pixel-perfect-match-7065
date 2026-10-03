@@ -99,7 +99,7 @@ function OfficialTikTokRadar() {
     error: connectionErrorDetail,
   } = useTikTokShopConnection();
   const discovery = useSearchTikTokOpportunities();
-  const trackedTikTok = useTikTokTrackedOpportunities();
+  const trackedTikTok = useTikTokTrackedOpportunities(connection?.connected === true);
   const trackTikTok = useTrackTikTokOpportunity();
   const untrackTikTok = useUntrackTikTokOpportunity();
 
