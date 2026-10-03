@@ -28,6 +28,7 @@ Em uma instalação limpa, aplique no Lovable Cloud / Supabase de produção, ne
 8. `drizzle/migrations/0007_tiktok_shop_oauth_storage.sql`
 9. `drizzle/migrations/0008_tiktok_showcase_private_cache.sql`
 10. `drizzle/migrations/0009_tiktok_opportunity_tracking.sql`
+11. `drizzle/migrations/0010_security_definer_hardening.sql`
 
 No banco atual do RadarShop AI, o histórico foi confirmado em 2026-10-03. A tabela
 `drizzle.__drizzle_migrations` registra `0000_radarshop_core_schema` e os aliases históricos
@@ -36,6 +37,8 @@ canônicas posteriores até a `0009` estão presentes no schema, mas essas aplic
 foram registradas como novas linhas no journal antigo do Drizzle. **Não reexecute migrations apenas
 para tentar alinhar esse histórico e não edite a tabela de migrations manualmente.** Os aliases devem
 permanecer versionados porque fazem parte do histórico real desse ambiente.
+
+A `0010_security_definer_hardening.sql` foi aplicada e verificada no banco atual em 2026-10-03. O helper `has_role` ficou limitado ao próprio `auth.uid()`: `anon` não possui `EXECUTE`, enquanto `authenticated` mantém somente a chamada controlada usada pelas policies. `handle_new_user` não pode mais ser executada diretamente por `anon` ou `authenticated`; o trigger de `auth.users` permanece configurado e os papéis internos necessários mantêm `EXECUTE`.
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
@@ -124,7 +127,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008 e 0009
+2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008, 0009 e 0010
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível
