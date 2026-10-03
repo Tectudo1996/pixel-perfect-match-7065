@@ -71,7 +71,7 @@ function PersonalRadarPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = usePersonalRadar();
   const { data: tiktokShop, isLoading: loadingTikTokShop } = useTikTokShopConnection();
   const tiktokDiscovery = useSearchTikTokOpportunities();
-  const trackedTikTok = useTikTokTrackedOpportunities();
+  const trackedTikTok = useTikTokTrackedOpportunities(tiktokShop?.connected === true);
   const trackTikTok = useTrackTikTokOpportunity();
   const untrackTikTok = useUntrackTikTokOpportunity();
   const refreshTrackedTikTok = useRefreshTikTokTrackedOpportunities();
