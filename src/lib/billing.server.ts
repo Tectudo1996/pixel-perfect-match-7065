@@ -1397,4 +1397,3 @@ function requireWebhookConfig() {
 
   return config;
 }
-
