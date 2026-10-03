@@ -16,17 +16,26 @@ ser alterado antes do lançamento.
 
 ## 2. Ordem das migrations
 
-Aplique no Lovable Cloud / Supabase de produção, nesta ordem:
+Em uma instalação limpa, aplique no Lovable Cloud / Supabase de produção, nesta ordem:
 
-1. `drizzle/migrations/0001_foundation_security.sql`
-2. `drizzle/migrations/0002_plan_usage.sql`
-3. `drizzle/migrations/0003_billing_mercado_pago.sql`
-4. `drizzle/migrations/0004_multi_gateway_billing.sql`
-5. `drizzle/migrations/0005_multi_gateway_readiness.sql`
-6. `drizzle/migrations/0006_ingestion_observability.sql`
-7. `drizzle/migrations/0007_tiktok_shop_oauth_storage.sql`
-8. `drizzle/migrations/0008_tiktok_showcase_private_cache.sql`
-9. `drizzle/migrations/0009_tiktok_opportunity_tracking.sql`
+1. `drizzle/migrations/0000_radarshop_core_schema.sql`
+2. `drizzle/migrations/0001_foundation_security.sql`
+3. `drizzle/migrations/0002_plan_usage.sql`
+4. `drizzle/migrations/0003_billing_mercado_pago.sql`
+5. `drizzle/migrations/0004_multi_gateway_billing.sql`
+6. `drizzle/migrations/0005_multi_gateway_readiness.sql`
+7. `drizzle/migrations/0006_ingestion_observability.sql`
+8. `drizzle/migrations/0007_tiktok_shop_oauth_storage.sql`
+9. `drizzle/migrations/0008_tiktok_showcase_private_cache.sql`
+10. `drizzle/migrations/0009_tiktok_opportunity_tracking.sql`
+
+No banco atual do RadarShop AI, o histórico foi confirmado em 2026-10-03. A tabela
+`drizzle.__drizzle_migrations` registra `0000_radarshop_core_schema` e os aliases históricos
+`0001_billing_mercado_pago` e `0002_0004_multi_gateway_billing`. Os objetos das migrations
+canônicas posteriores até a `0009` estão presentes no schema, mas essas aplicações posteriores não
+foram registradas como novas linhas no journal antigo do Drizzle. **Não reexecute migrations apenas
+para tentar alinhar esse histórico e não edite a tabela de migrations manualmente.** Os aliases devem
+permanecer versionados porque fazem parte do histórico real desse ambiente.
 
 Depois, acesse **Admin → Prontidão**. A migration 0005 não altera dados comerciais: ela cria uma
 RPC somente de leitura, executável apenas pelo service role, usada para confirmar que os constraints
@@ -115,7 +124,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. aplique as migrations 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008 e 0009
+2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008 e 0009
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível
