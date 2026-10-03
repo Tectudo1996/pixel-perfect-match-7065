@@ -698,11 +698,7 @@ function normalizeCurrency(value: string | null) {
   return /^[A-Z]{3}$/.test(currency) ? currency : null;
 }
 
-async function normalizePublicAssetUrl(
-  value: string | null,
-  baseUrl: URL,
-  warnings: string[],
-) {
+async function normalizePublicAssetUrl(value: string | null, baseUrl: URL, warnings: string[]) {
   if (!value) return null;
 
   try {
@@ -710,7 +706,9 @@ async function normalizePublicAssetUrl(
     const validated = await validatePublicUrl(resolved.toString());
     return validated.toString();
   } catch {
-    warnings.push("A imagem encontrada apontava para uma URL não pública ou inválida e foi ignorada.");
+    warnings.push(
+      "A imagem encontrada apontava para uma URL não pública ou inválida e foi ignorada.",
+    );
     return null;
   }
 }
