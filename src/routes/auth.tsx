@@ -23,6 +23,7 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Acesse sua conta RadarShop AI e abra o radar de produtos." },
       { property: "og:title", content: "Entrar — RadarShop AI" },
       { property: "og:description", content: "Acesse sua conta RadarShop AI." },
+      { name: "robots", content: "noindex,nofollow,noarchive" },
     ],
   }),
   component: AuthPage,
@@ -153,6 +154,7 @@ function AuthPage() {
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Seu nome"
+                  autoComplete="name"
                   required
                 />
               </div>
@@ -165,6 +167,7 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="voce@email.com"
+                autoComplete="email"
                 required
               />
             </div>
@@ -187,6 +190,7 @@ function AuthPage() {
                   type="password"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
+                  autoComplete={modo === "entrar" ? "current-password" : "new-password"}
                   minLength={6}
                   required
                 />
@@ -197,6 +201,20 @@ function AuthPage() {
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {modo === "entrar" ? "Entrar" : modo === "criar" ? "Criar conta" : "Enviar link"}
             </Button>
+
+            {modo === "criar" && (
+              <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+                Ao criar sua conta, você declara que leu e concorda com os{" "}
+                <Link to="/termos" className="font-medium text-foreground hover:underline">
+                  Termos de Uso
+                </Link>{" "}
+                e com a{" "}
+                <Link to="/privacidade" className="font-medium text-foreground hover:underline">
+                  Política de Privacidade
+                </Link>
+                .
+              </p>
+            )}
           </form>
 
           {modo !== "recuperar" && (
