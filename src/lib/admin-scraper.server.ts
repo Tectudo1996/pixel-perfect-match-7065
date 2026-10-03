@@ -233,8 +233,8 @@ async function scrapeProductPage(payload: ScraperPayload): Promise<ProductPrevie
     meta["description"] ??
     null;
 
-  const imageUrl =
-    normalizeHttpUrl(readImage(structuredProduct?.["image"]) ?? meta["og:image"] ?? null) ?? null;
+  const rawImageUrl = readImage(structuredProduct?.["image"]) ?? meta["og:image"] ?? null;
+  const imageUrl = await normalizePublicAssetUrl(rawImageUrl, finalUrl, warnings);
 
   const storeName =
     readPartyName(firstObject(offers?.["seller"])) ??
@@ -698,12 +698,19 @@ function normalizeCurrency(value: string | null) {
   return /^[A-Z]{3}$/.test(currency) ? currency : null;
 }
 
-function normalizeHttpUrl(value: string | null) {
+async function normalizePublicAssetUrl(
+  value: string | null,
+  baseUrl: URL,
+  warnings: string[],
+) {
   if (!value) return null;
+
   try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+    const resolved = new URL(value, baseUrl);
+    const validated = await validatePublicUrl(resolved.toString());
+    return validated.toString();
   } catch {
+    warnings.push("A imagem encontrada apontava para uma URL não pública ou inválida e foi ignorada.");
     return null;
   }
 }
