@@ -1214,7 +1214,9 @@ export async function getValidTikTokCreatorAccessToken(userId: string) {
         access_token: refreshed.access_token,
         refresh_token: refreshed.refresh_token,
       }),
-      access_token_expires_at: expirationFromSeconds(getTikTokTokenLifetimeSeconds(refreshed, "access")),
+      access_token_expires_at: expirationFromSeconds(
+        getTikTokTokenLifetimeSeconds(refreshed, "access"),
+      ),
       refresh_token_expires_at: expirationFromSeconds(
         getTikTokTokenLifetimeSeconds(refreshed, "refresh"),
       ),
@@ -1290,7 +1292,9 @@ async function saveTikTokShopConnection(userId: string, tokenData: TikTokShopTok
       user_type: tokenData.user_type,
       granted_scopes: grantedScopes,
       token_ciphertext: tokenCiphertext,
-      access_token_expires_at: expirationFromSeconds(getTikTokTokenLifetimeSeconds(tokenData, "access")),
+      access_token_expires_at: expirationFromSeconds(
+        getTikTokTokenLifetimeSeconds(tokenData, "access"),
+      ),
       refresh_token_expires_at: expirationFromSeconds(
         getTikTokTokenLifetimeSeconds(tokenData, "refresh"),
       ),
