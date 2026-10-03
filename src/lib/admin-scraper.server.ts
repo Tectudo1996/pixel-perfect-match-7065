@@ -1,5 +1,6 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ApiAdminError, ApiAuthError, requireApiAdmin } from "@/lib/api-auth.server";
 import { ingestProductBatch } from "@/lib/product-ingest.server";
 import { productIngestRequestSchema } from "@/lib/product-ingest-schema";
@@ -35,7 +36,7 @@ type ProductPreview = {
 
 export async function handleAdminScraperPost(request: Request) {
   try {
-    await requireApiAdmin(request);
+    const adminUserId = await requireApiAdmin(request);
     const payload = parsePayload(await readJsonBody(request, 16_384));
     const preview = await scrapeProductPage(payload);
 
@@ -43,9 +44,10 @@ export async function handleAdminScraperPost(request: Request) {
       return Response.json({ ok: true, preview });
     }
 
+    const collectedAt = new Date().toISOString();
     const body = productIngestRequestSchema.parse({
       source: preview.source,
-      collected_at: new Date().toISOString(),
+      collected_at: collectedAt,
       products: [
         {
           name: preview.name,
@@ -63,15 +65,92 @@ export async function handleAdminScraperPost(request: Request) {
       ],
     });
 
-    const result = await ingestProductBatch(body);
-
-    return Response.json({
-      ok: true,
-      preview,
-      result,
+    const runId = await startScraperRun({
+      source: preview.source,
+      collectedAt,
+      adminUserId,
     });
+
+    try {
+      const result = await ingestProductBatch(body);
+
+      await finishScraperRun(runId, {
+        status: "succeeded",
+        inserted_count: result.inserted,
+        updated_count: result.updated,
+        snapshot_count: result.metric_snapshots,
+      });
+
+      return Response.json({
+        ok: true,
+        preview,
+        result,
+      });
+    } catch (error) {
+      await finishScraperRun(runId, {
+        status: "failed",
+        error_code: "SCRAPER_IMPORT_FAILED",
+        error_message: "A página foi analisada, mas a gravação no catálogo falhou.",
+      });
+      throw error;
+    }
   } catch (error) {
     return scraperErrorResponse(error);
+  }
+}
+
+async function startScraperRun({
+  source,
+  collectedAt,
+  adminUserId,
+}: {
+  source: string;
+  collectedAt: string;
+  adminUserId: string;
+}) {
+  const { data, error } = await supabaseAdmin
+    .from("ingestion_runs")
+    .insert({
+      source,
+      channel: "api",
+      accepted_count: 1,
+      collected_at: collectedAt,
+      created_by: adminUserId,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.warn("[RadarShop AI] histórico do scraper indisponível", error.message);
+    return null;
+  }
+
+  return data.id;
+}
+
+async function finishScraperRun(
+  id: string | null,
+  values: {
+    status: "succeeded" | "failed";
+    inserted_count?: number;
+    updated_count?: number;
+    snapshot_count?: number;
+    error_code?: string;
+    error_message?: string;
+  },
+) {
+  if (!id) return;
+
+  const { error } = await supabaseAdmin
+    .from("ingestion_runs")
+    .update({
+      ...values,
+      finished_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.warn("[RadarShop AI] histórico do scraper não pôde ser atualizado", error.message);
   }
 }
 
