@@ -76,7 +76,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { title: "Painel admin — RadarShop AI" },
       {
         name: "description",
-        content: "Administração de produtos, categorias, fontes e importações.",
+        content: "Administração de produtos, categorias, fontes, importações e raspagem autorizada.",
       },
     ],
   }),
@@ -352,7 +352,7 @@ function SourcesTab({
       <section className="surface-card p-5">
         <h2 className="text-base font-semibold">Execuções recentes</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Últimas importações recebidas pela API de ingestão ou pelo CSV administrativo.
+          Últimas coletas recebidas pela API de ingestão, pelo CSV administrativo ou pelo scraper.
         </p>
 
         {runs.length ? (
