@@ -380,7 +380,8 @@ async function assertRobotsAllowed(url: URL) {
 
 function robotsAllowsPath(text: string, pathname: string) {
   const lines = text.split(/\r?\n/);
-  let applies = false;
+  let groupApplies = false;
+  let groupHasRules = false;
   let bestRule: { allow: boolean; length: number } | null = null;
 
   for (const rawLine of lines) {
@@ -394,11 +395,21 @@ function robotsAllowsPath(text: string, pathname: string) {
     const value = line.slice(separator + 1).trim();
 
     if (field === "user-agent") {
-      applies = value === "*" || value.toLowerCase().includes("radarshopai");
+      if (groupHasRules) {
+        groupApplies = false;
+        groupHasRules = false;
+      }
+
+      if (value === "*" || value.toLowerCase().includes("radarshopai")) {
+        groupApplies = true;
+      }
       continue;
     }
 
-    if (!applies || (field !== "allow" && field !== "disallow") || !value) continue;
+    if (field !== "allow" && field !== "disallow") continue;
+    groupHasRules = true;
+
+    if (!groupApplies || !value) continue;
 
     if (pathname.startsWith(value) && (!bestRule || value.length > bestRule.length)) {
       bestRule = { allow: field === "allow", length: value.length };
@@ -496,7 +507,11 @@ function isPrivateAddress(address: string) {
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168)
+    (a === 192 && b === 168) ||
+    (a === 192 && b === 0) ||
+    (a === 192 && b === 2) ||
+    (a === 198 && (b === 18 || b === 19 || b === 51)) ||
+    (a === 203 && b === 0)
   );
 }
 
@@ -674,8 +689,8 @@ function normalizeHttpUrl(value: string | null) {
 }
 
 function normalizeSource(value: string | null, hostname: string) {
-  const fallback = `scraper:${hostname.replace(/^www\./, "")}`;
-  const source = (value || fallback).trim();
+  const raw = (value || hostname.replace(/^www\./, "")).trim();
+  const source = raw.toLowerCase().startsWith("scraper:") ? raw : `scraper:${raw}`;
   return source.slice(0, 120);
 }
 
