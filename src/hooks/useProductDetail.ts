@@ -51,10 +51,7 @@ export function useProductDetail(productId: string) {
       if (metricsResult.error) throw metricsResult.error;
       if (!productResult.data) return null;
 
-      const rawCategory = productResult.data.categories as
-        | ProductCategory
-        | ProductCategory[]
-        | null;
+      const rawCategory = productResult.data.categories as ProductCategory | ProductCategory[] | null;
       const category = Array.isArray(rawCategory) ? (rawCategory[0] ?? null) : rawCategory;
 
       const product: ProductDetail = {
