@@ -441,7 +441,7 @@ export async function handleFastmossSyncRequest(request: Request) {
 
   try {
     const userId = await requireApiAdmin(request);
-    const raw = (await readJsonBody(request, 4096).catch(() => ({}))) as Record<string, unknown>;
+    const raw = (await readJsonBody(request, 4096).catch(() => ({}))) as { provider?: unknown; region?: unknown; pageSize?: unknown };
     if (raw.provider !== undefined && raw.provider !== "fastmoss") {
       throw new ApiError(400, "UNSUPPORTED_PROVIDER", "Provedor de sincronização não suportado.");
     }
