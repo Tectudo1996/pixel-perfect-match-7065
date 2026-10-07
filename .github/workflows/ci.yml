@@ -36,6 +36,7 @@ jobs:
           src/components/admin-scraper.tsx
           src/components/app-shell.tsx
           src/components/product-card.tsx
+          src/components/product-market-content.tsx
           src/components/tiktok-opportunity-card.tsx
           src/hooks/useAdmin.ts
           src/hooks/useAdminScraper.ts
@@ -46,6 +47,7 @@ jobs:
           src/hooks/useMarketIntelligence.ts
           src/hooks/usePersonalRadar.ts
           src/hooks/useProductDetail.ts
+          src/hooks/useProductMarketContent.ts
           src/hooks/useProductRadar.ts
           src/hooks/useReadiness.ts
           src/hooks/usePlanUsage.ts
@@ -58,8 +60,13 @@ jobs:
           src/lib/billing.server.ts
           src/lib/billing-policy.ts
           src/lib/http-security.ts
+          src/lib/fastmoss-normalize.ts
+          src/lib/fastmoss.server.ts
+          src/lib/format.ts
           src/lib/market-intelligence.ts
           src/lib/product-ingest-schema.ts
+          src/lib/product-market-content-policy.ts
+          src/lib/product-market-content.server.ts
           src/lib/product-ingest.server.ts
           src/lib/readiness.server.ts
           src/lib/request-body.server.ts
