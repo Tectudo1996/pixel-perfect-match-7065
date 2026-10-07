@@ -304,7 +304,12 @@ function CreatorCard({ creator, currency }: { creator: MarketCreator; currency: 
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
           {creator.avatarUrl ? (
-            <img\n              src={creator.avatarUrl}\n              alt=""\n              className="h-full w-full object-cover"\n              loading="lazy"\n            />
+            <img
+              src={creator.avatarUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
           ) : (
             <UserRound className="h-5 w-5 text-muted-foreground" />
           )}
