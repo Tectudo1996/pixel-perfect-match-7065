@@ -19,6 +19,7 @@ A ordem oficial para preparar um banco novo é:
 9. `0008_tiktok_showcase_private_cache.sql`
 10. `0009_tiktok_opportunity_tracking.sql`
 11. `0010_security_definer_hardening.sql`
+12. `0011_market_intelligence.sql` (Etapa 15A — campos aditivos de inteligência de mercado FastMoss BR e índices)
 
 A mesma sequência operacional está documentada em `docs/PRODUCTION_RUNBOOK.md`.
 
