@@ -30,6 +30,7 @@ Em uma instalação limpa, aplique no Lovable Cloud / Supabase de produção, ne
 10. `drizzle/migrations/0009_tiktok_opportunity_tracking.sql`
 11. `drizzle/migrations/0010_security_definer_hardening.sql`
 12. `drizzle/migrations/0011_market_intelligence.sql`
+13. `drizzle/migrations/0012_product_market_content.sql`
 
 No banco atual do RadarShop AI, o histórico foi confirmado em 2026-10-03. A tabela
 `drizzle.__drizzle_migrations` registra `0000_radarshop_core_schema` e os aliases históricos
@@ -128,7 +129,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008, 0009, 0010 e 0011
+2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008, 0009, 0010, 0011 e 0012
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível
@@ -406,3 +407,21 @@ Creator autorizado e pode depender de região/elegibilidade; por isso a interfac
 
 Nenhum score de venda é inventado nesta etapa. O RadarShop exibe somente campos retornados pela
 API oficial, como preço, comissão, loja, unidades vendidas e link do produto quando presentes.
+
+
+## Inteligência de conteúdo FastMoss — Etapa 15B
+
+A migration `0012_product_market_content.sql` adiciona caches privados para os até 12 vídeos e
+12 criadores mais relevantes de cada produto enriquecido. Abrir a página do produto não chama a
+FastMoss: a consulta externa só ocorre mediante ação explícita do usuário autenticado.
+
+Uma atualização completa bloqueia nova chamada externa do mesmo produto por 24 horas. Se apenas
+vídeos ou criadores forem atualizados, a parte válida é preservada e uma nova tentativa externa fica
+disponível após 1 hora. Nenhuma atualização em massa dos Top 100 é executada automaticamente.
+
+Antes de usar a função em produção:
+- aplique a migration 0012;
+- configure `FASTMOSS_API_KEY` apenas no servidor;
+- confirme que GET do conteúdo usa somente cache e que PATCH respeita o TTL;
+- confira que a interface identifica os números como inteligência de mercado FastMoss, não como
+  métricas oficiais do TikTok.
