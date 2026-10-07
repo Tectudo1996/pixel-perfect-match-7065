@@ -20,6 +20,7 @@ A ordem oficial para preparar um banco novo é:
 10. `0009_tiktok_opportunity_tracking.sql`
 11. `0010_security_definer_hardening.sql`
 12. `0011_market_intelligence.sql` (Etapa 15A — campos aditivos de inteligência de mercado FastMoss BR e índices)
+13. `0012_product_market_content.sql` (Etapa 15B — cache privado de vídeos e criadores por produto)
 
 A mesma sequência operacional está documentada em `docs/PRODUCTION_RUNBOOK.md`.
 
@@ -74,3 +75,11 @@ O comando falha se:
 - um alias legado divergir do seu equivalente canônico;
 - o journal apontar para um arquivo inexistente;
 - o runbook deixar de listar a ordem oficial.
+
+
+## 0012 — conteúdo relacionado ao produto
+
+A migration `0012_product_market_content.sql` cria caches server-only para vídeos e criadores
+associados a produtos FastMoss, além do estado de TTL por produto. As três tabelas mantêm RLS
+ativo e removem acesso direto de `anon` e `authenticated`; somente o service role grava ou lê
+essas tabelas, e a aplicação expõe apenas a resposta autenticada necessária pela API interna.
