@@ -290,6 +290,195 @@ export type Database = {
           },
         ]
       }
+      product_market_enrichment_state: {
+        Row: {
+          creator_total: number | null
+          creators_fetched_at: string | null
+          last_error_code: string | null
+          last_error_message: string | null
+          next_refresh_at: string | null
+          product_id: string
+          updated_at: string
+          video_total: number | null
+          videos_fetched_at: string | null
+        }
+        Insert: {
+          creator_total?: number | null
+          creators_fetched_at?: string | null
+          last_error_code?: string | null
+          last_error_message?: string | null
+          next_refresh_at?: string | null
+          product_id: string
+          updated_at?: string
+          video_total?: number | null
+          videos_fetched_at?: string | null
+        }
+        Update: {
+          creator_total?: number | null
+          creators_fetched_at?: string | null
+          last_error_code?: string | null
+          last_error_message?: string | null
+          next_refresh_at?: string | null
+          product_id?: string
+          updated_at?: string
+          video_total?: number | null
+          videos_fetched_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_market_enrichment_state_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_related_creators: {
+        Row: {
+          avatar_url: string | null
+          aweme_count: number | null
+          category_id: number | null
+          category_name: string | null
+          creator_uid: string
+          favoriting_count: number | null
+          fetched_at: string
+          follower_count: number | null
+          gmv: number | null
+          id: string
+          nickname: string | null
+          product_id: string
+          region: string | null
+          source: string
+          unique_id: string | null
+          units_sold: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          aweme_count?: number | null
+          category_id?: number | null
+          category_name?: string | null
+          creator_uid: string
+          favoriting_count?: number | null
+          fetched_at: string
+          follower_count?: number | null
+          gmv?: number | null
+          id?: string
+          nickname?: string | null
+          product_id: string
+          region?: string | null
+          source?: string
+          unique_id?: string | null
+          units_sold?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          aweme_count?: number | null
+          category_id?: number | null
+          category_name?: string | null
+          creator_uid?: string
+          favoriting_count?: number | null
+          fetched_at?: string
+          follower_count?: number | null
+          gmv?: number | null
+          id?: string
+          nickname?: string | null
+          product_id?: string
+          region?: string | null
+          source?: string
+          unique_id?: string | null
+          units_sold?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_related_creators_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_related_videos: {
+        Row: {
+          comment_count: number | null
+          cover_url: string | null
+          creator_uid: string | null
+          description: string | null
+          digg_count: number | null
+          duration_seconds: number | null
+          external_video_id: string
+          fastmoss_url: string | null
+          fetched_at: string
+          gmv: number | null
+          id: string
+          is_ad: boolean | null
+          play_count: number | null
+          product_id: string
+          published_at: string | null
+          region: string | null
+          seller_id: string | null
+          share_count: number | null
+          source: string
+          tiktok_url: string | null
+          units_sold: number | null
+        }
+        Insert: {
+          comment_count?: number | null
+          cover_url?: string | null
+          creator_uid?: string | null
+          description?: string | null
+          digg_count?: number | null
+          duration_seconds?: number | null
+          external_video_id: string
+          fastmoss_url?: string | null
+          fetched_at: string
+          gmv?: number | null
+          id?: string
+          is_ad?: boolean | null
+          play_count?: number | null
+          product_id: string
+          published_at?: string | null
+          region?: string | null
+          seller_id?: string | null
+          share_count?: number | null
+          source?: string
+          tiktok_url?: string | null
+          units_sold?: number | null
+        }
+        Update: {
+          comment_count?: number | null
+          cover_url?: string | null
+          creator_uid?: string | null
+          description?: string | null
+          digg_count?: number | null
+          duration_seconds?: number | null
+          external_video_id?: string
+          fastmoss_url?: string | null
+          fetched_at?: string
+          gmv?: number | null
+          id?: string
+          is_ad?: boolean | null
+          play_count?: number | null
+          product_id?: string
+          published_at?: string | null
+          region?: string | null
+          seller_id?: string | null
+          share_count?: number | null
+          source?: string
+          tiktok_url?: string | null
+          units_sold?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_related_videos_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
