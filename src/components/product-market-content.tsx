@@ -304,7 +304,7 @@ function CreatorCard({ creator, currency }: { creator: MarketCreator; currency: 
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
           {creator.avatarUrl ? (
-            <img src={creator.avatarUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+            <img\n              src={creator.avatarUrl}\n              alt=""\n              className="h-full w-full object-cover"\n              loading="lazy"\n            />
           ) : (
             <UserRound className="h-5 w-5 text-muted-foreground" />
           )}
@@ -345,13 +345,7 @@ function CreatorCard({ creator, currency }: { creator: MarketCreator; currency: 
   );
 }
 
-function Metric({
-  icon: Icon,
-  value,
-}: {
-  icon: typeof ShoppingCart;
-  value: string;
-}) {
+function Metric({ icon: Icon, value }: { icon: typeof ShoppingCart; value: string }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       <Icon className="h-3 w-3 shrink-0" />
@@ -384,9 +378,7 @@ function formatDuration(value: number | null) {
   if (value === null) return "Duração não disponível";
   const minutes = Math.floor(value / 60);
   const seconds = value % 60;
-  return minutes > 0
-    ? minutes + ":" + seconds.toString().padStart(2, "0")
-    : seconds + "s";
+  return minutes > 0 ? minutes + ":" + seconds.toString().padStart(2, "0") : seconds + "s";
 }
 
 function dateTimeBR(value: string) {
