@@ -1,7 +1,4 @@
-export const money = (
-  value: number | null | undefined,
-  currency = "BRL",
-) => {
+export const money = (value: number | null | undefined, currency = "BRL") => {
   if (value === null || value === undefined) return null;
 
   try {
