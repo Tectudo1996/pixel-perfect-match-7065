@@ -1,4 +1,6 @@
 -- Etapa 15A — motor de dados FastMoss BR (aditiva, idempotente, preserva RLS existente)
+BEGIN;
+
 ALTER TABLE public.products
   ADD COLUMN IF NOT EXISTS external_id text,
   ADD COLUMN IF NOT EXISTS region text,
@@ -18,8 +20,13 @@ ALTER TABLE public.product_metrics_history
   ADD COLUMN IF NOT EXISTS video_count integer;
 
 CREATE INDEX IF NOT EXISTS products_source_external_id_idx
-  ON public.products (source, external_id);
+  ON public.products (source, external_id)
+  WHERE external_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS products_region_gmv_7d_idx
   ON public.products (region, gmv_7d DESC NULLS LAST);
-CREATE INDEX IF NOT EXISTS product_metrics_history_product_recorded_idx
-  ON public.product_metrics_history (product_id, recorded_at);
+
+CREATE INDEX IF NOT EXISTS product_metrics_history_product_recorded_market_idx
+  ON public.product_metrics_history (product_id, recorded_at DESC);
+
+COMMIT;
