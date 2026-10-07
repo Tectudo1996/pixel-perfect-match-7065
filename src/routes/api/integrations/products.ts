@@ -4,9 +4,8 @@ export const Route = createFileRoute("/api/integrations/products")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const { handleProductMarketContentGet } = await import(
-          "@/lib/product-market-content.server"
-        );
+        const { handleProductMarketContentGet } =
+          await import("@/lib/product-market-content.server");
         return handleProductMarketContentGet(request);
       },
       POST: async ({ request }) => {
@@ -18,9 +17,8 @@ export const Route = createFileRoute("/api/integrations/products")({
         return handleFastmossSyncRequest(request);
       },
       PATCH: async ({ request }) => {
-        const { handleProductMarketContentRefresh } = await import(
-          "@/lib/product-market-content.server"
-        );
+        const { handleProductMarketContentRefresh } =
+          await import("@/lib/product-market-content.server");
         return handleProductMarketContentRefresh(request);
       },
     },
