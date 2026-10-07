@@ -160,10 +160,16 @@ export async function handleProductMarketContentRefresh(request: Request) {
       next_refresh_at: nextRefreshAt,
       updated_at: fetchedAt,
       last_error_code: failures.length
-        ? failures.map((failure) => failure.code).join("|").slice(0, 500)
+        ? failures
+            .map((failure) => failure.code)
+            .join("|")
+            .slice(0, 500)
         : null,
       last_error_message: failures.length
-        ? failures.map((failure) => failure.message).join(" ").slice(0, 1000)
+        ? failures
+            .map((failure) => failure.message)
+            .join(" ")
+            .slice(0, 1000)
         : null,
     };
 
@@ -243,8 +249,7 @@ async function getMarketContent(
   suppliedState?: MarketState | null,
 ) {
   const product = suppliedProduct ?? (await getMarketProduct(productId));
-  const state =
-    suppliedState === undefined ? await getMarketState(productId) : suppliedState;
+  const state = suppliedState === undefined ? await getMarketState(productId) : suppliedState;
 
   const [videosResult, creatorsResult] = await Promise.all([
     supabaseAdmin
@@ -310,10 +315,7 @@ async function getMarketContent(
     available: isFastmossProduct(product),
     source: product.source,
     currency: product.currency,
-    lastUpdatedAt: latestIso(
-      state?.videos_fetched_at ?? null,
-      state?.creators_fetched_at ?? null,
-    ),
+    lastUpdatedAt: latestIso(state?.videos_fetched_at ?? null, state?.creators_fetched_at ?? null),
     canRefreshAt: state?.next_refresh_at ?? null,
     videos,
     creators,
