@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Heart, ImageOff, UsersRound } from "lucide-react";
 import { useToggleFavorite } from "@/hooks/useFavorites";
-import { brl, percent, NA } from "@/lib/format";
+import { money, percent, NA } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Produto } from "@/types/product";
 
@@ -67,12 +67,12 @@ export function ProductCard({ produto, favorito }: { produto: Produto; favorito:
           <div className="mt-auto space-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
             <div className="flex justify-between gap-3">
               <span>Preço</span>
-              <span className="font-medium text-foreground">{brl(produto.price) ?? NA}</span>
+              <span className="font-medium text-foreground">{money(produto.price, produto.currency ?? "BRL") ?? NA}</span>
             </div>
             <div className="flex justify-between gap-3">
               <span>Comissão</span>
               <span className="font-medium text-foreground">
-                {brl(produto.commission_amount) ?? percent(produto.commission_percent) ?? NA}
+                {money(produto.commission_amount, produto.currency ?? "BRL") ?? percent(produto.commission_percent) ?? NA}
               </span>
             </div>
             {(produto.sales_count !== null || produto.creators_count !== null) && (
@@ -94,7 +94,7 @@ export function ProductCard({ produto, favorito }: { produto: Produto; favorito:
             {produto.gmv_7d != null && (
               <div className="flex justify-between gap-3">
                 <span>GMV 7 dias</span>
-                <span className="font-medium text-foreground">{brl(produto.gmv_7d) ?? NA}</span>
+                <span className="font-medium text-foreground">{money(produto.gmv_7d, produto.currency ?? "BRL") ?? NA}</span>
               </div>
             )}
             {(produto.sales_7d != null || produto.video_count != null) && (
