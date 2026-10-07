@@ -70,9 +70,7 @@ async function getAccessToken() {
 
 async function readResponse(response: Response): Promise<ProductMarketContent> {
   const payload = (await response.json().catch(() => null)) as
-    | (ProductMarketContent & { error?: string })
-    | { error?: string }
-    | null;
+    (ProductMarketContent & { error?: string }) | { error?: string } | null;
 
   if (!response.ok || !payload || !("productId" in payload)) {
     throw new Error(payload?.error || "Não foi possível carregar a inteligência de mercado.");
