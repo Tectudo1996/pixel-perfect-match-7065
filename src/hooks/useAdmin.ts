@@ -577,11 +577,15 @@ export function useSyncFastmossTop100() {
       const response = await fetch("/api/integrations/products", {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: "fastmoss", region: "BR", pageSize: 100, sort: "day7_gmv" }),
+        body: JSON.stringify({
+          provider: "fastmoss",
+          region: "BR",
+          pageSize: 100,
+          sort: "day7_gmv",
+        }),
       });
       const payload = (await response.json().catch(() => null)) as
-        | (FastmossSyncResult & { error?: string })
-        | null;
+        (FastmossSyncResult & { error?: string }) | null;
 
       if (!response.ok || !payload) {
         throw new Error(payload?.error ?? "Não foi possível sincronizar com a FastMoss agora.");
