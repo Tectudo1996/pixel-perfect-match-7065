@@ -507,3 +507,18 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - `PUT /api/integrations/products` (somente admin) executa a sincronização reutilizando o pipeline de ingestão e o histórico de execuções; o `POST` de ingestão externa continua igual;
 - Admin → Fontes: botão "Sincronizar Top 100 BR";
 - Radar: ordenação "Maior GMV em 7 dias" e card com GMV/vendas 7 dias, vídeos e selo "Fonte FastMoss" (dados de terceiros, não são métricas oficiais do TikTok).
+
+
+## Etapa 15B — vídeos e criadores por produto
+
+- usa os endpoints FastMoss `/product/v1/videoList` e `/product/v1/creatorList`;
+- a coleta é sob demanda: abrir a página do produto não consome API;
+- cache global por produto com TTL de 24 horas após atualização completa;
+- falha parcial preserva o cache válido e permite nova tentativa após 1 hora;
+- guarda até 12 vídeos e 12 criadores por coleta, com vendas/GMV e métricas de contexto;
+- tabelas de cache são server-only, com RLS e sem grants para `anon` ou `authenticated`;
+- página do produto mostra até 6 itens inicialmente e expande localmente até os 12 já cacheados;
+- links externos são exibidos somente quando URLs são HTTP(S) válidas;
+- todos os números são identificados como inteligência de terceiros FastMoss, não como métricas
+  oficiais do TikTok;
+- nenhuma chamada em massa automática é feita para os Top 100.
