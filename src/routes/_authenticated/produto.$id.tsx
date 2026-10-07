@@ -12,11 +12,12 @@ import {
   Store,
   UsersRound,
 } from "lucide-react";
+import { ProductMarketContent } from "@/components/product-market-content";
 import { Button } from "@/components/ui/button";
 import { useFavorites, useToggleFavorite } from "@/hooks/useFavorites";
 import { useProductDetail } from "@/hooks/useProductDetail";
 import { summarizeMetricHistory } from "@/lib/market-intelligence";
-import { brl, dateBR, num, percent, NA } from "@/lib/format";
+import { dateBR, money, num, percent, NA } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/produto/$id")({
@@ -137,17 +138,29 @@ function ProductDetailPage() {
               </Button>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <InfoCard label="Preço" value={brl(product.price) ?? NA} />
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+              <InfoCard
+                label="Preço"
+                value={money(product.price, product.currency ?? "BRL") ?? NA}
+              />
               <InfoCard
                 label="Comissão"
-                value={brl(product.commission_amount) ?? percent(product.commission_percent) ?? NA}
+                value={
+                  money(product.commission_amount, product.currency ?? "BRL") ??
+                  percent(product.commission_percent) ??
+                  NA
+                }
               />
-              <InfoCard label="Vendas informadas" value={num(product.sales_count) ?? NA} />
+              <InfoCard label="Vendas totais" value={num(product.sales_count) ?? NA} />
               <InfoCard
-                label="Criadores informados"
+                label="Criadores"
                 value={num(product.creators_count) ?? NA}
                 icon={UsersRound}
+              />
+              <InfoCard label="Vendas 7 dias" value={num(product.sales_7d) ?? NA} />
+              <InfoCard
+                label="GMV 7 dias"
+                value={money(product.gmv_7d, product.currency ?? "BRL") ?? NA}
               />
             </div>
 
@@ -220,6 +233,13 @@ function ProductDetailPage() {
         </p>
       </section>
 
+      <ProductMarketContent
+        productId={product.id}
+        source={product.source}
+        externalId={product.external_id}
+        currency={product.currency}
+      />
+
       <div className="grid gap-5 xl:grid-cols-[0.75fr_1.25fr]">
         <section className="surface-card p-5">
           <h2 className="text-base font-semibold">Origem dos dados</h2>
@@ -244,13 +264,15 @@ function ProductDetailPage() {
 
           {metrics.length ? (
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[620px] text-left text-xs">
+              <table className="w-full min-w-[820px] text-left text-xs">
                 <thead className="border-b border-border text-muted-foreground">
                   <tr>
                     <th className="pb-2 font-medium">Data</th>
                     <th className="pb-2 font-medium">Preço</th>
                     <th className="pb-2 font-medium">Comissão</th>
                     <th className="pb-2 font-medium">Vendas</th>
+                    <th className="pb-2 font-medium">Vendas 7d</th>
+                    <th className="pb-2 font-medium">GMV 7d</th>
                     <th className="pb-2 font-medium">Criadores</th>
                     <th className="pb-2 font-medium">Fonte</th>
                   </tr>
@@ -259,9 +281,20 @@ function ProductDetailPage() {
                   {metrics.map((metric) => (
                     <tr key={metric.id}>
                       <td className="py-2.5">{dateBR(metric.recorded_at) ?? NA}</td>
-                      <td className="py-2.5">{brl(metric.price) ?? NA}</td>
-                      <td className="py-2.5">{brl(metric.commission_amount) ?? NA}</td>
+                      <td className="py-2.5">
+                        {money(metric.price, metric.currency ?? product.currency ?? "BRL") ?? NA}
+                      </td>
+                      <td className="py-2.5">
+                        {money(
+                          metric.commission_amount,
+                          metric.currency ?? product.currency ?? "BRL",
+                        ) ?? NA}
+                      </td>
                       <td className="py-2.5">{num(metric.sales_count) ?? NA}</td>
+                      <td className="py-2.5">{num(metric.sales_7d) ?? NA}</td>
+                      <td className="py-2.5">
+                        {money(metric.gmv_7d, metric.currency ?? product.currency ?? "BRL") ?? NA}
+                      </td>
                       <td className="py-2.5">{num(metric.creators_count) ?? NA}</td>
                       <td className="py-2.5">{metric.source || NA}</td>
                     </tr>
