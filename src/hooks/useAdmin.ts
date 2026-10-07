@@ -552,3 +552,42 @@ async function finishAdminIngestionRun(id: string | null, values: TablesUpdate<"
     console.warn("[RadarShop AI] histórico de importação não pôde ser atualizado", error.message);
   }
 }
+
+export type FastmossSyncResult = {
+  ok: true;
+  provider: "fastmoss";
+  region: string;
+  source: string;
+  received: number;
+  accepted: number;
+  inserted: number;
+  updated: number;
+  metric_snapshots: number;
+};
+
+export function useSyncFastmossTop100() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<FastmossSyncResult> => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sua sessão expirou. Entre novamente.");
+
+      const response = await fetch("/api/integrations/products", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "fastmoss", region: "BR", pageSize: 100, sort: "day7_gmv" }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | (FastmossSyncResult & { error?: string })
+        | null;
+
+      if (!response.ok || !payload) {
+        throw new Error(payload?.error ?? "Não foi possível sincronizar com a FastMoss agora.");
+      }
+      return payload;
+    },
+    onSuccess: () => invalidateAdminQueries(queryClient),
+  });
+}

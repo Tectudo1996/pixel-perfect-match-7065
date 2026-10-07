@@ -27,6 +27,7 @@ import {
   useAdminOverview,
   useAdminProducts,
   useAdminUsers,
+  useSyncFastmossTop100,
   useCreateAdminCategory,
   useCreateAdminProduct,
   useDeleteAdminCategory,
@@ -290,6 +291,8 @@ function SourcesTab({
           histórico não interfere na importação caso a observabilidade esteja indisponível.
         </p>
       </section>
+
+      <FastmossSyncCard />
 
       {historyError && (
         <section className="rounded-lg border border-border bg-secondary/30 p-4">
@@ -1326,5 +1329,38 @@ function AdminLoading() {
         Verificando acesso administrativo
       </span>
     </div>
+  );
+}
+
+function FastmossSyncCard() {
+  const sync = useSyncFastmossTop100();
+
+  return (
+    <section className="surface-card flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+      <div>
+        <h2 className="text-base font-semibold">FastMoss — Top 100 BR</h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          Inteligência de mercado de terceiros (FastMoss), ordenada por GMV dos últimos 7 dias. A
+          chave fica apenas no servidor; estes dados não são métricas oficiais do TikTok.
+        </p>
+      </div>
+      <Button
+        type="button"
+        variant="gold"
+        disabled={sync.isPending}
+        onClick={() =>
+          sync.mutate(undefined, {
+            onSuccess: (result) =>
+              toast.success(
+                `Sincronização concluída: ${result.inserted} novos, ${result.updated} atualizados.`,
+              ),
+            onError: (error) => toast.error(error.message),
+          })
+        }
+      >
+        {sync.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+        Sincronizar Top 100 BR
+      </Button>
+    </section>
   );
 }
