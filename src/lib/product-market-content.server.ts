@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { requireApiUser } from "@/lib/api-auth.server";
 import {
   FastmossError,
@@ -154,7 +155,7 @@ export async function handleProductMarketContentRefresh(request: Request) {
     const anySucceeded = videosSucceeded || creatorsSucceeded;
     const partial = anySucceeded && !(videosSucceeded && creatorsSucceeded);
     const nextRefreshAt = nextMarketContentRefreshAt(partial || !anySucceeded);
-    const stateValues: Record<string, unknown> = {
+    const stateValues: TablesInsert<"product_market_enrichment_state"> = {
       product_id: product.id,
       next_refresh_at: nextRefreshAt,
       updated_at: fetchedAt,
