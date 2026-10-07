@@ -67,12 +67,12 @@ export function ProductCard({ produto, favorito }: { produto: Produto; favorito:
           <div className="mt-auto space-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
             <div className="flex justify-between gap-3">
               <span>Preço</span>
-              <span className="font-medium text-foreground">{money(produto.price, produto.currency ?? "BRL") ?? NA}</span>
+              <span className="font-medium text-foreground">\n                {money(produto.price, produto.currency ?? "BRL") ?? NA}\n              </span>
             </div>
             <div className="flex justify-between gap-3">
               <span>Comissão</span>
               <span className="font-medium text-foreground">
-                {money(produto.commission_amount, produto.currency ?? "BRL") ?? percent(produto.commission_percent) ?? NA}
+                {money(produto.commission_amount, produto.currency ?? "BRL") ??\n                  percent(produto.commission_percent) ??\n                  NA}
               </span>
             </div>
             {(produto.sales_count !== null || produto.creators_count !== null) && (
@@ -94,7 +94,7 @@ export function ProductCard({ produto, favorito }: { produto: Produto; favorito:
             {produto.gmv_7d != null && (
               <div className="flex justify-between gap-3">
                 <span>GMV 7 dias</span>
-                <span className="font-medium text-foreground">{money(produto.gmv_7d, produto.currency ?? "BRL") ?? NA}</span>
+                <span className="font-medium text-foreground">\n                  {money(produto.gmv_7d, produto.currency ?? "BRL") ?? NA}\n                </span>
               </div>
             )}
             {(produto.sales_7d != null || produto.video_count != null) && (
