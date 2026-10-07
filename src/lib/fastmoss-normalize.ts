@@ -186,9 +186,7 @@ export function normalizeFastmossProduct(
   const title = typeof raw.title === "string" ? raw.title.trim() : "";
   if (!productId || !title) return null;
 
-  const region = (
-    typeof raw.region === "string" && raw.region.trim() ? raw.region : defaultRegion
-  )
+  const region = (typeof raw.region === "string" && raw.region.trim() ? raw.region : defaultRegion)
     .trim()
     .toUpperCase();
   const shopName = raw.shop && typeof raw.shop.name === "string" ? raw.shop.name.trim() : "";
@@ -275,8 +273,7 @@ export function normalizeFastmossCreator(
     followerCount: nonNegativeInt(raw.follower_count),
     awemeCount: nonNegativeInt(raw.aweme_count),
     favoritingCount: nonNegativeInt(raw.favoriting_count),
-    region: typeof raw.region === "string" && raw.region.trim()
-      ? raw.region.trim().toUpperCase()
-      : null,
+    region:
+      typeof raw.region === "string" && raw.region.trim() ? raw.region.trim().toUpperCase() : null,
   };
 }
