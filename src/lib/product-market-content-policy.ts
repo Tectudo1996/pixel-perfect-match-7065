@@ -11,10 +11,7 @@ export function isMarketContentCacheFresh(
   return Number.isFinite(parsed) && parsed > now;
 }
 
-export function nextMarketContentRefreshAt(
-  partial: boolean,
-  now = Date.now(),
-) {
+export function nextMarketContentRefreshAt(partial: boolean, now = Date.now()) {
   return new Date(
     now + (partial ? MARKET_CONTENT_PARTIAL_RETRY_MS : MARKET_CONTENT_CACHE_TTL_MS),
   ).toISOString();
