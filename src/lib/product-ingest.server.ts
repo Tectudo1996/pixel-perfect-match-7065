@@ -285,7 +285,10 @@ export async function startIngestionRun(
   }
 }
 
-export async function finishIngestionRun(id: string | null, values: TablesUpdate<"ingestion_runs">) {
+export async function finishIngestionRun(
+  id: string | null,
+  values: TablesUpdate<"ingestion_runs">,
+) {
   if (!id) return;
 
   try {
@@ -441,13 +444,18 @@ export async function handleFastmossSyncRequest(request: Request) {
 
   try {
     const userId = await requireApiAdmin(request);
-    const raw = (await readJsonBody(request, 4096).catch(() => ({}))) as { provider?: unknown; region?: unknown; pageSize?: unknown };
+    const raw = (await readJsonBody(request, 4096).catch(() => ({}))) as {
+      provider?: unknown;
+      region?: unknown;
+      pageSize?: unknown;
+    };
     if (raw.provider !== undefined && raw.provider !== "fastmoss") {
       throw new ApiError(400, "UNSUPPORTED_PROVIDER", "Provedor de sincronização não suportado.");
     }
-    const region = typeof raw.region === "string" && /^[A-Za-z]{2}$/.test(raw.region)
-      ? raw.region.toUpperCase()
-      : (process.env["FASTMOSS_DEFAULT_REGION"] || "BR").toUpperCase();
+    const region =
+      typeof raw.region === "string" && /^[A-Za-z]{2}$/.test(raw.region)
+        ? raw.region.toUpperCase()
+        : (process.env["FASTMOSS_DEFAULT_REGION"] || "BR").toUpperCase();
     if (region !== "BR") {
       throw new ApiError(400, "UNSUPPORTED_REGION", "Nesta etapa apenas o mercado BR é suportado.");
     }
@@ -461,14 +469,20 @@ export async function handleFastmossSyncRequest(request: Request) {
       collected_at: new Date().toISOString(),
     });
     if (ingestionRunId) {
-      await supabaseAdmin.from("ingestion_runs").update({ created_by: userId }).eq("id", ingestionRunId);
+      await supabaseAdmin
+        .from("ingestion_runs")
+        .update({ created_by: userId })
+        .eq("id", ingestionRunId);
     }
 
     if (!result.products.length) {
       throw new ApiError(502, "FASTMOSS_EMPTY", "A FastMoss não retornou produtos válidos.");
     }
 
-    const body = productIngestRequestSchema.parse({ source: result.source, products: result.products });
+    const body = productIngestRequestSchema.parse({
+      source: result.source,
+      products: result.products,
+    });
     const ingest = await ingestProductBatch(body);
 
     await finishIngestionRun(ingestionRunId, {
@@ -497,6 +511,9 @@ export async function handleFastmossSyncRequest(request: Request) {
       error_message: normalized.message,
     });
 
-    return Response.json({ error: normalized.message, code: normalized.code }, { status: normalized.status });
+    return Response.json(
+      { error: normalized.message, code: normalized.code },
+      { status: normalized.status },
+    );
   }
 }
