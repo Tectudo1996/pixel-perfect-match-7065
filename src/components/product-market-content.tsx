@@ -62,8 +62,8 @@ export function ProductMarketContent({
       <section className="surface-card p-5">
         <Header />
         <p className="mt-3 text-sm text-muted-foreground">
-          Vídeos e criadores associados ficam disponíveis para produtos importados pela FastMoss
-          que possuam um ID externo válido.
+          Vídeos e criadores associados ficam disponíveis para produtos importados pela FastMoss que
+          possuam um ID externo válido.
         </p>
       </section>
     );
@@ -121,8 +121,8 @@ export function ProductMarketContent({
         <div>
           <Header />
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
-            Inteligência de mercado FastMoss — não é métrica oficial do TikTok. O cache é global
-            por produto e evita novas chamadas por 24 horas quando a atualização está completa.
+            Inteligência de mercado FastMoss — não é métrica oficial do TikTok. O cache é global por
+            produto e evita novas chamadas por 24 horas quando a atualização está completa.
           </p>
           {data?.lastUpdatedAt && (
             <p className="mt-2 text-[11px] text-muted-foreground">
