@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as TransparenciaRouteImport } from './routes/transparencia'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -30,6 +32,7 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiUsageRouteImport } from './routes/api/usage'
 import { Route as AuthenticatedProdutoIdRouteImport } from './routes/_authenticated/produto.$id'
 import { Route as ApiAdminReadinessRouteImport } from './routes/api/admin/readiness'
+import { Route as ApiAdminScraperRouteImport } from './routes/api/admin/scraper'
 import { Route as ApiAdminSubscriptionsRouteImport } from './routes/api/admin/subscriptions'
 import { Route as ApiBillingCancelRouteImport } from './routes/api/billing/cancel'
 import { Route as ApiBillingCheckoutRouteImport } from './routes/api/billing/checkout'
@@ -38,6 +41,15 @@ import { Route as ApiBillingSyncRouteImport } from './routes/api/billing/sync'
 import { Route as ApiIntegrationsProductsRouteImport } from './routes/api/integrations/products'
 import { Route as ApiWebhooksMercadoPagoRouteImport } from './routes/api/webhooks/mercado-pago'
 import { Route as ApiWebhooksPaypalRouteImport } from './routes/api/webhooks/paypal'
+import { Route as ApiIntegrationsTiktokShopAuthorizeRouteImport } from './routes/api/integrations/tiktok-shop/authorize'
+import { Route as ApiIntegrationsTiktokShopCallbackRouteImport } from './routes/api/integrations/tiktok-shop/callback'
+import { Route as ApiIntegrationsTiktokShopDiscoveryRouteImport } from './routes/api/integrations/tiktok-shop/discovery'
+import { Route as ApiIntegrationsTiktokShopShowcaseRouteImport } from './routes/api/integrations/tiktok-shop/showcase'
+import { Route as ApiIntegrationsTiktokShopStatusRouteImport } from './routes/api/integrations/tiktok-shop/status'
+import { Route as ApiIntegrationsTiktokShopTrackedRouteImport } from './routes/api/integrations/tiktok-shop/tracked'
+import { Route as ApiIntegrationsTiktokShopShowcaseSyncRouteImport } from './routes/api/integrations/tiktok-shop/showcase/sync'
+import { Route as ApiIntegrationsTiktokShopTrackedHistoryRouteImport } from './routes/api/integrations/tiktok-shop/tracked/history'
+import { Route as ApiIntegrationsTiktokShopTrackedRefreshRouteImport } from './routes/api/integrations/tiktok-shop/tracked/refresh'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,9 +65,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TransparenciaRoute = TransparenciaRouteImport.update({
@@ -145,6 +167,11 @@ const ApiAdminReadinessRoute = ApiAdminReadinessRouteImport.update({
   path: '/api/admin/readiness',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminScraperRoute = ApiAdminScraperRouteImport.update({
+  id: '/api/admin/scraper',
+  path: '/api/admin/scraper',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminSubscriptionsRoute = ApiAdminSubscriptionsRouteImport.update({
   id: '/api/admin/subscriptions',
   path: '/api/admin/subscriptions',
@@ -185,11 +212,67 @@ const ApiWebhooksPaypalRoute = ApiWebhooksPaypalRouteImport.update({
   path: '/api/webhooks/paypal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIntegrationsTiktokShopAuthorizeRoute =
+  ApiIntegrationsTiktokShopAuthorizeRouteImport.update({
+    id: '/api/integrations/tiktok-shop/authorize',
+    path: '/api/integrations/tiktok-shop/authorize',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsTiktokShopCallbackRoute =
+  ApiIntegrationsTiktokShopCallbackRouteImport.update({
+    id: '/api/integrations/tiktok-shop/callback',
+    path: '/api/integrations/tiktok-shop/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsTiktokShopDiscoveryRoute =
+  ApiIntegrationsTiktokShopDiscoveryRouteImport.update({
+    id: '/api/integrations/tiktok-shop/discovery',
+    path: '/api/integrations/tiktok-shop/discovery',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsTiktokShopShowcaseRoute =
+  ApiIntegrationsTiktokShopShowcaseRouteImport.update({
+    id: '/api/integrations/tiktok-shop/showcase',
+    path: '/api/integrations/tiktok-shop/showcase',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsTiktokShopStatusRoute =
+  ApiIntegrationsTiktokShopStatusRouteImport.update({
+    id: '/api/integrations/tiktok-shop/status',
+    path: '/api/integrations/tiktok-shop/status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsTiktokShopTrackedRoute =
+  ApiIntegrationsTiktokShopTrackedRouteImport.update({
+    id: '/api/integrations/tiktok-shop/tracked',
+    path: '/api/integrations/tiktok-shop/tracked',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsTiktokShopShowcaseSyncRoute =
+  ApiIntegrationsTiktokShopShowcaseSyncRouteImport.update({
+    id: '/sync',
+    path: '/sync',
+    getParentRoute: () => ApiIntegrationsTiktokShopShowcaseRoute,
+  } as any)
+const ApiIntegrationsTiktokShopTrackedHistoryRoute =
+  ApiIntegrationsTiktokShopTrackedHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => ApiIntegrationsTiktokShopTrackedRoute,
+  } as any)
+const ApiIntegrationsTiktokShopTrackedRefreshRoute =
+  ApiIntegrationsTiktokShopTrackedRefreshRouteImport.update({
+    id: '/refresh',
+    path: '/refresh',
+    getParentRoute: () => ApiIntegrationsTiktokShopTrackedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/termos': typeof TermosRoute
   '/transparencia': typeof TransparenciaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -207,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/api/usage': typeof ApiUsageRoute
   '/produto/$id': typeof AuthenticatedProdutoIdRoute
   '/api/admin/readiness': typeof ApiAdminReadinessRoute
+  '/api/admin/scraper': typeof ApiAdminScraperRoute
   '/api/admin/subscriptions': typeof ApiAdminSubscriptionsRoute
   '/api/billing/cancel': typeof ApiBillingCancelRoute
   '/api/billing/checkout': typeof ApiBillingCheckoutRoute
@@ -215,11 +299,22 @@ export interface FileRoutesByFullPath {
   '/api/integrations/products': typeof ApiIntegrationsProductsRoute
   '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
   '/api/webhooks/paypal': typeof ApiWebhooksPaypalRoute
+  '/api/integrations/tiktok-shop/authorize': typeof ApiIntegrationsTiktokShopAuthorizeRoute
+  '/api/integrations/tiktok-shop/callback': typeof ApiIntegrationsTiktokShopCallbackRoute
+  '/api/integrations/tiktok-shop/discovery': typeof ApiIntegrationsTiktokShopDiscoveryRoute
+  '/api/integrations/tiktok-shop/showcase': typeof ApiIntegrationsTiktokShopShowcaseRouteWithChildren
+  '/api/integrations/tiktok-shop/status': typeof ApiIntegrationsTiktokShopStatusRoute
+  '/api/integrations/tiktok-shop/tracked': typeof ApiIntegrationsTiktokShopTrackedRouteWithChildren
+  '/api/integrations/tiktok-shop/showcase/sync': typeof ApiIntegrationsTiktokShopShowcaseSyncRoute
+  '/api/integrations/tiktok-shop/tracked/history': typeof ApiIntegrationsTiktokShopTrackedHistoryRoute
+  '/api/integrations/tiktok-shop/tracked/refresh': typeof ApiIntegrationsTiktokShopTrackedRefreshRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/termos': typeof TermosRoute
   '/transparencia': typeof TransparenciaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -237,6 +332,7 @@ export interface FileRoutesByTo {
   '/api/usage': typeof ApiUsageRoute
   '/produto/$id': typeof AuthenticatedProdutoIdRoute
   '/api/admin/readiness': typeof ApiAdminReadinessRoute
+  '/api/admin/scraper': typeof ApiAdminScraperRoute
   '/api/admin/subscriptions': typeof ApiAdminSubscriptionsRoute
   '/api/billing/cancel': typeof ApiBillingCancelRoute
   '/api/billing/checkout': typeof ApiBillingCheckoutRoute
@@ -245,13 +341,24 @@ export interface FileRoutesByTo {
   '/api/integrations/products': typeof ApiIntegrationsProductsRoute
   '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
   '/api/webhooks/paypal': typeof ApiWebhooksPaypalRoute
+  '/api/integrations/tiktok-shop/authorize': typeof ApiIntegrationsTiktokShopAuthorizeRoute
+  '/api/integrations/tiktok-shop/callback': typeof ApiIntegrationsTiktokShopCallbackRoute
+  '/api/integrations/tiktok-shop/discovery': typeof ApiIntegrationsTiktokShopDiscoveryRoute
+  '/api/integrations/tiktok-shop/showcase': typeof ApiIntegrationsTiktokShopShowcaseRouteWithChildren
+  '/api/integrations/tiktok-shop/status': typeof ApiIntegrationsTiktokShopStatusRoute
+  '/api/integrations/tiktok-shop/tracked': typeof ApiIntegrationsTiktokShopTrackedRouteWithChildren
+  '/api/integrations/tiktok-shop/showcase/sync': typeof ApiIntegrationsTiktokShopShowcaseSyncRoute
+  '/api/integrations/tiktok-shop/tracked/history': typeof ApiIntegrationsTiktokShopTrackedHistoryRoute
+  '/api/integrations/tiktok-shop/tracked/refresh': typeof ApiIntegrationsTiktokShopTrackedRefreshRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/termos': typeof TermosRoute
   '/transparencia': typeof TransparenciaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -269,6 +376,7 @@ export interface FileRoutesById {
   '/api/usage': typeof ApiUsageRoute
   '/_authenticated/produto/$id': typeof AuthenticatedProdutoIdRoute
   '/api/admin/readiness': typeof ApiAdminReadinessRoute
+  '/api/admin/scraper': typeof ApiAdminScraperRoute
   '/api/admin/subscriptions': typeof ApiAdminSubscriptionsRoute
   '/api/billing/cancel': typeof ApiBillingCancelRoute
   '/api/billing/checkout': typeof ApiBillingCheckoutRoute
@@ -277,13 +385,24 @@ export interface FileRoutesById {
   '/api/integrations/products': typeof ApiIntegrationsProductsRoute
   '/api/webhooks/mercado-pago': typeof ApiWebhooksMercadoPagoRoute
   '/api/webhooks/paypal': typeof ApiWebhooksPaypalRoute
+  '/api/integrations/tiktok-shop/authorize': typeof ApiIntegrationsTiktokShopAuthorizeRoute
+  '/api/integrations/tiktok-shop/callback': typeof ApiIntegrationsTiktokShopCallbackRoute
+  '/api/integrations/tiktok-shop/discovery': typeof ApiIntegrationsTiktokShopDiscoveryRoute
+  '/api/integrations/tiktok-shop/showcase': typeof ApiIntegrationsTiktokShopShowcaseRouteWithChildren
+  '/api/integrations/tiktok-shop/status': typeof ApiIntegrationsTiktokShopStatusRoute
+  '/api/integrations/tiktok-shop/tracked': typeof ApiIntegrationsTiktokShopTrackedRouteWithChildren
+  '/api/integrations/tiktok-shop/showcase/sync': typeof ApiIntegrationsTiktokShopShowcaseSyncRoute
+  '/api/integrations/tiktok-shop/tracked/history': typeof ApiIntegrationsTiktokShopTrackedHistoryRoute
+  '/api/integrations/tiktok-shop/tracked/refresh': typeof ApiIntegrationsTiktokShopTrackedRefreshRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/privacidade'
     | '/reset-password'
+    | '/termos'
     | '/transparencia'
     | '/admin'
     | '/configuracoes'
@@ -301,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/usage'
     | '/produto/$id'
     | '/api/admin/readiness'
+    | '/api/admin/scraper'
     | '/api/admin/subscriptions'
     | '/api/billing/cancel'
     | '/api/billing/checkout'
@@ -309,11 +429,22 @@ export interface FileRouteTypes {
     | '/api/integrations/products'
     | '/api/webhooks/mercado-pago'
     | '/api/webhooks/paypal'
+    | '/api/integrations/tiktok-shop/authorize'
+    | '/api/integrations/tiktok-shop/callback'
+    | '/api/integrations/tiktok-shop/discovery'
+    | '/api/integrations/tiktok-shop/showcase'
+    | '/api/integrations/tiktok-shop/status'
+    | '/api/integrations/tiktok-shop/tracked'
+    | '/api/integrations/tiktok-shop/showcase/sync'
+    | '/api/integrations/tiktok-shop/tracked/history'
+    | '/api/integrations/tiktok-shop/tracked/refresh'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/privacidade'
     | '/reset-password'
+    | '/termos'
     | '/transparencia'
     | '/admin'
     | '/configuracoes'
@@ -331,6 +462,7 @@ export interface FileRouteTypes {
     | '/api/usage'
     | '/produto/$id'
     | '/api/admin/readiness'
+    | '/api/admin/scraper'
     | '/api/admin/subscriptions'
     | '/api/billing/cancel'
     | '/api/billing/checkout'
@@ -339,12 +471,23 @@ export interface FileRouteTypes {
     | '/api/integrations/products'
     | '/api/webhooks/mercado-pago'
     | '/api/webhooks/paypal'
+    | '/api/integrations/tiktok-shop/authorize'
+    | '/api/integrations/tiktok-shop/callback'
+    | '/api/integrations/tiktok-shop/discovery'
+    | '/api/integrations/tiktok-shop/showcase'
+    | '/api/integrations/tiktok-shop/status'
+    | '/api/integrations/tiktok-shop/tracked'
+    | '/api/integrations/tiktok-shop/showcase/sync'
+    | '/api/integrations/tiktok-shop/tracked/history'
+    | '/api/integrations/tiktok-shop/tracked/refresh'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/privacidade'
     | '/reset-password'
+    | '/termos'
     | '/transparencia'
     | '/_authenticated/admin'
     | '/_authenticated/configuracoes'
@@ -362,6 +505,7 @@ export interface FileRouteTypes {
     | '/api/usage'
     | '/_authenticated/produto/$id'
     | '/api/admin/readiness'
+    | '/api/admin/scraper'
     | '/api/admin/subscriptions'
     | '/api/billing/cancel'
     | '/api/billing/checkout'
@@ -370,18 +514,30 @@ export interface FileRouteTypes {
     | '/api/integrations/products'
     | '/api/webhooks/mercado-pago'
     | '/api/webhooks/paypal'
+    | '/api/integrations/tiktok-shop/authorize'
+    | '/api/integrations/tiktok-shop/callback'
+    | '/api/integrations/tiktok-shop/discovery'
+    | '/api/integrations/tiktok-shop/showcase'
+    | '/api/integrations/tiktok-shop/status'
+    | '/api/integrations/tiktok-shop/tracked'
+    | '/api/integrations/tiktok-shop/showcase/sync'
+    | '/api/integrations/tiktok-shop/tracked/history'
+    | '/api/integrations/tiktok-shop/tracked/refresh'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermosRoute: typeof TermosRoute
   TransparenciaRoute: typeof TransparenciaRoute
   ApiAiContentRoute: typeof ApiAiContentRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiUsageRoute: typeof ApiUsageRoute
   ApiAdminReadinessRoute: typeof ApiAdminReadinessRoute
+  ApiAdminScraperRoute: typeof ApiAdminScraperRoute
   ApiAdminSubscriptionsRoute: typeof ApiAdminSubscriptionsRoute
   ApiBillingCancelRoute: typeof ApiBillingCancelRoute
   ApiBillingCheckoutRoute: typeof ApiBillingCheckoutRoute
@@ -390,6 +546,12 @@ export interface RootRouteChildren {
   ApiIntegrationsProductsRoute: typeof ApiIntegrationsProductsRoute
   ApiWebhooksMercadoPagoRoute: typeof ApiWebhooksMercadoPagoRoute
   ApiWebhooksPaypalRoute: typeof ApiWebhooksPaypalRoute
+  ApiIntegrationsTiktokShopAuthorizeRoute: typeof ApiIntegrationsTiktokShopAuthorizeRoute
+  ApiIntegrationsTiktokShopCallbackRoute: typeof ApiIntegrationsTiktokShopCallbackRoute
+  ApiIntegrationsTiktokShopDiscoveryRoute: typeof ApiIntegrationsTiktokShopDiscoveryRoute
+  ApiIntegrationsTiktokShopShowcaseRoute: typeof ApiIntegrationsTiktokShopShowcaseRouteWithChildren
+  ApiIntegrationsTiktokShopStatusRoute: typeof ApiIntegrationsTiktokShopStatusRoute
+  ApiIntegrationsTiktokShopTrackedRoute: typeof ApiIntegrationsTiktokShopTrackedRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -415,11 +577,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transparencia': {
@@ -541,6 +717,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminReadinessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/scraper': {
+      id: '/api/admin/scraper'
+      path: '/api/admin/scraper'
+      fullPath: '/api/admin/scraper'
+      preLoaderRoute: typeof ApiAdminScraperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/subscriptions': {
       id: '/api/admin/subscriptions'
       path: '/api/admin/subscriptions'
@@ -597,6 +780,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksPaypalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations/tiktok-shop/authorize': {
+      id: '/api/integrations/tiktok-shop/authorize'
+      path: '/api/integrations/tiktok-shop/authorize'
+      fullPath: '/api/integrations/tiktok-shop/authorize'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopAuthorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/tiktok-shop/callback': {
+      id: '/api/integrations/tiktok-shop/callback'
+      path: '/api/integrations/tiktok-shop/callback'
+      fullPath: '/api/integrations/tiktok-shop/callback'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/tiktok-shop/discovery': {
+      id: '/api/integrations/tiktok-shop/discovery'
+      path: '/api/integrations/tiktok-shop/discovery'
+      fullPath: '/api/integrations/tiktok-shop/discovery'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopDiscoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/tiktok-shop/showcase': {
+      id: '/api/integrations/tiktok-shop/showcase'
+      path: '/api/integrations/tiktok-shop/showcase'
+      fullPath: '/api/integrations/tiktok-shop/showcase'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopShowcaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/tiktok-shop/status': {
+      id: '/api/integrations/tiktok-shop/status'
+      path: '/api/integrations/tiktok-shop/status'
+      fullPath: '/api/integrations/tiktok-shop/status'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/tiktok-shop/tracked': {
+      id: '/api/integrations/tiktok-shop/tracked'
+      path: '/api/integrations/tiktok-shop/tracked'
+      fullPath: '/api/integrations/tiktok-shop/tracked'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopTrackedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/tiktok-shop/showcase/sync': {
+      id: '/api/integrations/tiktok-shop/showcase/sync'
+      path: '/sync'
+      fullPath: '/api/integrations/tiktok-shop/showcase/sync'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopShowcaseSyncRouteImport
+      parentRoute: typeof ApiIntegrationsTiktokShopShowcaseRoute
+    }
+    '/api/integrations/tiktok-shop/tracked/history': {
+      id: '/api/integrations/tiktok-shop/tracked/history'
+      path: '/history'
+      fullPath: '/api/integrations/tiktok-shop/tracked/history'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopTrackedHistoryRouteImport
+      parentRoute: typeof ApiIntegrationsTiktokShopTrackedRoute
+    }
+    '/api/integrations/tiktok-shop/tracked/refresh': {
+      id: '/api/integrations/tiktok-shop/tracked/refresh'
+      path: '/refresh'
+      fullPath: '/api/integrations/tiktok-shop/tracked/refresh'
+      preLoaderRoute: typeof ApiIntegrationsTiktokShopTrackedRefreshRouteImport
+      parentRoute: typeof ApiIntegrationsTiktokShopTrackedRoute
+    }
   }
 }
 
@@ -633,16 +879,52 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiIntegrationsTiktokShopShowcaseRouteChildren {
+  ApiIntegrationsTiktokShopShowcaseSyncRoute: typeof ApiIntegrationsTiktokShopShowcaseSyncRoute
+}
+
+const ApiIntegrationsTiktokShopShowcaseRouteChildren: ApiIntegrationsTiktokShopShowcaseRouteChildren =
+  {
+    ApiIntegrationsTiktokShopShowcaseSyncRoute:
+      ApiIntegrationsTiktokShopShowcaseSyncRoute,
+  }
+
+const ApiIntegrationsTiktokShopShowcaseRouteWithChildren =
+  ApiIntegrationsTiktokShopShowcaseRoute._addFileChildren(
+    ApiIntegrationsTiktokShopShowcaseRouteChildren,
+  )
+
+interface ApiIntegrationsTiktokShopTrackedRouteChildren {
+  ApiIntegrationsTiktokShopTrackedHistoryRoute: typeof ApiIntegrationsTiktokShopTrackedHistoryRoute
+  ApiIntegrationsTiktokShopTrackedRefreshRoute: typeof ApiIntegrationsTiktokShopTrackedRefreshRoute
+}
+
+const ApiIntegrationsTiktokShopTrackedRouteChildren: ApiIntegrationsTiktokShopTrackedRouteChildren =
+  {
+    ApiIntegrationsTiktokShopTrackedHistoryRoute:
+      ApiIntegrationsTiktokShopTrackedHistoryRoute,
+    ApiIntegrationsTiktokShopTrackedRefreshRoute:
+      ApiIntegrationsTiktokShopTrackedRefreshRoute,
+  }
+
+const ApiIntegrationsTiktokShopTrackedRouteWithChildren =
+  ApiIntegrationsTiktokShopTrackedRoute._addFileChildren(
+    ApiIntegrationsTiktokShopTrackedRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermosRoute: TermosRoute,
   TransparenciaRoute: TransparenciaRoute,
   ApiAiContentRoute: ApiAiContentRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiUsageRoute: ApiUsageRoute,
   ApiAdminReadinessRoute: ApiAdminReadinessRoute,
+  ApiAdminScraperRoute: ApiAdminScraperRoute,
   ApiAdminSubscriptionsRoute: ApiAdminSubscriptionsRoute,
   ApiBillingCancelRoute: ApiBillingCancelRoute,
   ApiBillingCheckoutRoute: ApiBillingCheckoutRoute,
@@ -651,6 +933,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIntegrationsProductsRoute: ApiIntegrationsProductsRoute,
   ApiWebhooksMercadoPagoRoute: ApiWebhooksMercadoPagoRoute,
   ApiWebhooksPaypalRoute: ApiWebhooksPaypalRoute,
+  ApiIntegrationsTiktokShopAuthorizeRoute:
+    ApiIntegrationsTiktokShopAuthorizeRoute,
+  ApiIntegrationsTiktokShopCallbackRoute:
+    ApiIntegrationsTiktokShopCallbackRoute,
+  ApiIntegrationsTiktokShopDiscoveryRoute:
+    ApiIntegrationsTiktokShopDiscoveryRoute,
+  ApiIntegrationsTiktokShopShowcaseRoute:
+    ApiIntegrationsTiktokShopShowcaseRouteWithChildren,
+  ApiIntegrationsTiktokShopStatusRoute: ApiIntegrationsTiktokShopStatusRoute,
+  ApiIntegrationsTiktokShopTrackedRoute:
+    ApiIntegrationsTiktokShopTrackedRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
