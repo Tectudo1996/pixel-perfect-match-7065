@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cloudClient as supabase } from "@/lib/cloud-client";
 import type { Produto, ProductCategory } from "@/types/product";
 
-export type RadarSort = "recent" | "commission_desc" | "sales_desc" | "price_asc" | "price_desc";
+export type RadarSort = "recent" | "gmv7d_desc" | "commission_desc" | "sales_desc" | "price_asc" | "price_desc";
 
 export type RadarFilters = {
   search: string;
@@ -30,7 +30,7 @@ export function useProductRadar(filters: RadarFilters) {
       let query = supabase
         .from("products")
         .select(
-          "id,name,image_url,price,commission_amount,commission_percent,store_name,sales_count,creators_count,source,data_updated_at,categories(name,slug)",
+          "id,name,image_url,price,commission_amount,commission_percent,store_name,sales_count,creators_count,source,data_updated_at,external_id,region,currency,sales_7d,gmv_7d,gmv_total,video_count,data_provenance,categories(name,slug)",
           { count: "exact" },
         );
 
@@ -55,7 +55,11 @@ export function useProductRadar(filters: RadarFilters) {
         query = query.gte("commission_amount", filters.commissionMin);
       }
 
-      if (filters.sort === "commission_desc") {
+      if (filters.sort === "gmv7d_desc") {
+        query = query
+          .order("gmv_7d", { ascending: false, nullsFirst: false })
+          .order("data_updated_at", { ascending: false });
+      } else if (filters.sort === "commission_desc") {
         query = query
           .order("commission_amount", { ascending: false, nullsFirst: false })
           .order("data_updated_at", { ascending: false });
