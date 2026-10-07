@@ -27,10 +27,7 @@ export function parsePercent(value: unknown): number | null {
 /** Número finito e não negativo, ou null. */
 export function nonNegativeNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
-  const raw =
-    typeof value === "number"
-      ? value
-      : Number(String(value).replace(/[^\d.-]/g, ""));
+  const raw = typeof value === "number" ? value : Number(String(value).replace(/[^\d.-]/g, ""));
   if (!Number.isFinite(raw) || raw < 0) return null;
   return raw;
 }
@@ -185,9 +182,7 @@ export function normalizeFastmossProduct(
   defaultRegion: string,
 ): ProductIngestItem | null {
   const productId =
-    raw.product_id === null || raw.product_id === undefined
-      ? ""
-      : String(raw.product_id).trim();
+    raw.product_id === null || raw.product_id === undefined ? "" : String(raw.product_id).trim();
   const title = typeof raw.title === "string" ? raw.title.trim() : "";
   if (!productId || !title) return null;
 
@@ -218,9 +213,7 @@ export function normalizeFastmossProduct(
   };
 }
 
-export function normalizeFastmossVideo(
-  raw: FastmossRawVideo,
-): NormalizedFastmossVideo | null {
+export function normalizeFastmossVideo(raw: FastmossRawVideo): NormalizedFastmossVideo | null {
   const externalVideoId =
     raw.video_id === null || raw.video_id === undefined ? "" : String(raw.video_id).trim();
 
@@ -233,8 +226,7 @@ export function normalizeFastmossVideo(
         : String(raw.video.uid).trim() || null
       : String(raw.uid).trim() || null;
 
-  const description =
-    typeof raw.video?.video_desc === "string" ? raw.video.video_desc.trim() : "";
+  const description = typeof raw.video?.video_desc === "string" ? raw.video.video_desc.trim() : "";
 
   return {
     externalVideoId: externalVideoId.slice(0, 255),
@@ -250,9 +242,8 @@ export function normalizeFastmossVideo(
     shareCount: nonNegativeInt(raw.share_count),
     unitsSold: nonNegativeInt(raw.units_sold),
     gmv: nonNegativeNumber(raw.gmv),
-    region: typeof raw.region === "string" && raw.region.trim()
-      ? raw.region.trim().toUpperCase()
-      : null,
+    region:
+      typeof raw.region === "string" && raw.region.trim() ? raw.region.trim().toUpperCase() : null,
     description: description ? description.slice(0, 5000) : null,
     coverUrl: httpUrl(raw.video?.cover),
     durationSeconds: nonNegativeInt(raw.video?.duration),
@@ -270,8 +261,7 @@ export function normalizeFastmossCreator(
 
   const uniqueId = typeof raw.unique_id === "string" ? raw.unique_id.trim() : "";
   const nickname = typeof raw.nickname === "string" ? raw.nickname.trim() : "";
-  const categoryName =
-    typeof raw.category_name === "string" ? raw.category_name.trim() : "";
+  const categoryName = typeof raw.category_name === "string" ? raw.category_name.trim() : "";
 
   return {
     creatorUid: creatorUid.slice(0, 255),
