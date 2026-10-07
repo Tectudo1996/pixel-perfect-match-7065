@@ -535,6 +535,7 @@ function CatalogRadar() {
             aria-label="Ordenar produtos"
           >
             <option value="recent">Atualizados recentemente</option>
+            <option value="gmv7d_desc">Maior GMV em 7 dias</option>
             <option value="commission_desc">Maior comissão em R$</option>
             <option value="sales_desc">Mais vendas informadas</option>
             <option value="price_asc">Menor preço</option>

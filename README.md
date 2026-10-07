@@ -498,3 +498,12 @@ No Lovable Cloud não é necessário cadastrar manualmente `LOVABLE_API_KEY`.
 - respeita `robots.txt`, 401/403, 429, limites de tamanho, timeout e não usa cookies/login/CAPTCHA
 - cada importação passa pelo mesmo pipeline validado de ingestão e aparece no histórico de fontes
 
+
+## Etapa 15A — motor de dados FastMoss BR
+
+- migration aditiva `0011_market_intelligence.sql`: `external_id`, `region`, `currency`, `sales_7d`, `gmv_7d`, `gmv_total`, `video_count`, `data_provenance` em `products` e snapshots correspondentes (incluindo `commission_percent` e `currency`) em `product_metrics_history`, com índices;
+- cliente server-only `src/lib/fastmoss.server.ts` (`POST https://openapi.fastmoss.com/product/v1/search`, BR, `day7_gmv desc`, 100 itens, timeout); a chave `FASTMOSS_API_KEY` fica apenas no servidor e nunca aparece em erros/logs;
+- normalização pura em `src/lib/fastmoss-normalize.ts` (percentuais, números não negativos, URLs http/https, fallback de URL pública do TikTok Shop, BR ⇒ BRL); métricas ausentes viram `null`;
+- `PUT /api/integrations/products` (somente admin) executa a sincronização reutilizando o pipeline de ingestão e o histórico de execuções; o `POST` de ingestão externa continua igual;
+- Admin → Fontes: botão "Sincronizar Top 100 BR";
+- Radar: ordenação "Maior GMV em 7 dias" e card com GMV/vendas 7 dias, vídeos e selo "Fonte FastMoss" (dados de terceiros, não são métricas oficiais do TikTok).

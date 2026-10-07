@@ -15,6 +15,7 @@ const canonicalOrder = [
   "0008_tiktok_showcase_private_cache.sql",
   "0009_tiktok_opportunity_tracking.sql",
   "0010_security_definer_hardening.sql",
+  "0011_market_intelligence.sql",
 ];
 
 const legacyAliases = new Map([

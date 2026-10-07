@@ -29,6 +29,7 @@ Em uma instalação limpa, aplique no Lovable Cloud / Supabase de produção, ne
 9. `drizzle/migrations/0008_tiktok_showcase_private_cache.sql`
 10. `drizzle/migrations/0009_tiktok_opportunity_tracking.sql`
 11. `drizzle/migrations/0010_security_definer_hardening.sql`
+12. `drizzle/migrations/0011_market_intelligence.sql`
 
 No banco atual do RadarShop AI, o histórico foi confirmado em 2026-10-03. A tabela
 `drizzle.__drizzle_migrations` registra `0000_radarshop_core_schema` e os aliases históricos
@@ -127,7 +128,7 @@ Referências oficiais:
 ## 5. Ordem segura de ativação
 
 1. faça deploy com `AI_USAGE_LIMITS_ENABLED=false` e todos os `*_BILLING_ENABLED=false`
-2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008, 0009 e 0010
+2. em banco novo, aplique as migrations canônicas 0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008, 0009, 0010 e 0011
 3. configure Supabase/Lovable Cloud, IA e segredo de ingestão
 4. abra **Admin → Prontidão** e confirme banco base, migrations 0002/0003/0004/0005 e IA
 5. abra **Admin → Fontes** e confirme que o histórico da migration 0006 está acessível

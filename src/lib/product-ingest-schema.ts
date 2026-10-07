@@ -17,6 +17,14 @@ export const productIngestItemSchema = z.object({
   store_name: z.string().trim().max(500).nullable().optional(),
   sales_count: optionalCounter,
   creators_count: optionalCounter,
+  external_id: z.string().trim().min(1).max(200).nullable().optional(),
+  region: z.string().trim().min(2).max(10).nullable().optional(),
+  currency: z.string().trim().length(3).nullable().optional(),
+  sales_7d: optionalCounter,
+  gmv_7d: optionalMoney,
+  gmv_total: optionalMoney,
+  video_count: optionalCounter,
+  data_provenance: z.string().trim().max(120).nullable().optional(),
 });
 
 export const productIngestRequestSchema = z.object({

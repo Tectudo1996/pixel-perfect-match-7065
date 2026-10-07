@@ -234,33 +234,51 @@ export type Database = {
       product_metrics_history: {
         Row: {
           commission_amount: number | null
+          commission_percent: number | null
           creators_count: number | null
+          currency: string | null
+          gmv_7d: number | null
+          gmv_total: number | null
           id: string
           price: number | null
           product_id: string
           recorded_at: string
+          sales_7d: number | null
           sales_count: number | null
           source: string | null
+          video_count: number | null
         }
         Insert: {
           commission_amount?: number | null
+          commission_percent?: number | null
           creators_count?: number | null
+          currency?: string | null
+          gmv_7d?: number | null
+          gmv_total?: number | null
           id?: string
           price?: number | null
           product_id: string
           recorded_at?: string
+          sales_7d?: number | null
           sales_count?: number | null
           source?: string | null
+          video_count?: number | null
         }
         Update: {
           commission_amount?: number | null
+          commission_percent?: number | null
           creators_count?: number | null
+          currency?: string | null
+          gmv_7d?: number | null
+          gmv_total?: number | null
           id?: string
           price?: number | null
           product_id?: string
           recorded_at?: string
+          sales_7d?: number | null
           sales_count?: number | null
           source?: string | null
+          video_count?: number | null
         }
         Relationships: [
           {
@@ -280,8 +298,13 @@ export type Database = {
           created_at: string
           created_by: string | null
           creators_count: number | null
+          currency: string | null
+          data_provenance: string | null
           data_updated_at: string
           description: string | null
+          external_id: string | null
+          gmv_7d: number | null
+          gmv_total: number | null
           id: string
           identified_at: string
           image_url: string | null
@@ -289,9 +312,12 @@ export type Database = {
           name: string
           original_url: string | null
           price: number | null
+          region: string | null
+          sales_7d: number | null
           sales_count: number | null
           source: string
           store_name: string | null
+          video_count: number | null
         }
         Insert: {
           category_id?: string | null
@@ -300,8 +326,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           creators_count?: number | null
+          currency?: string | null
+          data_provenance?: string | null
           data_updated_at?: string
           description?: string | null
+          external_id?: string | null
+          gmv_7d?: number | null
+          gmv_total?: number | null
           id?: string
           identified_at?: string
           image_url?: string | null
@@ -309,9 +340,12 @@ export type Database = {
           name: string
           original_url?: string | null
           price?: number | null
+          region?: string | null
+          sales_7d?: number | null
           sales_count?: number | null
           source?: string
           store_name?: string | null
+          video_count?: number | null
         }
         Update: {
           category_id?: string | null
@@ -320,8 +354,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           creators_count?: number | null
+          currency?: string | null
+          data_provenance?: string | null
           data_updated_at?: string
           description?: string | null
+          external_id?: string | null
+          gmv_7d?: number | null
+          gmv_total?: number | null
           id?: string
           identified_at?: string
           image_url?: string | null
@@ -329,9 +368,12 @@ export type Database = {
           name?: string
           original_url?: string | null
           price?: number | null
+          region?: string | null
+          sales_7d?: number | null
           sales_count?: number | null
           source?: string
           store_name?: string | null
+          video_count?: number | null
         }
         Relationships: [
           {
@@ -423,186 +465,6 @@ export type Database = {
           created_at?: string
           expires_at?: string
           state_hash?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_tiktok_showcase_products: {
-        Row: {
-          commission_amount: number | null
-          commission_currency: string | null
-          commission_percent: number | null
-          currency: string | null
-          detail_link: string | null
-          has_inventory: boolean | null
-          image_url: string | null
-          maximum_price: number | null
-          minimum_price: number | null
-          product_id: string
-          sale_region: string | null
-          shop_name: string | null
-          synced_at: string
-          title: string
-          units_sold: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          commission_amount?: number | null
-          commission_currency?: string | null
-          commission_percent?: number | null
-          currency?: string | null
-          detail_link?: string | null
-          has_inventory?: boolean | null
-          image_url?: string | null
-          maximum_price?: number | null
-          minimum_price?: number | null
-          product_id: string
-          sale_region?: string | null
-          shop_name?: string | null
-          synced_at?: string
-          title: string
-          units_sold?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          commission_amount?: number | null
-          commission_currency?: string | null
-          commission_percent?: number | null
-          currency?: string | null
-          detail_link?: string | null
-          has_inventory?: boolean | null
-          image_url?: string | null
-          maximum_price?: number | null
-          minimum_price?: number | null
-          product_id?: string
-          sale_region?: string | null
-          shop_name?: string | null
-          synced_at?: string
-          title?: string
-          units_sold?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_tiktok_opportunity_history: {
-        Row: {
-          commission_amount: number | null
-          commission_currency: string | null
-          commission_percent: number | null
-          currency: string | null
-          has_inventory: boolean | null
-          id: string
-          maximum_price: number | null
-          minimum_price: number | null
-          product_id: string
-          recorded_at: string
-          units_sold: number | null
-          user_id: string
-        }
-        Insert: {
-          commission_amount?: number | null
-          commission_currency?: string | null
-          commission_percent?: number | null
-          currency?: string | null
-          has_inventory?: boolean | null
-          id?: string
-          maximum_price?: number | null
-          minimum_price?: number | null
-          product_id: string
-          recorded_at?: string
-          units_sold?: number | null
-          user_id: string
-        }
-        Update: {
-          commission_amount?: number | null
-          commission_currency?: string | null
-          commission_percent?: number | null
-          currency?: string | null
-          has_inventory?: boolean | null
-          id?: string
-          maximum_price?: number | null
-          minimum_price?: number | null
-          product_id?: string
-          recorded_at?: string
-          units_sold?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_tiktok_tracked_opportunities: {
-        Row: {
-          commission_amount: number | null
-          commission_currency: string | null
-          commission_percent: number | null
-          currency: string | null
-          detail_link: string | null
-          has_inventory: boolean | null
-          image_url: string | null
-          last_checked_at: string
-          maximum_price: number | null
-          minimum_price: number | null
-          previous_checked_at: string | null
-          previous_commission_percent: number | null
-          previous_minimum_price: number | null
-          previous_units_sold: number | null
-          product_id: string
-          sale_region: string | null
-          shop_name: string | null
-          title: string
-          tracked_at: string
-          units_sold: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          commission_amount?: number | null
-          commission_currency?: string | null
-          commission_percent?: number | null
-          currency?: string | null
-          detail_link?: string | null
-          has_inventory?: boolean | null
-          image_url?: string | null
-          last_checked_at?: string
-          maximum_price?: number | null
-          minimum_price?: number | null
-          previous_checked_at?: string | null
-          previous_commission_percent?: number | null
-          previous_minimum_price?: number | null
-          previous_units_sold?: number | null
-          product_id: string
-          sale_region?: string | null
-          shop_name?: string | null
-          title: string
-          tracked_at?: string
-          units_sold?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          commission_amount?: number | null
-          commission_currency?: string | null
-          commission_percent?: number | null
-          currency?: string | null
-          detail_link?: string | null
-          has_inventory?: boolean | null
-          image_url?: string | null
-          last_checked_at?: string
-          maximum_price?: number | null
-          minimum_price?: number | null
-          previous_checked_at?: string | null
-          previous_commission_percent?: number | null
-          previous_minimum_price?: number | null
-          previous_units_sold?: number | null
-          product_id?: string
-          sale_region?: string | null
-          shop_name?: string | null
-          title?: string
-          tracked_at?: string
-          units_sold?: number | null
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -718,13 +580,201 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tiktok_opportunity_history: {
+        Row: {
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_percent: number | null
+          currency: string | null
+          has_inventory: boolean | null
+          id: string
+          maximum_price: number | null
+          minimum_price: number | null
+          product_id: string
+          recorded_at: string
+          units_sold: number | null
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          has_inventory?: boolean | null
+          id?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id: string
+          recorded_at?: string
+          units_sold?: number | null
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          has_inventory?: boolean | null
+          id?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id?: string
+          recorded_at?: string
+          units_sold?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tiktok_opportunity_history_tracked_fkey"
+            columns: ["user_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "user_tiktok_tracked_opportunities"
+            referencedColumns: ["user_id", "product_id"]
+          },
+        ]
+      }
+      user_tiktok_showcase_products: {
+        Row: {
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_percent: number | null
+          currency: string | null
+          detail_link: string | null
+          has_inventory: boolean | null
+          image_url: string | null
+          maximum_price: number | null
+          minimum_price: number | null
+          product_id: string
+          sale_region: string | null
+          shop_name: string | null
+          synced_at: string
+          title: string
+          units_sold: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id: string
+          sale_region?: string | null
+          shop_name?: string | null
+          synced_at?: string
+          title: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          maximum_price?: number | null
+          minimum_price?: number | null
+          product_id?: string
+          sale_region?: string | null
+          shop_name?: string | null
+          synced_at?: string
+          title?: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_tiktok_tracked_opportunities: {
+        Row: {
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_percent: number | null
+          currency: string | null
+          detail_link: string | null
+          has_inventory: boolean | null
+          image_url: string | null
+          last_checked_at: string
+          maximum_price: number | null
+          minimum_price: number | null
+          previous_checked_at: string | null
+          previous_commission_percent: number | null
+          previous_minimum_price: number | null
+          previous_units_sold: number | null
+          product_id: string
+          sale_region: string | null
+          shop_name: string | null
+          title: string
+          tracked_at: string
+          units_sold: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          last_checked_at?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          previous_checked_at?: string | null
+          previous_commission_percent?: number | null
+          previous_minimum_price?: number | null
+          previous_units_sold?: number | null
+          product_id: string
+          sale_region?: string | null
+          shop_name?: string | null
+          title: string
+          tracked_at?: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_percent?: number | null
+          currency?: string | null
+          detail_link?: string | null
+          has_inventory?: boolean | null
+          image_url?: string | null
+          last_checked_at?: string
+          maximum_price?: number | null
+          minimum_price?: number | null
+          previous_checked_at?: string | null
+          previous_commission_percent?: number | null
+          previous_minimum_price?: number | null
+          previous_units_sold?: number | null
+          product_id?: string
+          sale_region?: string | null
+          shop_name?: string | null
+          title?: string
+          tracked_at?: string
+          units_sold?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       check_multi_gateway_billing_schema: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           subscription_constraint_ready: boolean
           webhook_constraint_ready: boolean

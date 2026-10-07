@@ -16,4 +16,12 @@ export type Produto = {
   source: string;
   data_updated_at: string;
   categories?: ProductCategory | null;
+  external_id?: string | null;
+  region?: string | null;
+  currency?: string | null;
+  sales_7d?: number | null;
+  gmv_7d?: number | null;
+  gmv_total?: number | null;
+  video_count?: number | null;
+  data_provenance?: string | null;
 };

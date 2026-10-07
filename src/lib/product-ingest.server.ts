@@ -14,9 +14,18 @@ type ProductSnapshot = {
   commission_amount: number | null;
   sales_count: number | null;
   creators_count: number | null;
+  commission_percent: number | null;
+  currency: string | null;
+  sales_7d: number | null;
+  gmv_7d: number | null;
+  gmv_total: number | null;
+  video_count: number | null;
   source: string;
   data_updated_at: string;
 };
+
+const SNAPSHOT_COLUMNS =
+  "id,price,commission_amount,commission_percent,currency,sales_7d,gmv_7d,gmv_total,video_count,sales_count,creators_count,source,data_updated_at";
 
 export async function handleProductIngestRequest(request: Request) {
   let ingestionRunId: string | null = null;
@@ -152,6 +161,24 @@ export async function ingestProductBatch(body: ProductIngestRequest) {
 
   if (existingError) throw existingError;
 
+  const externalIds = body.products
+    .map((product) => product.external_id)
+    .filter((id): id is string => Boolean(id));
+  const existingByExternalId = new Map<string, string>();
+
+  if (externalIds.length) {
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("id,external_id")
+      .eq("source", body.source)
+      .in("external_id", externalIds);
+
+    if (error) throw error;
+    for (const row of data ?? []) {
+      if (row.external_id) existingByExternalId.set(row.external_id, row.id);
+    }
+  }
+
   const existingByUrl = new Map(
     (existingRows ?? [])
       .filter((row): row is typeof row & { original_url: string } => Boolean(row.original_url))
@@ -162,7 +189,9 @@ export async function ingestProductBatch(body: ProductIngestRequest) {
   const updates: Array<{ id: string; values: TablesUpdate<"products"> }> = [];
 
   for (const product of body.products) {
-    const existingId = existingByUrl.get(product.original_url);
+    const existingId =
+      (product.external_id ? existingByExternalId.get(product.external_id) : undefined) ??
+      existingByUrl.get(product.original_url);
 
     if (existingId) {
       updates.push({
@@ -180,7 +209,7 @@ export async function ingestProductBatch(body: ProductIngestRequest) {
     const { data, error } = await supabaseAdmin
       .from("products")
       .insert(inserts)
-      .select("id,price,commission_amount,sales_count,creators_count,source,data_updated_at");
+      .select(SNAPSHOT_COLUMNS);
 
     if (error) throw error;
     snapshots.push(...((data ?? []) as ProductSnapshot[]));
@@ -191,7 +220,7 @@ export async function ingestProductBatch(body: ProductIngestRequest) {
       .from("products")
       .update(update.values)
       .eq("id", update.id)
-      .select("id,price,commission_amount,sales_count,creators_count,source,data_updated_at")
+      .select(SNAPSHOT_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -206,6 +235,12 @@ export async function ingestProductBatch(body: ProductIngestRequest) {
         commission_amount: product.commission_amount,
         sales_count: product.sales_count,
         creators_count: product.creators_count,
+        commission_percent: product.commission_percent,
+        currency: product.currency,
+        sales_7d: product.sales_7d,
+        gmv_7d: product.gmv_7d,
+        gmv_total: product.gmv_total,
+        video_count: product.video_count,
         source: product.source,
         recorded_at: product.data_updated_at,
       })),
@@ -225,7 +260,7 @@ export async function ingestProductBatch(body: ProductIngestRequest) {
   };
 }
 
-async function startIngestionRun(
+export async function startIngestionRun(
   values: Pick<
     TablesInsert<"ingestion_runs">,
     "source" | "channel" | "accepted_count" | "collected_at"
@@ -250,7 +285,7 @@ async function startIngestionRun(
   }
 }
 
-async function finishIngestionRun(id: string | null, values: TablesUpdate<"ingestion_runs">) {
+export async function finishIngestionRun(id: string | null, values: TablesUpdate<"ingestion_runs">) {
   if (!id) return;
 
   try {
@@ -288,6 +323,14 @@ function buildInsert(
     original_url: product.original_url,
     sales_count: product.sales_count ?? null,
     creators_count: product.creators_count ?? null,
+    external_id: product.external_id ?? null,
+    region: product.region ?? null,
+    currency: product.currency ?? null,
+    sales_7d: product.sales_7d ?? null,
+    gmv_7d: product.gmv_7d ?? null,
+    gmv_total: product.gmv_total ?? null,
+    video_count: product.video_count ?? null,
+    data_provenance: product.data_provenance ?? null,
     source,
     is_demo: false,
     identified_at: collectedAt,
@@ -329,6 +372,18 @@ function buildUpdate(
   assignIfPresent(values, "store_name", product, "store_name", (value) => value ?? null);
   assignIfPresent(values, "sales_count", product, "sales_count", (value) => value ?? null);
   assignIfPresent(values, "creators_count", product, "creators_count", (value) => value ?? null);
+  for (const key of [
+    "external_id",
+    "region",
+    "currency",
+    "sales_7d",
+    "gmv_7d",
+    "gmv_total",
+    "video_count",
+    "data_provenance",
+  ] as const) {
+    assignIfPresent(values, key, product, key, (value) => (value ?? null) as never);
+  }
 
   if ("category_slug" in product) {
     values.category_id = product.category_slug
@@ -377,4 +432,71 @@ function normalizeError(error: unknown) {
   }
 
   return new ApiError(500, "INGEST_INTERNAL_ERROR", "Não foi possível processar o lote agora.");
+}
+
+export async function handleFastmossSyncRequest(request: Request) {
+  const { requireApiAdmin, ApiAuthError, ApiAdminError } = await import("@/lib/api-auth.server");
+  const { searchFastmossTopProducts, FastmossError } = await import("@/lib/fastmoss.server");
+  let ingestionRunId: string | null = null;
+
+  try {
+    const userId = await requireApiAdmin(request);
+    const raw = (await readJsonBody(request, 4096).catch(() => ({}))) as { provider?: unknown; region?: unknown; pageSize?: unknown };
+    if (raw.provider !== undefined && raw.provider !== "fastmoss") {
+      throw new ApiError(400, "UNSUPPORTED_PROVIDER", "Provedor de sincronização não suportado.");
+    }
+    const region = typeof raw.region === "string" && /^[A-Za-z]{2}$/.test(raw.region)
+      ? raw.region.toUpperCase()
+      : (process.env["FASTMOSS_DEFAULT_REGION"] || "BR").toUpperCase();
+    if (region !== "BR") {
+      throw new ApiError(400, "UNSUPPORTED_REGION", "Nesta etapa apenas o mercado BR é suportado.");
+    }
+    const pageSize = Math.min(Math.max(Number(raw.pageSize) || 100, 1), 100);
+
+    const result = await searchFastmossTopProducts({ region, pageSize });
+    ingestionRunId = await startIngestionRun({
+      source: result.source,
+      channel: "api",
+      accepted_count: result.products.length,
+      collected_at: new Date().toISOString(),
+    });
+    if (ingestionRunId) {
+      await supabaseAdmin.from("ingestion_runs").update({ created_by: userId }).eq("id", ingestionRunId);
+    }
+
+    if (!result.products.length) {
+      throw new ApiError(502, "FASTMOSS_EMPTY", "A FastMoss não retornou produtos válidos.");
+    }
+
+    const body = productIngestRequestSchema.parse({ source: result.source, products: result.products });
+    const ingest = await ingestProductBatch(body);
+
+    await finishIngestionRun(ingestionRunId, {
+      status: "succeeded",
+      accepted_count: ingest.accepted,
+      inserted_count: ingest.inserted,
+      updated_count: ingest.updated,
+      snapshot_count: ingest.metric_snapshots,
+      collected_at: ingest.collected_at,
+    });
+
+    return Response.json({ ...ingest, provider: "fastmoss", region, received: result.received });
+  } catch (error) {
+    let normalized: ApiError;
+    if (error instanceof ApiAuthError || error instanceof ApiAdminError) {
+      normalized = new ApiError(error.status, error.code, error.message);
+    } else if (error instanceof FastmossError) {
+      normalized = new ApiError(error.status, error.code, error.message);
+    } else {
+      normalized = normalizeError(error);
+    }
+
+    await finishIngestionRun(ingestionRunId, {
+      status: "failed",
+      error_code: normalized.code,
+      error_message: normalized.message,
+    });
+
+    return Response.json({ error: normalized.message, code: normalized.code }, { status: normalized.status });
+  }
 }

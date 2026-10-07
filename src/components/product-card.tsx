@@ -48,6 +48,15 @@ export function ProductCard({ produto, favorito }: { produto: Produto; favorito:
                 {produto.categories.name}
               </span>
             )}
+            {produto.data_provenance === "third_party_market_intelligence" &&
+              produto.source.startsWith("fastmoss:") && (
+                <span
+                  className="w-fit rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground"
+                  title="Dados de inteligência de mercado de terceiros (FastMoss). Não são métricas oficiais do TikTok."
+                >
+                  Fonte FastMoss
+                </span>
+              )}
           </div>
 
           <h3 className="line-clamp-2 text-sm font-semibold">{produto.name}</h3>
@@ -78,6 +87,25 @@ export function ProductCard({ produto, favorito }: { produto: Produto; favorito:
                       <UsersRound className="h-3 w-3" />
                       {compactNumber.format(produto.creators_count)}
                     </span>
+                  )}
+                </span>
+              </div>
+            )}
+            {produto.gmv_7d != null && (
+              <div className="flex justify-between gap-3">
+                <span>GMV 7 dias</span>
+                <span className="font-medium text-foreground">{brl(produto.gmv_7d) ?? NA}</span>
+              </div>
+            )}
+            {(produto.sales_7d != null || produto.video_count != null) && (
+              <div className="flex justify-between gap-3">
+                <span>7 dias</span>
+                <span className="flex items-center gap-2 text-foreground">
+                  {produto.sales_7d != null && (
+                    <span>{compactNumber.format(produto.sales_7d)} vendas</span>
+                  )}
+                  {produto.video_count != null && (
+                    <span>{compactNumber.format(produto.video_count)} vídeos</span>
                   )}
                 </span>
               </div>
